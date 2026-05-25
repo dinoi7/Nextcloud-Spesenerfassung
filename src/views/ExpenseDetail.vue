@@ -1,0 +1,202 @@
+<template>
+  <div class="spes-page">
+    <div class="spes-page-header" v-if="expense">
+      <button class="spes-btn" @click="$router.back()">&larr; {{ t('dashboard') }}</button>
+      <div class="spes-header-right">
+        <button
+          v-if="canEdit"
+          class="spes-btn"
+          @click="$router.push(`/expenses/${expense.id}/edit`)"
+        >{{ t('edit') }}</button>
+        <button
+          v-if="canDelete"
+          class="spes-btn spes-btn-danger"
+          @click="handleDelete"
+        >{{ t('delete') }}</button>
+      </div>
+    </div>
+
+    <div v-if="loading" class="spes-loading">{{ t('loading') }}</div>
+    <div v-else-if="!expense" class="spes-error">{{ t('error') }}</div>
+
+    <div v-else class="spes-detail">
+      <div class="spes-detail-header">
+        <h1>{{ expense.title }}</h1>
+        <StatusBadge :status="expense.status" class="spes-detail-status" />
+      </div>
+
+      <div class="spes-detail-grid">
+        <div class="spes-detail-item">
+          <span class="spes-detail-label">{{ t('amount') }}</span>
+          <span class="spes-detail-value">CHF {{ formatAmount(expense.amount) }}</span>
+        </div>
+        <div class="spes-detail-item">
+          <span class="spes-detail-label">{{ t('category') }}</span>
+          <span class="spes-detail-value">{{ expense.category }}</span>
+        </div>
+        <div class="spes-detail-item">
+          <span class="spes-detail-label">{{ t('expenseDate') }}</span>
+          <span class="spes-detail-value">{{ formatDate(expense.expenseDate) }}</span>
+        </div>
+      </div>
+
+      <div v-if="expense.description" class="spes-detail-desc">
+        <h3>{{ t('description') }}</h3>
+        <p>{{ expense.description }}</p>
+      </div>
+
+      <div v-if="receipts.length" class="spes-detail-receipts">
+        <h3>{{ t('uploadReceipt') }} ({{ receipts.length }})</h3>
+        <div class="spes-receipt-list">
+          <div v-for="rec in receipts" :key="rec.id" class="spes-receipt-item">
+            <a :href="getReceiptUrl(rec)" target="_blank" class="spes-receipt-link">
+              <span>{{ rec.fileName }}</span>
+              <span class="spes-receipt-size">{{ formatSize(rec.size) }}</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <HistoryTimeline :history="history" />
+
+      <div v-if="canApprove || canReject || canPay || canDone" class="spes-detail-actions">
+        <button v-if="canApprove" class="spes-btn spes-btn-success" @click="handleApprove">{{ t('approve') }}</button>
+        <button v-if="canReject" class="spes-btn spes-btn-danger" @click="handleReject">{{ t('reject') }}</button>
+        <button v-if="canPay" class="spes-btn spes-btn-success" @click="handlePay">{{ t('pay') }}</button>
+        <button v-if="canDone" class="spes-btn" @click="handleDone">{{ t('done') }}</button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useExpenseStore } from '../store/expenses'
+import { useSettingsStore } from '../store/settings'
+import { useI18n } from '../i18n'
+import { api } from '../api'
+import StatusBadge from '../components/StatusBadge.vue'
+import HistoryTimeline from '../components/HistoryTimeline.vue'
+
+const route = useRoute()
+const router = useRouter()
+const store = useExpenseStore()
+const settingsStore = useSettingsStore()
+const { t } = useI18n()
+
+const expense = ref(null)
+const history = ref([])
+const receipts = ref([])
+const loading = ref(true)
+
+const canEdit = computed(() => {
+  if (!expense.value) return false
+  return ['draft', 'rejected'].includes(expense.value.status)
+})
+
+const canDelete = computed(() => {
+  if (!expense.value) return false
+  return ['draft', 'rejected'].includes(expense.value.status)
+})
+
+const canApprove = computed(() => {
+  if (!expense.value) return false
+  return store.userIsPresident && expense.value.status === 'submitted' && parseFloat(expense.value.amount) > settingsStore.settings.threshold
+})
+
+const canReject = computed(() => {
+  if (!expense.value) return false
+  if (expense.value.status === 'submitted') {
+    return store.userIsPresident && parseFloat(expense.value.amount) > settingsStore.settings.threshold
+      || store.userIsTreasurer && parseFloat(expense.value.amount) <= settingsStore.settings.threshold
+  }
+  if (expense.value.status === 'approved') {
+    return store.userIsTreasurer
+  }
+  return false
+})
+
+const canPay = computed(() => {
+  if (!expense.value) return false
+  return store.userIsTreasurer && (expense.value.status === 'submitted' && parseFloat(expense.value.amount) <= settingsStore.settings.threshold
+    || expense.value.status === 'approved')
+})
+
+const canDone = computed(() => {
+  if (!expense.value) return false
+  return expense.value.status === 'paid'
+})
+
+const id = computed(() => parseInt(route.params.id))
+
+onMounted(async () => {
+  await settingsStore.loadSettings()
+  try {
+    const data = await store.getExpense(id.value)
+    expense.value = data
+    history.value = data.history || []
+    receipts.value = data.receipts || []
+  } catch (e) {
+    expense.value = null
+  } finally {
+    loading.value = false
+  }
+})
+
+function formatAmount(amount) {
+  return parseFloat(amount || 0).toFixed(2)
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('de-CH')
+}
+
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + ' B'
+  return (bytes / 1024).toFixed(0) + ' KB'
+}
+
+function getReceiptUrl(rec) {
+  return '/apps/spesenerfassung/api/receipts/' + rec.id + '/download'
+}
+
+async function handleApprove() {
+  try {
+    const exp = await api.approve(id.value)
+    expense.value = exp
+  } catch (e) { alert(e.message) }
+}
+
+async function handleReject() {
+  const reason = prompt(t('rejectConfirmation'))
+  if (!reason) return
+  try {
+    const exp = await api.reject(id.value, reason)
+    expense.value = exp
+    router.push('/')
+  } catch (e) { alert(e.message) }
+}
+
+async function handlePay() {
+  try {
+    const exp = await api.pay(id.value)
+    expense.value = exp
+  } catch (e) { alert(e.message) }
+}
+
+async function handleDone() {
+  try {
+    const exp = await api.done(id.value)
+    expense.value = exp
+  } catch (e) { alert(e.message) }
+}
+
+async function handleDelete() {
+  if (!confirm(t('confirmDelete'))) return
+  await store.deleteExpense(id.value)
+  router.push('/')
+}
+</script>

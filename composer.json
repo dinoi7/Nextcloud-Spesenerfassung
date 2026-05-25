@@ -1,0 +1,17 @@
+{
+	"name": "makerspace-reinach/spesenerfassung",
+	"description": "Expense tracking app with approval workflow for Makerspace Reinach",
+	"type": "nextcloud-app",
+	"license": "AGPL-3.0-or-later",
+	"require": {
+		"php": ">=8.2"
+	},
+	"autoload": {
+		"psr-4": {
+			"OCA\\Spesenerfassung\\": "lib/"
+		}
+	},
+	"scripts": {
+		"lint": "find . -name '*.php' -print0 | xargs -0 -n1 php -l"
+	}
+}

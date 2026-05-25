@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+	<id>spesenerfassung</id>
+	<name>Spesenerfassung</name>
+	<summary>Expense tracking with approval workflow</summary>
+	<description><![CDATA[Expense tracking app for Makerspace Reinach.
+Features:
+- Submit expenses with receipt uploads (PDF, JPG, PNG, max 1MB)
+- Camera capture for receipts on mobile
+- Nextcloud SSO authentication
+- Configurable categories and approval thresholds
+- Two-step approval: President (for >threshold) and Treasurer
+- Email notifications on status changes
+- Full audit trail with rejection reasons
+- Responsive UI for desktop and mobile]]></description>
+	<version>1.0.0</version>
+	<licence>agpl</licence>
+	<author>Makerspace Reinach</author>
+	<namespace>Spesenerfassung</namespace>
+	<category>office</category>
+	<website>https://makerspace-reinach.ch</website>
+	<bugs>https://github.com/makerspace-reinach/spesenerfassung/issues</bugs>
+	<dependencies>
+		<nextcloud min-version="30" max-version="32"/>
+	</dependencies>
+	<settings>
+		<admin>OCA\Spesenerfassung\Settings\AdminSettings</admin>
+		<admin-section>OCA\Spesenerfassung\Settings\AdminSection</admin-section>
+	</settings>
+	<navigations>
+		<navigation>
+			<name>Spesenerfassung</name>
+			<route>spesenerfassung.page.index</route>
+			<icon>app.svg</icon>
+			<order>50</order>
+		</navigation>
+	</navigations>
+</info>
