@@ -11,7 +11,7 @@ use OCP\IDBConnection;
 
 class ExpenseMapper extends QBMapper {
 	public function __construct(IDBConnection $db) {
-		parent::__construct($db, 'spesenerfassung_expenses', Expense::class);
+		parent::__construct($db, 'sp_expenses', Expense::class);
 	}
 
 	/**

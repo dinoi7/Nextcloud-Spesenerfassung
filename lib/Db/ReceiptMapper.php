@@ -9,7 +9,7 @@ use OCP\IDBConnection;
 
 class ReceiptMapper extends QBMapper {
 	public function __construct(IDBConnection $db) {
-		parent::__construct($db, 'spesenerfassung_receipts', Receipt::class);
+		parent::__construct($db, 'sp_receipts', Receipt::class);
 	}
 
 	/**

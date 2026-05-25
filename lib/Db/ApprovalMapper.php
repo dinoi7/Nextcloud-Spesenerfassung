@@ -9,7 +9,7 @@ use OCP\IDBConnection;
 
 class ApprovalMapper extends QBMapper {
 	public function __construct(IDBConnection $db) {
-		parent::__construct($db, 'spesenerfassung_approvals', Approval::class);
+		parent::__construct($db, 'sp_approvals', Approval::class);
 	}
 
 	/**

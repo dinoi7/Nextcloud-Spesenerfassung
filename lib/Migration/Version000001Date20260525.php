@@ -15,8 +15,8 @@ class Version000001Date20260525 extends SimpleMigrationStep {
 		/** @var ISchemaWrapper $schema */
 		$schema = $schemaClosure();
 
-		if (!$schema->hasTable('spesenerfassung_expenses')) {
-			$table = $schema->createTable('spesenerfassung_expenses');
+		if (!$schema->hasTable('sp_expenses')) {
+			$table = $schema->createTable('sp_expenses');
 			$table->addColumn('id', Types::BIGINT, [
 				'autoincrement' => true,
 				'notnull' => true,
@@ -57,12 +57,12 @@ class Version000001Date20260525 extends SimpleMigrationStep {
 				'notnull' => true,
 			]);
 			$table->setPrimaryKey(['id']);
-			$table->addIndex(['user_id'], 'spesenerfassung_expenses_user_idx');
-			$table->addIndex(['status'], 'spesenerfassung_expenses_status_idx');
+			$table->addIndex(['user_id'], 'sp_exp_user_idx');
+			$table->addIndex(['status'], 'sp_exp_status_idx');
 		}
 
-		if (!$schema->hasTable('spesenerfassung_receipts')) {
-			$table = $schema->createTable('spesenerfassung_receipts');
+		if (!$schema->hasTable('sp_receipts')) {
+			$table = $schema->createTable('sp_receipts');
 			$table->addColumn('id', Types::BIGINT, [
 				'autoincrement' => true,
 				'notnull' => true,
@@ -92,17 +92,17 @@ class Version000001Date20260525 extends SimpleMigrationStep {
 				'notnull' => true,
 			]);
 			$table->setPrimaryKey(['id']);
-			$table->addIndex(['expense_id'], 'spesenerfassung_rec_expense_idx');
+			$table->addIndex(['expense_id'], 'sp_rec_expense_idx');
 			$table->addForeignKeyConstraint(
-				$schema->getTable('spesenerfassung_expenses'),
+				$schema->getTable('sp_expenses'),
 				['expense_id'],
 				['id'],
 				['onDelete' => 'CASCADE']
 			);
 		}
 
-		if (!$schema->hasTable('spesenerfassung_approvals')) {
-			$table = $schema->createTable('spesenerfassung_approvals');
+		if (!$schema->hasTable('sp_approvals')) {
+			$table = $schema->createTable('sp_approvals');
 			$table->addColumn('id', Types::BIGINT, [
 				'autoincrement' => true,
 				'notnull' => true,
@@ -127,9 +127,9 @@ class Version000001Date20260525 extends SimpleMigrationStep {
 				'notnull' => true,
 			]);
 			$table->setPrimaryKey(['id']);
-			$table->addIndex(['expense_id'], 'spesenerfassung_appr_expense_idx');
+			$table->addIndex(['expense_id'], 'sp_appr_expense_idx');
 			$table->addForeignKeyConstraint(
-				$schema->getTable('spesenerfassung_expenses'),
+				$schema->getTable('sp_expenses'),
 				['expense_id'],
 				['id'],
 				['onDelete' => 'CASCADE']

@@ -7,6 +7,7 @@ use OCA\Spesenerfassung\Service\SettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -37,6 +38,8 @@ class SettingsController extends Controller {
 		return new DataResponse(SettingsService::getAll());
 	}
 
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function update(): DataResponse {
 		if (!$this->requireAdmin()) {
 			return new DataResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
@@ -51,6 +54,8 @@ class SettingsController extends Controller {
 		return new DataResponse(SettingsService::getCategories());
 	}
 
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function createCategory(): DataResponse {
 		if (!$this->requireAdmin()) {
 			return new DataResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
@@ -63,6 +68,8 @@ class SettingsController extends Controller {
 		return new DataResponse(SettingsService::addCategory($name));
 	}
 
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function updateCategory(int $id): DataResponse {
 		if (!$this->requireAdmin()) {
 			return new DataResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
@@ -75,6 +82,8 @@ class SettingsController extends Controller {
 		return new DataResponse(SettingsService::updateCategory($id, $name));
 	}
 
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function deleteCategory(int $id): DataResponse {
 		if (!$this->requireAdmin()) {
 			return new DataResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
