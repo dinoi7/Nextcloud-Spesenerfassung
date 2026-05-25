@@ -122,6 +122,7 @@ class ApprovalController extends Controller {
 	}
 
 	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function pending(): DataResponse {
 		$userId = $this->getUserId();
 		$presidentUid = SettingsService::getPresidentUid();

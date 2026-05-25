@@ -34,6 +34,7 @@ class SettingsController extends Controller {
 	}
 
 	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function get(): DataResponse {
 		return new DataResponse(SettingsService::getAll());
 	}
@@ -50,6 +51,7 @@ class SettingsController extends Controller {
 	}
 
 	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function getCategories(): DataResponse {
 		return new DataResponse(SettingsService::getCategories());
 	}

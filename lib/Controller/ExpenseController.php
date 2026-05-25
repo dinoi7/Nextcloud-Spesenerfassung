@@ -45,6 +45,7 @@ class ExpenseController extends Controller {
 	}
 
 	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function index(): DataResponse {
 		$userId = $this->getUserId();
 		$expenses = $this->expenseService->findAllForUser($userId);
@@ -53,6 +54,7 @@ class ExpenseController extends Controller {
 	}
 
 	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function show(int $id): DataResponse {
 		$expense = $this->expenseService->findById($id);
 		if ($expense === null) {
