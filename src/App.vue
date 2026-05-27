@@ -24,11 +24,6 @@
           <span class="spes-nav-label">{{ t('settings') }}</span>
         </router-link>
       </nav>
-      <div class="spes-header-right">
-        <button class="spes-lang-btn" @click="toggleLang" :title="lang === 'de' ? 'Switch to English' : 'Zu Deutsch wechseln'">
-          {{ lang.toUpperCase() }}
-        </button>
-      </div>
     </header>
     <main class="spes-main">
       <router-view />
@@ -39,18 +34,11 @@
 <script setup>
 import { computed } from 'vue'
 import { useExpenseStore } from './store/expenses'
-import { useSettingsStore } from './store/settings'
 import { useI18n } from './i18n'
 
-const { t, lang } = useI18n()
+const { t } = useI18n()
 const expenseStore = useExpenseStore()
-const settingsStore = useSettingsStore()
 
 const isAdmin = computed(() => expenseStore.userIsAdmin)
 const isReviewer = computed(() => expenseStore.userIsPresident || expenseStore.userIsTreasurer)
-
-function toggleLang() {
-  localStorage.setItem('spesenerfassung_lang', lang.value === 'de' ? 'en' : 'de')
-  location.reload()
-}
 </script>

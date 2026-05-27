@@ -160,7 +160,7 @@ function formatSize(bytes) {
 }
 
 function getReceiptUrl(rec) {
-  return '/apps/spesenerfassung/api/receipts/' + rec.id + '/download'
+  return '/index.php/apps/spesenerfassung/api/expenses/' + expense.value.id + '/receipts/' + rec.id + '/download'
 }
 
 async function handleApprove() {

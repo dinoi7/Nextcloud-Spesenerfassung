@@ -1,14 +1,25 @@
 import { ref, computed } from 'vue'
 
-const locale = ref(localStorage.getItem('spesenerfassung_lang') || (navigator.language?.startsWith('de') ? 'de' : 'en'))
+function getLocale() {
+  try {
+    const htmlLang = document.documentElement?.lang || ''
+    if (htmlLang.startsWith('de')) return 'de'
+  } catch {}
+  try {
+    if (navigator.language?.startsWith('de')) return 'de'
+  } catch {}
+  return 'en'
+}
+
+const locale = ref(getLocale())
 
 const messages = {
   de: {
     dashboard: 'Dashboard',
     approvals: 'Genehmigungen',
     settings: 'Einstellungen',
-    newExpense: 'Neue Spese',
-    editExpense: 'Spese bearbeiten',
+    newExpense: 'Neue Spesen',
+    editExpense: 'Spesen bearbeiten',
     title: 'Titel',
     description: 'Beschreibung',
     descriptionOptional: 'Beschreibung (optional)',
@@ -32,6 +43,7 @@ const messages = {
     dropFiles: 'Dateien hier ablegen oder klicken',
     camera: 'Kamera',
     fileInfo: 'PDF, JPG, PNG (max. 1 MB)',
+    maxReceipts: 'Maximal 5 Belege erreicht',
     noExpenses: 'Keine Spesen vorhanden',
     noApprovals: 'Keine ausstehenden Genehmigungen',
     history: 'Verlauf',
@@ -49,7 +61,7 @@ const messages = {
     pending: 'Ausstehend',
     completed: 'Erledigt',
     rejectConfirmation: 'Begründung für Zurückweisung:',
-    submitConfirmation: 'Spese einreichen? Der Status kann danach nicht mehr geändert werden.',
+    submitConfirmation: 'Spesen einreichen? Der Status kann danach nicht mehr geändert werden.',
     settingsSaved: 'Einstellungen gespeichert',
     presidentUid: 'Präsident (Nextcloud Benutzername)',
     treasurerUid: 'Kassier (Nextcloud Benutzername)',
@@ -60,14 +72,14 @@ const messages = {
     loading: 'Laden...',
     error: 'Fehler',
     success: 'Erfolg',
-    created: 'Spese erstellt',
-    updated: 'Spese aktualisiert',
-    submitted: 'Spese eingereicht',
-    approved: 'Spese genehmigt',
-    rejected: 'Spese zurückgewiesen',
-    paid: 'Spese ausbezahlt',
-    doneSet: 'Spese als erledigt markiert',
-    deleted: 'Spese gelöscht',
+    created: 'Spesen erstellt',
+    updated: 'Spesen aktualisiert',
+    submitted: 'Spesen eingereicht',
+    approved: 'Spesen genehmigt',
+    rejected: 'Spesen zurückgewiesen',
+    paid: 'Spesen ausbezahlt',
+    doneSet: 'Spesen als erledigt markiert',
+    deleted: 'Spesen gelöscht',
   },
   en: {
     dashboard: 'Dashboard',
@@ -98,6 +110,7 @@ const messages = {
     dropFiles: 'Drop files here or click to upload',
     camera: 'Camera',
     fileInfo: 'PDF, JPG, PNG (max. 1 MB)',
+    maxReceipts: 'Maximum 5 receipts reached',
     noExpenses: 'No expenses found',
     noApprovals: 'No pending approvals',
     history: 'History',

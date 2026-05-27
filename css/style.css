@@ -11,13 +11,15 @@
   background: var(--color-main-background, #f5f7fa);
   min-height: 100vh;
   max-width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .spes-app {
   width: 100%;
-  max-width: 960px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 0 16px 40px;
+  padding: 0 20px 80px;
 }
 
 .spes-header {
@@ -148,8 +150,8 @@
 
 .spes-card-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
 }
 
 .spes-card {
@@ -223,12 +225,13 @@
   background: var(--color-main-background, #fff);
   border: var(--spes-border);
   border-radius: var(--spes-radius);
-  padding: 20px;
+  padding: 24px;
   box-shadow: var(--spes-shadow);
   display: flex;
   flex-direction: column;
   gap: 16px;
-  max-width: 640px;
+  max-width: 100%;
+  width: 100%;
 }
 .spes-form-row {
   display: grid;
@@ -307,6 +310,17 @@
   justify-content: flex-end;
 }
 
+@media (max-width: 600px) {
+  .spes-form-actions {
+    position: sticky;
+    bottom: 0;
+    background: var(--color-main-background, #fff);
+    padding: 12px 0;
+    border-top: var(--spes-border);
+    z-index: 10;
+  }
+}
+
 .spes-loading, .spes-empty, .spes-error {
   text-align: center;
   padding: 40px 20px;
@@ -319,7 +333,7 @@
   background: var(--color-main-background, #fff);
   border: var(--spes-border);
   border-radius: var(--spes-radius);
-  padding: 20px;
+  padding: 24px;
   box-shadow: var(--spes-shadow);
   display: flex;
   flex-direction: column;
@@ -414,6 +428,12 @@
 .spes-upload-icon { font-size: 32px; }
 .spes-upload-hint { font-size: 12px; color: var(--color-text-maxcontrast, #888); }
 .spes-upload-input { display: none; }
+.spes-upload-max {
+  padding: 20px;
+  text-align: center;
+  color: var(--color-text-maxcontrast, #888);
+  font-size: 13px;
+}
 
 .spes-timeline {
   padding-top: 12px;
@@ -462,21 +482,30 @@
 .spes-add-category .spes-input { flex: 1; }
 
 @media (max-width: 600px) {
-  .spes-app { padding: 0 8px 24px; }
+  .spes-app { padding: 0 12px 100px; }
   .spes-header { padding: 8px 0; gap: 8px; }
   .spes-nav-label { display: none; }
   .spes-nav-link { padding: 8px 10px; }
   .spes-nav-icon { font-size: 18px; }
   .spes-form-row { grid-template-columns: 1fr; }
   .spes-card-list { grid-template-columns: 1fr; }
-  .spes-form { padding: 14px; }
-  .spes-detail { padding: 14px; }
+  .spes-form { padding: 16px; }
+  .spes-detail { padding: 16px; }
   .spes-page-header h1 { font-size: 18px; }
   .spes-summary { grid-template-columns: repeat(2, 1fr); }
+  .spes-form-actions {
+    position: sticky;
+    bottom: 0;
+    background: var(--color-main-background, #fff);
+    padding: 12px 0;
+    border-top: var(--spes-border);
+    z-index: 10;
+  }
 }
 
 @media (max-width: 380px) {
   .spes-summary { grid-template-columns: 1fr; }
   .spes-detail-grid { grid-template-columns: 1fr; }
   .spes-logo span { font-size: 15px; }
+  .spes-form-actions .spes-btn { width: 100%; }
 }

@@ -15,9 +15,11 @@ class ReceiptService {
 	private const ALLOWED_MIMES = [
 		'application/pdf',
 		'image/jpeg',
+		'image/jpg',
 		'image/png',
 	];
 	private const MAX_SIZE = 1048576;
+	private const MAX_FILES = 5;
 
 	private ReceiptMapper $receiptMapper;
 	private IAppData $appData;
@@ -45,6 +47,11 @@ class ReceiptService {
 	}
 
 	public function upload(int $expenseId, string $originalName, string $tempPath, string $mimeType, int $size): ?Receipt {
+		$existing = $this->receiptMapper->findByExpenseId($expenseId);
+		if (count($existing) >= self::MAX_FILES) {
+			return null;
+		}
+
 		$error = $this->validateFile($mimeType, $size);
 		if ($error !== null) {
 			return null;
@@ -52,6 +59,15 @@ class ReceiptService {
 
 		$safeName = $this->sanitizeFileName($originalName);
 		$now = (new DateTime())->format('Y-m-d H:i:s');
+
+		if ($tempPath === '' || ($tempPath !== '' && !file_exists($tempPath) && !is_readable($tempPath))) {
+			return null;
+		}
+
+		$content = file_get_contents($tempPath);
+		if ($content === false) {
+			return null;
+		}
 
 		try {
 			try {
@@ -75,7 +91,7 @@ class ReceiptService {
 				$counter++;
 			}
 
-			$expenseFolder->newFile($finalName, file_get_contents($tempPath));
+			$expenseFolder->newFile($finalName, $content);
 
 			$receipt = new Receipt();
 			$receipt->setExpenseId($expenseId);
@@ -114,6 +130,17 @@ class ReceiptService {
 		try {
 			return $this->receiptMapper->findById($receiptId);
 		} catch (DoesNotExistException) {
+			return null;
+		}
+	}
+
+	public function getContent(Receipt $receipt): ?string {
+		try {
+			$receiptsFolder = $this->appData->getFolder('receipts');
+			$expenseFolder = $receiptsFolder->getFolder((string) $receipt->getExpenseId());
+			$file = $expenseFolder->getFile($receipt->getFileName());
+			return $file->getContent();
+		} catch (\Throwable) {
 			return null;
 		}
 	}

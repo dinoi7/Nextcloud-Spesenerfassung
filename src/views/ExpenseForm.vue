@@ -34,8 +34,8 @@
         </select>
       </div>
 
-      <div v-if="isEdit" class="spes-form-group">
-        <ReceiptUpload :expense-id="expenseId" :receipts="existingReceipts" />
+      <div class="spes-form-group">
+        <ReceiptUpload :expense-id="currentExpenseId" :receipts="existingReceipts" @file="handleFile" @delete="onDeleteReceipt" />
       </div>
 
       <div class="spes-form-actions">
@@ -53,6 +53,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useExpenseStore } from '../store/expenses'
 import { useSettingsStore } from '../store/settings'
 import { useI18n } from '../i18n'
+import { api } from '../api'
 import ReceiptUpload from '../components/ReceiptUpload.vue'
 
 const route = useRoute()
@@ -63,6 +64,7 @@ const { t } = useI18n()
 
 const isEdit = computed(() => !!route.params.id)
 const expenseId = computed(() => parseInt(route.params.id) || null)
+const currentExpenseId = ref(expenseId.value)
 
 const existingReceipts = ref([])
 
@@ -96,6 +98,34 @@ onMounted(async () => {
   }
 })
 
+async function ensureSaved() {
+  if (currentExpenseId.value) return currentExpenseId.value
+  const data = { ...form.value, status: 'draft' }
+  const created = await store.createExpense(data)
+  currentExpenseId.value = created.id
+  return created.id
+}
+
+async function handleFile(file) {
+  try {
+    const id = await ensureSaved()
+    const receipt = await api.uploadReceipt(id, file)
+    existingReceipts.value.push(receipt)
+  } catch (e) {
+    alert(e.message)
+  }
+}
+
+async function onDeleteReceipt(receiptId) {
+  if (!currentExpenseId.value) return
+  existingReceipts.value = existingReceipts.value.filter(r => r.id !== receiptId)
+  try {
+    await api.deleteReceipt(currentExpenseId.value, receiptId)
+  } catch (e) {
+    alert(e.message)
+  }
+}
+
 async function handleSubmit(e) {
   const action = e.submitter?.value || 'draft'
   const status = action === 'submit' ? 'submitted' : 'draft'
@@ -110,16 +140,11 @@ async function handleSubmit(e) {
   }
 
   try {
-    if (isEdit.value) {
-      await store.updateExpense(expenseId.value, data)
+    if (currentExpenseId.value) {
+      await store.updateExpense(currentExpenseId.value, data)
     } else {
       const created = await store.createExpense(data)
-      if (status === 'submitted') {
-        router.push('/')
-      } else {
-        router.push(`/expenses/${created.id}/edit`)
-      }
-      return
+      currentExpenseId.value = created.id
     }
     router.push('/')
   } catch (err) {

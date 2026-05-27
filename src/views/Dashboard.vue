@@ -15,50 +15,50 @@
     <template v-else>
       <div class="spes-summary">
         <div class="spes-summary-item">
-          <span class="spes-summary-label">{{ t('pending') }}</span>
-          <span class="spes-summary-value">{{ store.submittedExpenses.length }}</span>
-        </div>
-        <div class="spes-summary-item">
-          <span class="spes-summary-label">{{ t('completed') }}</span>
-          <span class="spes-summary-value">{{ store.doneExpenses.length }}</span>
-        </div>
-        <div class="spes-summary-item">
           <span class="spes-summary-label">{{ t('totalAmount') }}</span>
           <span class="spes-summary-value">CHF {{ totalAmount }}</span>
         </div>
       </div>
 
-      <div v-if="store.draftExpenses.length" class="spes-section">
-        <h2 class="spes-section-title">{{ t('statusDraft') }} / {{ t('statusRejected') }} ({{ store.draftExpenses.length }})</h2>
+      <div v-if="drafts.length" class="spes-section">
+        <h2 class="spes-section-title">{{ t('statusDraft') }} ({{ drafts.length }})</h2>
         <div class="spes-card-list">
-          <ExpenseCard
-            v-for="expense in store.draftExpenses"
-            :key="expense.id"
-            :expense="expense"
-            :show-actions="true"
-          />
+          <ExpenseCard v-for="expense in drafts" :key="expense.id" :expense="expense" :show-actions="true" />
         </div>
       </div>
 
-      <div v-if="store.submittedExpenses.length" class="spes-section">
-        <h2 class="spes-section-title">{{ t('pending') }} ({{ store.submittedExpenses.length }})</h2>
+      <div v-if="submitted.length" class="spes-section">
+        <h2 class="spes-section-title">{{ t('statusSubmitted') }} ({{ submitted.length }})</h2>
         <div class="spes-card-list">
-          <ExpenseCard
-            v-for="expense in store.submittedExpenses"
-            :key="expense.id"
-            :expense="expense"
-          />
+          <ExpenseCard v-for="expense in submitted" :key="expense.id" :expense="expense" />
         </div>
       </div>
 
-      <div v-if="store.doneExpenses.length" class="spes-section">
-        <h2 class="spes-section-title">{{ t('completed') }} ({{ store.doneExpenses.length }})</h2>
+      <div v-if="approved.length" class="spes-section">
+        <h2 class="spes-section-title">{{ t('statusApproved') }} ({{ approved.length }})</h2>
         <div class="spes-card-list">
-          <ExpenseCard
-            v-for="expense in store.doneExpenses"
-            :key="expense.id"
-            :expense="expense"
-          />
+          <ExpenseCard v-for="expense in approved" :key="expense.id" :expense="expense" />
+        </div>
+      </div>
+
+      <div v-if="rejected.length" class="spes-section">
+        <h2 class="spes-section-title">{{ t('statusRejected') }} ({{ rejected.length }})</h2>
+        <div class="spes-card-list">
+          <ExpenseCard v-for="expense in rejected" :key="expense.id" :expense="expense" :show-actions="true" />
+        </div>
+      </div>
+
+      <div v-if="paid.length" class="spes-section">
+        <h2 class="spes-section-title">{{ t('statusPaid') }} ({{ paid.length }})</h2>
+        <div class="spes-card-list">
+          <ExpenseCard v-for="expense in paid" :key="expense.id" :expense="expense" />
+        </div>
+      </div>
+
+      <div v-if="done.length" class="spes-section">
+        <h2 class="spes-section-title">{{ t('statusDone') }} ({{ done.length }})</h2>
+        <div class="spes-card-list">
+          <ExpenseCard v-for="expense in done" :key="expense.id" :expense="expense" />
         </div>
       </div>
     </template>
@@ -78,6 +78,13 @@ const totalAmount = computed(() => {
   const sum = store.expenses.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0)
   return sum.toFixed(2)
 })
+
+const drafts = computed(() => store.expenses.filter(e => e.status === 'draft'))
+const submitted = computed(() => store.expenses.filter(e => e.status === 'submitted'))
+const approved = computed(() => store.expenses.filter(e => e.status === 'approved'))
+const rejected = computed(() => store.expenses.filter(e => e.status === 'rejected'))
+const paid = computed(() => store.expenses.filter(e => e.status === 'paid'))
+const done = computed(() => store.expenses.filter(e => e.status === 'done'))
 
 onMounted(() => {
   store.loadExpenses()

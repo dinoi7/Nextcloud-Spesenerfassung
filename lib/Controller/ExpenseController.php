@@ -10,6 +10,7 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -191,5 +192,23 @@ class ExpenseController extends Controller {
 
 		$this->receiptService->delete($receiptId);
 		return new DataResponse(['success' => true]);
+	}
+
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
+	public function downloadReceipt(int $id, int $receiptId): DataDownloadResponse|DataResponse {
+		$receipt = $this->receiptService->findById($receiptId);
+		if ($receipt === null || $receipt->getExpenseId() !== $id) {
+			return new DataResponse(['error' => 'Receipt not found'], Http::STATUS_NOT_FOUND);
+		}
+
+		$content = $this->receiptService->getContent($receipt);
+		if ($content === null) {
+			return new DataResponse(['error' => 'File not found'], Http::STATUS_NOT_FOUND);
+		}
+
+		return new DataDownloadResponse($content, $receipt->getFileName(), $receipt->getMimeType());
 	}
 }
