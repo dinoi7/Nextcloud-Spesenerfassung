@@ -6,8 +6,6 @@ namespace OCA\Spesenerfassung\Controller;
 use OCA\Spesenerfassung\Service\SettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
-use OCP\AppFramework\Http\Attribute\NoAdminRequired;
-use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -29,40 +27,45 @@ class SettingsController extends Controller {
 		if ($user === null) {
 			return false;
 		}
-		// Nextcloud uses 'admin' group for administrators
 		return \OC::$server->getGroupManager()->isAdmin($user->getUID());
 	}
 
-	#[NoAdminRequired]
-	#[NoCSRFRequired]
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
 	public function get(): DataResponse {
 		return new DataResponse(SettingsService::getAll());
 	}
 
-	#[NoAdminRequired]
-	#[NoCSRFRequired]
+	/**
+	 * @NoCSRFRequired
+	 */
 	public function update(): DataResponse {
 		if (!$this->requireAdmin()) {
 			return new DataResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
 		}
-		$data = $this->request->getParsedBody();
+		$data = $this->request->getParams();
 		$result = SettingsService::updateAll($data);
 		return new DataResponse($result);
 	}
 
-	#[NoAdminRequired]
-	#[NoCSRFRequired]
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
 	public function getCategories(): DataResponse {
 		return new DataResponse(SettingsService::getCategories());
 	}
 
-	#[NoAdminRequired]
-	#[NoCSRFRequired]
+	/**
+	 * @NoCSRFRequired
+	 */
 	public function createCategory(): DataResponse {
 		if (!$this->requireAdmin()) {
 			return new DataResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
 		}
-		$data = $this->request->getParsedBody();
+		$data = $this->request->getParams();
 		$name = trim($data['name'] ?? '');
 		if ($name === '') {
 			return new DataResponse(['error' => 'Name required'], Http::STATUS_BAD_REQUEST);
@@ -70,13 +73,14 @@ class SettingsController extends Controller {
 		return new DataResponse(SettingsService::addCategory($name));
 	}
 
-	#[NoAdminRequired]
-	#[NoCSRFRequired]
+	/**
+	 * @NoCSRFRequired
+	 */
 	public function updateCategory(int $id): DataResponse {
 		if (!$this->requireAdmin()) {
 			return new DataResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
 		}
-		$data = $this->request->getParsedBody();
+		$data = $this->request->getParams();
 		$name = trim($data['name'] ?? '');
 		if ($name === '') {
 			return new DataResponse(['error' => 'Name required'], Http::STATUS_BAD_REQUEST);
@@ -84,8 +88,9 @@ class SettingsController extends Controller {
 		return new DataResponse(SettingsService::updateCategory($id, $name));
 	}
 
-	#[NoAdminRequired]
-	#[NoCSRFRequired]
+	/**
+	 * @NoCSRFRequired
+	 */
 	public function deleteCategory(int $id): DataResponse {
 		if (!$this->requireAdmin()) {
 			return new DataResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);

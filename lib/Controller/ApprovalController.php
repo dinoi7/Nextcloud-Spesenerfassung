@@ -7,8 +7,6 @@ use OCA\Spesenerfassung\Service\ExpenseService;
 use OCA\Spesenerfassung\Service\SettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
-use OCP\AppFramework\Http\Attribute\NoAdminRequired;
-use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -48,8 +46,10 @@ class ApprovalController extends Controller {
 		};
 	}
 
-	#[NoAdminRequired]
-	#[NoCSRFRequired]
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
 	public function submit(int $id): DataResponse {
 		$userId = $this->getUserId();
 		$expense = $this->expenseService->submit($id, $userId);
@@ -59,8 +59,10 @@ class ApprovalController extends Controller {
 		return new DataResponse($expense->toArray());
 	}
 
-	#[NoAdminRequired]
-	#[NoCSRFRequired]
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
 	public function approve(int $id): DataResponse {
 		if (!$this->checkRole('president')) {
 			return new DataResponse(['error' => 'Only president can approve'], Http::STATUS_FORBIDDEN);
@@ -72,8 +74,10 @@ class ApprovalController extends Controller {
 		return new DataResponse($expense->toArray());
 	}
 
-	#[NoAdminRequired]
-	#[NoCSRFRequired]
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
 	public function reject(int $id): DataResponse {
 		$userId = $this->getUserId();
 		$isPresident = $this->checkRole('president');
@@ -83,7 +87,7 @@ class ApprovalController extends Controller {
 			return new DataResponse(['error' => 'Not authorized'], Http::STATUS_FORBIDDEN);
 		}
 
-		$data = $this->request->getParsedBody();
+		$data = $this->request->getParams();
 		$reason = trim($data['reason'] ?? '');
 
 		if ($reason === '') {
@@ -97,8 +101,10 @@ class ApprovalController extends Controller {
 		return new DataResponse($expense->toArray());
 	}
 
-	#[NoAdminRequired]
-	#[NoCSRFRequired]
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
 	public function pay(int $id): DataResponse {
 		if (!$this->checkRole('treasurer')) {
 			return new DataResponse(['error' => 'Only treasurer can pay'], Http::STATUS_FORBIDDEN);
@@ -110,8 +116,10 @@ class ApprovalController extends Controller {
 		return new DataResponse($expense->toArray());
 	}
 
-	#[NoAdminRequired]
-	#[NoCSRFRequired]
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
 	public function done(int $id): DataResponse {
 		$userId = $this->getUserId();
 		$expense = $this->expenseService->done($id, $userId);
@@ -121,8 +129,10 @@ class ApprovalController extends Controller {
 		return new DataResponse($expense->toArray());
 	}
 
-	#[NoAdminRequired]
-	#[NoCSRFRequired]
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
 	public function pending(): DataResponse {
 		$userId = $this->getUserId();
 		$presidentUid = SettingsService::getPresidentUid();

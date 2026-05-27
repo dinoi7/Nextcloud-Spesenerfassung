@@ -8,6 +8,7 @@ return [
 		['name' => 'expense#index', 'url' => '/api/expenses', 'verb' => 'GET'],
 		['name' => 'expense#show', 'url' => '/api/expenses/{id}', 'verb' => 'GET', 'requirements' => ['id' => '\d+']],
 		['name' => 'expense#create', 'url' => '/api/expenses', 'verb' => 'POST'],
+		['name' => 'expense#ping', 'url' => '/api/ping', 'verb' => 'POST'],
 		['name' => 'expense#update', 'url' => '/api/expenses/{id}', 'verb' => 'PUT', 'requirements' => ['id' => '\d+']],
 		['name' => 'expense#destroy', 'url' => '/api/expenses/{id}', 'verb' => 'DELETE', 'requirements' => ['id' => '\d+']],
 		['name' => 'expense#uploadReceipt', 'url' => '/api/expenses/{id}/receipts', 'verb' => 'POST', 'requirements' => ['id' => '\d+']],

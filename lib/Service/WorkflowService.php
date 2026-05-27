@@ -32,6 +32,7 @@ class WorkflowService {
 		],
 		self::STATE_REJECTED => [
 			self::STATE_DRAFT,
+			self::STATE_SUBMITTED,
 		],
 		self::STATE_PAID => [
 			self::STATE_DONE,

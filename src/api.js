@@ -27,9 +27,16 @@ async function request(method, url, body = null) {
     }
   }
   const response = await fetch(BASE + url, opts)
-  const data = await response.json()
+
+  let data = null
+  try {
+    data = await response.json()
+  } catch {
+    data = { error: 'Server error: ' + response.status }
+  }
+
   if (!response.ok) {
-    throw new Error(data.error || 'Request failed')
+    throw new Error(data?.error || data?.message || 'Request failed (HTTP ' + response.status + ')')
   }
   return data
 }

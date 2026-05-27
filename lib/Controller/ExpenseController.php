@@ -44,8 +44,10 @@ class ExpenseController extends Controller {
 		return $user->getUID();
 	}
 
+	/**
+	 * @NoCSRFRequired
+	 */
 	#[NoAdminRequired]
-	#[NoCSRFRequired]
 	public function index(): DataResponse {
 		$userId = $this->getUserId();
 		$expenses = $this->expenseService->findAllForUser($userId);
@@ -53,8 +55,10 @@ class ExpenseController extends Controller {
 		return new DataResponse($result);
 	}
 
+	/**
+	 * @NoCSRFRequired
+	 */
 	#[NoAdminRequired]
-	#[NoCSRFRequired]
 	public function show(int $id): DataResponse {
 		$expense = $this->expenseService->findById($id);
 		if ($expense === null) {
@@ -75,15 +79,28 @@ class ExpenseController extends Controller {
 
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
+	public function ping(): DataResponse {
+		file_put_contents('/tmp/spes_debug2.log', "ping() called\n", FILE_APPEND);
+		return new DataResponse(['ok' => true, 'time' => time()]);
+	}
+
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function create(): DataResponse {
+		file_put_contents('/tmp/spes_debug2.log', "create() called\n", FILE_APPEND);
 		$userId = $this->getUserId();
-		$data = $this->request->getParsedBody();
+		$data = $this->request->getParams();
 
 		if (empty($data['title']) || empty($data['amount']) || empty($data['category']) || empty($data['expenseDate'])) {
 			return new DataResponse(['error' => 'Missing required fields'], Http::STATUS_BAD_REQUEST);
 		}
 
-		$expense = $this->expenseService->create($userId, $data);
+		try {
+			$expense = $this->expenseService->create($userId, $data);
+		} catch (\Throwable $e) {
+			file_put_contents('/tmp/spes_debug.log', $e->getMessage() . "\n" . $e->getTraceAsString() . "\n");
+			return new DataResponse(['error' => $e->getMessage()], Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
 		if ($expense === null) {
 			return new DataResponse(['error' => 'Failed to create expense'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
@@ -91,11 +108,13 @@ class ExpenseController extends Controller {
 		return new DataResponse($expense->toArray(), Http::STATUS_CREATED);
 	}
 
-	#[NoAdminRequired]
-	#[NoCSRFRequired]
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
 	public function update(int $id): DataResponse {
 		$userId = $this->getUserId();
-		$data = $this->request->getParsedBody();
+		$data = $this->request->getParams();
 
 		$expense = $this->expenseService->update($id, $userId, $data);
 		if ($expense === null) {
@@ -105,8 +124,10 @@ class ExpenseController extends Controller {
 		return new DataResponse($expense->toArray());
 	}
 
-	#[NoAdminRequired]
-	#[NoCSRFRequired]
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
 	public function destroy(int $id): DataResponse {
 		$userId = $this->getUserId();
 		$deleted = $this->expenseService->delete($id, $userId);
@@ -116,8 +137,10 @@ class ExpenseController extends Controller {
 		return new DataResponse(['success' => true]);
 	}
 
-	#[NoAdminRequired]
-	#[NoCSRFRequired]
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
 	public function uploadReceipt(int $id): DataResponse {
 		$userId = $this->getUserId();
 		$expense = $this->expenseService->findById($id);
@@ -149,8 +172,10 @@ class ExpenseController extends Controller {
 		return new DataResponse($receipt->toArray(), Http::STATUS_CREATED);
 	}
 
-	#[NoAdminRequired]
-	#[NoCSRFRequired]
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
 	public function deleteReceipt(int $id, int $receiptId): DataResponse {
 		$userId = $this->getUserId();
 		$expense = $this->expenseService->findById($id);
