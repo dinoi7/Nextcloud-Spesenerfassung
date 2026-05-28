@@ -3,25 +3,30 @@ declare(strict_types=1);
 
 namespace OCA\Spesenerfassung\Dashboard;
 
-use OCA\Spesenerfassung\Db\Expense;
-use OCA\Spesenerfassung\Db\ExpenseMapper;
-use OCA\Spesenerfassung\Service\SettingsService;
-use OCP\Dashboard\IAPIWidget;
+use OCP\Dashboard\IAPIWidgetV2;
+use OCP\Dashboard\IIconWidget;
 use OCP\Dashboard\Model\WidgetItem;
+use OCP\Dashboard\Model\WidgetItems;
+use OCP\DB\QueryBuilder\IQueryBuilder;
+use OCP\IAppConfig;
+use OCP\IDBConnection;
 use OCP\IURLGenerator;
 use OCP\IUserSession;
 
-class SpesenWidget implements IAPIWidget {
-	private ExpenseMapper $expenseMapper;
+class SpesenWidget implements IAPIWidgetV2, IIconWidget {
+	private IDBConnection $db;
+	private IAppConfig $appConfig;
 	private IUserSession $userSession;
 	private IURLGenerator $urlGenerator;
 
 	public function __construct(
-		ExpenseMapper $expenseMapper,
+		IDBConnection $db,
+		IAppConfig $appConfig,
 		IUserSession $userSession,
 		IURLGenerator $urlGenerator,
 	) {
-		$this->expenseMapper = $expenseMapper;
+		$this->db = $db;
+		$this->appConfig = $appConfig;
 		$this->userSession = $userSession;
 		$this->urlGenerator = $urlGenerator;
 	}
@@ -42,6 +47,10 @@ class SpesenWidget implements IAPIWidget {
 		return 'icon-files';
 	}
 
+	public function getIconUrl(): string {
+		return $this->urlGenerator->imagePath('spesenerfassung', 'app.svg');
+	}
+
 	public function getUrl(): ?string {
 		return $this->urlGenerator->linkToRoute('spesenerfassung.page.index');
 	}
@@ -49,45 +58,50 @@ class SpesenWidget implements IAPIWidget {
 	public function load(): void {
 	}
 
-	public function getItems(string $userId, ?string $since = null, int $limit = 7): array {
+	public function getItemsV2(string $userId, ?string $since = null, int $limit = 7): WidgetItems {
 		$items = [];
-		$draftCount = 0;
-		$rejectedCount = 0;
-		$paidCount = 0;
 
-		$userExpenses = $this->expenseMapper->findByUser($userId);
-		foreach ($userExpenses as $e) {
-			if ($e->getStatus() === Expense::STATUS_DRAFT) {
-				$draftCount++;
-			} elseif ($e->getStatus() === Expense::STATUS_REJECTED) {
-				$rejectedCount++;
-			} elseif ($e->getStatus() === Expense::STATUS_PAID) {
-				$paidCount++;
-			}
+		// Count: draft + rejected + paid
+		$qb = $this->db->getQueryBuilder();
+		$qb->select('status')
+			->from('sp_expenses')
+			->where($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)))
+			->andWhere($qb->expr()->in('status', $qb->createNamedParameter(['draft', 'rejected', 'paid'], IQueryBuilder::PARAM_STR_ARRAY)));
+		$result = $qb->executeQuery();
+		$actionCount = 0;
+		while ($row = $result->fetch()) {
+			$actionCount++;
 		}
+		$result->closeCursor();
 
-		$actionCount = $draftCount + $rejectedCount + $paidCount;
-
-		$presidentUid = SettingsService::getPresidentUid();
-		$treasurerUid = SettingsService::getTreasurerUid();
-		$threshold = SettingsService::getThreshold();
+		// Approval count
+		$presidentUid = $this->appConfig->getValueString('spesenerfassung', 'president_uid', '');
+		$treasurerUid = $this->appConfig->getValueString('spesenerfassung', 'treasurer_uid', '');
+		$threshold = (float) $this->appConfig->getValueString('spesenerfassung', 'threshold', '250');
 		$approvalCount = 0;
 
-		if ($userId === $presidentUid || $userId === $treasurerUid) {
-			$allSubmitted = $this->expenseMapper->findByStatus(Expense::STATUS_SUBMITTED);
-			foreach ($allSubmitted as $e) {
-				$amount = (float) $e->getAmount();
-				if ($userId === $presidentUid && $amount > $threshold) {
-					$approvalCount++;
-				} elseif ($userId === $treasurerUid && $amount <= $threshold) {
-					$approvalCount++;
-				}
-			}
+		if ($userId === $presidentUid) {
+			$qb = $this->db->getQueryBuilder();
+			$qb->select($qb->func()->count('*', 'cnt'))
+				->from('sp_expenses')
+				->where($qb->expr()->eq('status', $qb->createNamedParameter('submitted')))
+				->andWhere($qb->expr()->gt('amount', $qb->createNamedParameter($threshold)));
+			$approvalCount = (int) $qb->executeQuery()->fetchOne();
+		} elseif ($userId === $treasurerUid) {
+			// Submitted <= threshold
+			$qb = $this->db->getQueryBuilder();
+			$qb->select($qb->func()->count('*', 'cnt'))
+				->from('sp_expenses')
+				->where($qb->expr()->eq('status', $qb->createNamedParameter('submitted')))
+				->andWhere($qb->expr()->lte('amount', $qb->createNamedParameter($threshold)));
+			$approvalCount = (int) $qb->executeQuery()->fetchOne();
 
-			if ($userId === $treasurerUid) {
-				$approved = $this->expenseMapper->findByStatus(Expense::STATUS_APPROVED);
-				$approvalCount += count($approved);
-			}
+			// Plus approved
+			$qb = $this->db->getQueryBuilder();
+			$qb->select($qb->func()->count('*', 'cnt'))
+				->from('sp_expenses')
+				->where($qb->expr()->eq('status', $qb->createNamedParameter('approved')));
+			$approvalCount += (int) $qb->executeQuery()->fetchOne();
 		}
 
 		if ($actionCount > 0) {
@@ -102,10 +116,10 @@ class SpesenWidget implements IAPIWidget {
 			$items[] = new WidgetItem(
 				(string) $approvalCount,
 				'Spesen zu genehmigen',
-				$this->urlGenerator->linkToRoute('spesenerfassung.page.index'),
+				$this->urlGenerator->linkToRoute('spesenerfassung.page.index') . '#/approvals'
 			);
 		}
 
-		return array_slice($items, 0, $limit);
+		return new WidgetItems(array_slice($items, 0, $limit));
 	}
 }

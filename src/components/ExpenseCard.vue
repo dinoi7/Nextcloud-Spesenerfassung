@@ -3,7 +3,7 @@
     <div class="spes-card-header">
       <div class="spes-card-header-left">
         <span class="spes-card-title">{{ expense.title }}</span>
-        <span v-if="expense.displayName" class="spes-card-user">{{ expense.displayName }}</span>
+        <span class="spes-card-user">{{ expense.displayName || expense.userId }}</span>
       </div>
       <span v-if="expense.receiptCount > 0" class="spes-card-receipt-badge" :title="expense.receiptCount + ' Belege'">&#128206; {{ expense.receiptCount }}</span>
       <StatusBadge :status="expense.status" />
