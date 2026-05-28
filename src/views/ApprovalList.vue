@@ -13,14 +13,16 @@
     <div v-else class="spes-card-list">
       <div v-for="expense in pending" :key="expense.id" class="spes-card" @click="$router.push(`/expenses/${expense.id}`)">
         <div class="spes-card-header">
-          <span class="spes-card-title">{{ expense.title }}</span>
+          <div class="spes-card-header-left">
+            <span class="spes-card-title">{{ expense.title }}</span>
+            <span class="spes-card-user">{{ expense.userId }}</span>
+          </div>
           <StatusBadge :status="expense.status" />
         </div>
         <div class="spes-card-body">
           <div class="spes-card-amount">CHF {{ formatAmount(expense.amount) }}</div>
           <div class="spes-card-meta">
             <span>{{ expense.category }}</span>
-            <span>{{ expense.userId }}</span>
             <span>{{ formatDate(expense.expenseDate) }}</span>
           </div>
         </div>

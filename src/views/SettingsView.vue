@@ -8,11 +8,17 @@
     <div v-else class="spes-form">
       <div class="spes-form-group">
         <label class="spes-label">{{ t('presidentUid') }}</label>
-        <input v-model="form.presidentUid" class="spes-input" />
+        <select v-model="form.presidentUid" class="spes-input">
+          <option value="">--</option>
+          <option v-for="u in users" :key="u.uid" :value="u.uid">{{ u.displayName }} ({{ u.uid }})</option>
+        </select>
       </div>
       <div class="spes-form-group">
         <label class="spes-label">{{ t('treasurerUid') }}</label>
-        <input v-model="form.treasurerUid" class="spes-input" />
+        <select v-model="form.treasurerUid" class="spes-input">
+          <option value="">--</option>
+          <option v-for="u in users" :key="u.uid" :value="u.uid">{{ u.displayName }} ({{ u.uid }})</option>
+        </select>
       </div>
       <div class="spes-form-group">
         <label class="spes-label">{{ t('threshold') }}</label>
@@ -44,10 +50,12 @@
 import { ref, onMounted } from 'vue'
 import { useSettingsStore } from '../store/settings'
 import { useI18n } from '../i18n'
+import { api } from '../api'
 
 const settingsStore = useSettingsStore()
 const { t } = useI18n()
 const loading = ref(true)
+const users = ref([])
 const newCategory = ref('')
 
 const form = ref({
@@ -60,6 +68,9 @@ const form = ref({
 onMounted(async () => {
   await settingsStore.loadSettings()
   form.value = { ...settingsStore.settings }
+  try {
+    users.value = await api.getUsers()
+  } catch {}
   loading.value = false
 })
 

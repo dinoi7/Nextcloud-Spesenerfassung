@@ -68,4 +68,5 @@ export const api = {
   createCategory: (name) => request('POST', '/categories', { name }),
   updateCategory: (id, name) => request('PUT', `/categories/${id}`, { name }),
   deleteCategory: (id) => request('DELETE', `/categories/${id}`),
+  getUsers: () => request('GET', '/users'),
 }

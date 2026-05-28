@@ -18,6 +18,18 @@
           <span class="spes-summary-label">{{ t('totalAmount') }}</span>
           <span class="spes-summary-value">CHF {{ totalAmount }}</span>
         </div>
+        <div class="spes-summary-item">
+          <span class="spes-summary-label">{{ t('statusSubmitted') }}</span>
+          <span class="spes-summary-value">CHF {{ submittedAmount }}</span>
+        </div>
+        <div class="spes-summary-item">
+          <span class="spes-summary-label">{{ t('statusPaid') }}</span>
+          <span class="spes-summary-value">CHF {{ paidAmount }}</span>
+        </div>
+        <div class="spes-summary-item">
+          <span class="spes-summary-label">{{ t('statusDone') }}</span>
+          <span class="spes-summary-value">CHF {{ doneAmount }}</span>
+        </div>
       </div>
 
       <div v-if="drafts.length" class="spes-section">
@@ -51,7 +63,7 @@
       <div v-if="paid.length" class="spes-section">
         <h2 class="spes-section-title">{{ t('statusPaid') }} ({{ paid.length }})</h2>
         <div class="spes-card-list">
-          <ExpenseCard v-for="expense in paid" :key="expense.id" :expense="expense" />
+          <ExpenseCard v-for="expense in paid" :key="expense.id" :expense="expense" :show-actions="true" />
         </div>
       </div>
 
@@ -78,6 +90,11 @@ const totalAmount = computed(() => {
   const sum = store.expenses.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0)
   return sum.toFixed(2)
 })
+
+const sumAmount = (list) => list.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0).toFixed(2)
+const submittedAmount = computed(() => sumAmount(submitted.value))
+const paidAmount = computed(() => sumAmount(paid.value))
+const doneAmount = computed(() => sumAmount(done.value))
 
 const drafts = computed(() => store.expenses.filter(e => e.status === 'draft'))
 const submitted = computed(() => store.expenses.filter(e => e.status === 'submitted'))

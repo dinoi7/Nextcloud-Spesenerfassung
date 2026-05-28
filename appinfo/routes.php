@@ -28,5 +28,6 @@ return [
 		['name' => 'settings#createCategory', 'url' => '/api/categories', 'verb' => 'POST'],
 		['name' => 'settings#updateCategory', 'url' => '/api/categories/{id}', 'verb' => 'PUT', 'requirements' => ['id' => '\d+']],
 		['name' => 'settings#deleteCategory', 'url' => '/api/categories/{id}', 'verb' => 'DELETE', 'requirements' => ['id' => '\d+']],
+		['name' => 'settings#getUsers', 'url' => '/api/users', 'verb' => 'GET'],
 	],
 ];

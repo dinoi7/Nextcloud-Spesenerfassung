@@ -12,7 +12,11 @@
       </div>
     </div>
     <div v-if="showActions" class="spes-card-actions" @click.stop>
-      <button class="spes-btn spes-btn-sm" @click="$router.push(`/expenses/${expense.id}/edit`)">{{ t('edit') }}</button>
+      <button
+        v-if="expense.status === 'draft' || expense.status === 'rejected'"
+        class="spes-btn spes-btn-sm"
+        @click="$router.push(`/expenses/${expense.id}/edit`)"
+      >{{ t('edit') }}</button>
       <button
         v-if="expense.status === 'draft'"
         class="spes-btn spes-btn-sm spes-btn-primary"
@@ -23,6 +27,11 @@
         class="spes-btn spes-btn-sm spes-btn-danger"
         @click="handleDelete"
       >{{ t('delete') }}</button>
+      <button
+        v-if="expense.status === 'paid'"
+        class="spes-btn spes-btn-sm spes-btn-success"
+        @click="handleDone"
+      >{{ t('done') }}</button>
     </div>
   </div>
 </template>
@@ -30,6 +39,7 @@
 <script setup>
 import { useExpenseStore } from '../store/expenses'
 import { useI18n } from '../i18n'
+import { api } from '../api'
 import StatusBadge from './StatusBadge.vue'
 
 const props = defineProps({
@@ -59,6 +69,15 @@ async function handleSubmit() {
 async function handleDelete() {
   if (confirm(t('confirmDelete'))) {
     await store.deleteExpense(props.expense.id)
+  }
+}
+
+async function handleDone() {
+  try {
+    await api.done(props.expense.id)
+    window.location.reload()
+  } catch (e) {
+    alert(e.message)
   }
 }
 </script>

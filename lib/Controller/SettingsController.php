@@ -8,18 +8,22 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\IRequest;
+use OCP\IUserManager;
 use OCP\IUserSession;
 
 class SettingsController extends Controller {
 	private IUserSession $userSession;
+	private IUserManager $userManager;
 
 	public function __construct(
 		string $appName,
 		IRequest $request,
 		IUserSession $userSession,
+		IUserManager $userManager,
 	) {
 		parent::__construct($appName, $request);
 		$this->userSession = $userSession;
+		$this->userManager = $userManager;
 	}
 
 	private function requireAdmin(): bool {
@@ -96,5 +100,19 @@ class SettingsController extends Controller {
 			return new DataResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
 		}
 		return new DataResponse(SettingsService::deleteCategory($id));
+	}
+
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
+	public function getUsers(): DataResponse {
+		$users = $this->userManager->search('');
+		$result = array_map(fn($u) => [
+			'uid' => $u->getUID(),
+			'displayName' => $u->getDisplayName(),
+		], $users);
+		usort($result, fn($a, $b) => strcmp($a['displayName'], $b['displayName']));
+		return new DataResponse($result);
 	}
 }
