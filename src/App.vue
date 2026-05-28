@@ -14,10 +14,12 @@
         <router-link to="/" class="spes-nav-link" active-class="spes-nav-link--active">
           <span class="spes-nav-icon">&#9776;</span>
           <span class="spes-nav-label">{{ t('dashboard') }}</span>
+          <span v-if="expenseStore.actionCount > 0" class="spes-nav-badge">{{ expenseStore.actionCount }}</span>
         </router-link>
         <router-link v-if="isReviewer" to="/approvals" class="spes-nav-link" active-class="spes-nav-link--active">
           <span class="spes-nav-icon">&#10003;</span>
           <span class="spes-nav-label">{{ t('approvals') }}</span>
+          <span v-if="expenseStore.approvalCount > 0" class="spes-nav-badge">{{ expenseStore.approvalCount }}</span>
         </router-link>
         <router-link v-if="isAdmin" to="/settings" class="spes-nav-link" active-class="spes-nav-link--active">
           <span class="spes-nav-icon">&#9881;</span>
@@ -32,7 +34,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useExpenseStore } from './store/expenses'
 import { useI18n } from './i18n'
 
@@ -41,4 +43,10 @@ const expenseStore = useExpenseStore()
 
 const isAdmin = computed(() => expenseStore.userIsAdmin)
 const isReviewer = computed(() => expenseStore.userIsPresident || expenseStore.userIsTreasurer)
+
+onMounted(() => {
+  if (expenseStore.userIsPresident || expenseStore.userIsTreasurer) {
+    expenseStore.loadApprovalCount()
+  }
+})
 </script>

@@ -1,15 +1,25 @@
 <template>
-  <div class="spes-timeline" v-if="historyEntries.length">
+  <div class="spes-history" v-if="historyEntries.length">
     <h3>{{ t('history') }}</h3>
-    <div class="spes-timeline-list">
-      <div v-for="(entry, idx) in historyEntries" :key="idx" class="spes-timeline-item">
-        <span class="spes-timeline-action" :class="'spes-timeline-action--' + entry.action">
-          {{ actionLabel(entry.action) }}
-        </span>
-        <span class="spes-timeline-user">{{ t('byPrefix') }} {{ entry.userId }}</span>
-        <span class="spes-timeline-date">{{ formatDate(entry.createdAt) }}</span>
-        <span v-if="entry.comment" class="spes-timeline-comment">{{ entry.comment }}</span>
-      </div>
+    <div class="spes-history-table-wrap">
+      <table class="spes-history-table">
+        <thead>
+          <tr>
+            <th>{{ t('status') }}</th>
+            <th>{{ t('byPrefix') }}</th>
+            <th>{{ t('onDate') }}</th>
+            <th>{{ t('reason') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(entry, idx) in historyEntries" :key="idx">
+            <td><span class="spes-timeline-action" :class="'spes-timeline-action--' + entry.action">{{ actionLabel(entry.action) }}</span></td>
+            <td>{{ entry.displayName || entry.userId }}</td>
+            <td class="spes-history-date">{{ formatDate(entry.createdAt) }}</td>
+            <td class="spes-history-comment">{{ entry.comment || '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </template>
@@ -24,9 +34,7 @@ const props = defineProps({
 
 const { t } = useI18n()
 
-const historyEntries = computed(() => {
-  return [...props.history].reverse()
-})
+const historyEntries = computed(() => [...props.history].reverse())
 
 function actionLabel(action) {
   const map = {

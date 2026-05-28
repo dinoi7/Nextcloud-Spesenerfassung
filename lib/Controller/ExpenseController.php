@@ -13,6 +13,7 @@ use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\IRequest;
+use OCP\IUserManager;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
@@ -20,6 +21,7 @@ class ExpenseController extends Controller {
 	private ExpenseService $expenseService;
 	private ReceiptService $receiptService;
 	private IUserSession $userSession;
+	private IUserManager $userManager;
 	private LoggerInterface $logger;
 
 	public function __construct(
@@ -28,12 +30,14 @@ class ExpenseController extends Controller {
 		ExpenseService $expenseService,
 		ReceiptService $receiptService,
 		IUserSession $userSession,
+		IUserManager $userManager,
 		LoggerInterface $logger,
 	) {
 		parent::__construct($appName, $request);
 		$this->expenseService = $expenseService;
 		$this->receiptService = $receiptService;
 		$this->userSession = $userSession;
+		$this->userManager = $userManager;
 		$this->logger = $logger;
 	}
 
@@ -45,6 +49,15 @@ class ExpenseController extends Controller {
 		return $user->getUID();
 	}
 
+	private function mapDisplayNames(array $userIds): array {
+		$map = [];
+		foreach (array_unique($userIds) as $uid) {
+			$u = $this->userManager->get($uid);
+			$map[$uid] = $u ? $u->getDisplayName() : $uid;
+		}
+		return $map;
+	}
+
 	/**
 	 * @NoCSRFRequired
 	 */
@@ -52,7 +65,15 @@ class ExpenseController extends Controller {
 	public function index(): DataResponse {
 		$userId = $this->getUserId();
 		$expenses = $this->expenseService->findAllForUser($userId);
-		$result = array_map(fn(Expense $e) => $e->toArray(), $expenses);
+		$userIds = array_map(fn(Expense $e) => $e->getUserId(), $expenses);
+		$names = $this->mapDisplayNames($userIds);
+
+		$result = array_map(function (Expense $e) use ($names) {
+			$row = $e->toArray();
+			$row['displayName'] = $names[$e->getUserId()] ?? $e->getUserId();
+			$row['receiptCount'] = count($this->receiptService->findByExpenseId($e->getId()));
+			return $row;
+		}, $expenses);
 		return new DataResponse($result);
 	}
 
@@ -67,28 +88,31 @@ class ExpenseController extends Controller {
 		}
 
 		$data = $expense->toArray();
-		$data['receipts'] = array_map(
-			fn($r) => $r->toArray(),
-			$this->receiptService->findByExpenseId($id)
-		);
-		$data['history'] = array_map(
-			fn($a) => $a->toArray(),
-			$this->expenseService->getHistory($id)
-		);
+		$receipts = $this->receiptService->findByExpenseId($id);
+		$data['receipts'] = array_map(fn($r) => $r->toArray(), $receipts);
+		$data['receiptCount'] = count($receipts);
+
+		$history = $this->expenseService->getHistory($id);
+		$historyUserIds = array_map(fn($a) => $a->getUserId(), $history);
+		$names = $this->mapDisplayNames(array_merge($historyUserIds, [$expense->getUserId()]));
+		$data['displayName'] = $names[$expense->getUserId()] ?? $expense->getUserId();
+		$data['history'] = array_map(function ($a) use ($names) {
+			$row = $a->toArray();
+			$row['displayName'] = $names[$a->getUserId()] ?? $a->getUserId();
+			return $row;
+		}, $history);
 		return new DataResponse($data);
 	}
 
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
 	public function ping(): DataResponse {
-		file_put_contents('/tmp/spes_debug2.log', "ping() called\n", FILE_APPEND);
 		return new DataResponse(['ok' => true, 'time' => time()]);
 	}
 
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
 	public function create(): DataResponse {
-		file_put_contents('/tmp/spes_debug2.log', "create() called\n", FILE_APPEND);
 		$userId = $this->getUserId();
 		$data = $this->request->getParams();
 
@@ -99,7 +123,6 @@ class ExpenseController extends Controller {
 		try {
 			$expense = $this->expenseService->create($userId, $data);
 		} catch (\Throwable $e) {
-			file_put_contents('/tmp/spes_debug.log', $e->getMessage() . "\n" . $e->getTraceAsString() . "\n");
 			return new DataResponse(['error' => $e->getMessage()], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
 		if ($expense === null) {

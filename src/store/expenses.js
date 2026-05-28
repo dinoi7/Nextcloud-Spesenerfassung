@@ -83,6 +83,21 @@ export const useExpenseStore = defineStore('expenses', () => {
     expenses.value.filter(e => e.status === 'done')
   )
 
+  const actionCount = computed(() =>
+    expenses.value.filter(e => ['draft', 'rejected', 'paid'].includes(e.status)).length
+  )
+
+  const approvalCount = ref(0)
+
+  async function loadApprovalCount() {
+    try {
+      const pending = await api.getPendingApprovals()
+      approvalCount.value = Array.isArray(pending) ? pending.length : 0
+    } catch {
+      approvalCount.value = 0
+    }
+  }
+
   return {
     expenses, loading, error, currentUser,
     userIsPresident, userIsTreasurer, userIsAdmin,
@@ -90,5 +105,6 @@ export const useExpenseStore = defineStore('expenses', () => {
     loadExpenses, createExpense, updateExpense, deleteExpense,
     submitExpense, getExpense,
     filteredExpenses, draftExpenses, submittedExpenses, doneExpenses,
+    actionCount, approvalCount, loadApprovalCount,
   }
 })

@@ -4,26 +4,34 @@ declare(strict_types=1);
 namespace OCA\Spesenerfassung\Controller;
 
 use OCA\Spesenerfassung\Service\ExpenseService;
+use OCA\Spesenerfassung\Service\ReceiptService;
 use OCA\Spesenerfassung\Service\SettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\IRequest;
+use OCP\IUserManager;
 use OCP\IUserSession;
 
 class ApprovalController extends Controller {
 	private ExpenseService $expenseService;
 	private IUserSession $userSession;
+	private IUserManager $userManager;
+	private ReceiptService $receiptService;
 
 	public function __construct(
 		string $appName,
 		IRequest $request,
 		ExpenseService $expenseService,
 		IUserSession $userSession,
+		IUserManager $userManager,
+		ReceiptService $receiptService,
 	) {
 		parent::__construct($appName, $request);
 		$this->expenseService = $expenseService;
 		$this->userSession = $userSession;
+		$this->userManager = $userManager;
+		$this->receiptService = $receiptService;
 	}
 
 	private function getUserId(): string {
@@ -148,7 +156,19 @@ class ApprovalController extends Controller {
 			return new DataResponse(['error' => 'No pending approvals'], Http::STATUS_FORBIDDEN);
 		}
 
-		$result = array_map(fn($e) => $e->toArray(), $pending);
+		$userIds = array_map(fn($e) => $e->getUserId(), $pending);
+		$names = [];
+		foreach (array_unique($userIds) as $uid) {
+			$u = $this->userManager->get($uid);
+			$names[$uid] = $u ? $u->getDisplayName() : $uid;
+		}
+
+		$result = array_map(function ($e) use ($names) {
+			$row = $e->toArray();
+			$row['displayName'] = $names[$e->getUserId()] ?? $e->getUserId();
+			$row['receiptCount'] = count($this->receiptService->findByExpenseId($e->getId()));
+			return $row;
+		}, $pending);
 		return new DataResponse($result);
 	}
 }

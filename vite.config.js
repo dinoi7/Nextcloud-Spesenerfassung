@@ -12,17 +12,21 @@ export default defineConfig({
   build: {
     outDir: 'js',
     emptyOutDir: true,
+    lib: {
+      entry: resolve(__dirname, 'src/main.js'),
+      name: 'Spesenerfassung',
+      formats: ['iife'],
+      fileName: () => 'spesenerfassung-main.js',
+    },
     rollupOptions: {
-      input: resolve(__dirname, 'src/main.js'),
       output: {
-        entryFileNames: 'spesenerfassung-[name].js',
-        chunkFileNames: 'spesenerfassung-[name].js',
-        assetFileNames: 'spesenerfassung-[name].[ext]',
+        inlineDynamicImports: true,
       },
     },
     sourcemap: false,
   },
   define: {
     __APP_ID__: JSON.stringify('spesenerfassung'),
+    'process.env.NODE_ENV': JSON.stringify('production'),
   },
 })

@@ -1,7 +1,11 @@
 <template>
   <div class="spes-card" @click="$router.push(`/expenses/${expense.id}`)">
     <div class="spes-card-header">
-      <span class="spes-card-title">{{ expense.title }}</span>
+      <div class="spes-card-header-left">
+        <span class="spes-card-title">{{ expense.title }}</span>
+        <span v-if="expense.displayName" class="spes-card-user">{{ expense.displayName }}</span>
+      </div>
+      <span v-if="expense.receiptCount > 0" class="spes-card-receipt-badge" :title="expense.receiptCount + ' Belege'">&#128206; {{ expense.receiptCount }}</span>
       <StatusBadge :status="expense.status" />
     </div>
     <div class="spes-card-body">

@@ -196,6 +196,12 @@
   white-space: nowrap;
   flex-shrink: 0;
 }
+.spes-card-receipt-badge {
+  font-size: 12px;
+  color: var(--color-primary, #0082c9);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
 .spes-card-body { display: flex; flex-direction: column; gap: 4px; }
 .spes-card-amount {
   font-size: 18px;
@@ -487,6 +493,52 @@
   border-radius: 4px;
   font-size: 12px;
   margin-top: 4px;
+}
+
+.spes-history-table-wrap {
+  overflow-x: auto;
+}
+.spes-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.spes-history-table th {
+  text-align: left;
+  padding: 6px 10px;
+  border-bottom: 2px solid var(--color-border, #ddd);
+  font-weight: 600;
+  color: var(--color-text-maxcontrast, #666);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.spes-history-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--color-border, #eee);
+  vertical-align: top;
+}
+.spes-history-date {
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--color-text-maxcontrast, #888);
+}
+.spes-history-comment {
+  word-break: break-word;
+}
+
+.spes-nav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-error, #c62828);
+  color: #fff;
+  border-radius: 10px;
+  min-width: 18px;
+  height: 18px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 0 5px;
+  margin-left: 2px;
 }
 
 .spes-categories { display: flex; flex-direction: column; gap: 8px; }

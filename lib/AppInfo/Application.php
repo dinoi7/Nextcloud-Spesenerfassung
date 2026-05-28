@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace OCA\Spesenerfassung\AppInfo;
 
+use OCA\Spesenerfassung\Dashboard\SpesenWidget;
 use OCA\Spesenerfassung\Service\SettingsService;
 use OCA\Spesenerfassung\Settings\AdminSection;
 use OCA\Spesenerfassung\Settings\AdminSettings;
@@ -21,6 +22,7 @@ class Application extends App implements IBootstrap {
 
 	public function register(IRegistrationContext $context): void {
 		$context->registerAdminSettings(AdminSettings::class, AdminSection::class);
+		$context->registerDashboardWidget(SpesenWidget::class);
 	}
 
 	public function boot(IBootContext $context): void {
