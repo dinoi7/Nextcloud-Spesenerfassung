@@ -92,6 +92,12 @@ const messages = {
     payoutCash: 'Bar',
     payoutBank: 'Bank',
     defaultPayoutMethod: 'Standard-Auszahlungsmethode',
+    profile: 'Profil',
+    ibanLabel: 'IBAN',
+    ibanInvalid: 'Ungültige CH-IBAN',
+    ibanNotCH: 'IBAN muss mit CH beginnen',
+    foreignCurrency: 'Fremdwährung',
+    foreignAmount: 'Fremdwährungsbetrag',
   },
   en: {
     dashboard: 'Record',
@@ -163,6 +169,12 @@ const messages = {
     payoutCash: 'Cash',
     payoutBank: 'Bank',
     defaultPayoutMethod: 'Default Payout Method',
+    profile: 'Profile',
+    ibanLabel: 'IBAN',
+    ibanInvalid: 'Invalid CH IBAN',
+    ibanNotCH: 'IBAN must start with CH',
+    foreignCurrency: 'Foreign Currency',
+    foreignAmount: 'Foreign Amount',
   },
 }
 

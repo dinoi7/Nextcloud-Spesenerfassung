@@ -24,6 +24,10 @@ use OCP\AppFramework\Db\Entity;
  * @method void setExpenseDate(string $expenseDate)
  * @method string|null getPayoutMethod()
  * @method void setPayoutMethod(?string $payoutMethod)
+ * @method string|null getForeignCurrency()
+ * @method void setForeignCurrency(?string $foreignCurrency)
+ * @method string|null getForeignAmount()
+ * @method void setForeignAmount(?string $foreignAmount)
  * @method string getCreatedAt()
  * @method void setCreatedAt(string $createdAt)
  * @method string getUpdatedAt()
@@ -54,6 +58,8 @@ class Expense extends Entity {
 	protected string $status = self::STATUS_DRAFT;
 	protected string $expenseDate = '';
 	protected ?string $payoutMethod = null;
+	protected ?string $foreignCurrency = null;
+	protected ?string $foreignAmount = null;
 	protected string $createdAt = '';
 	protected string $updatedAt = '';
 
@@ -72,6 +78,8 @@ class Expense extends Entity {
 			'status' => $this->getStatus(),
 			'expenseDate' => $this->getExpenseDate(),
 			'payoutMethod' => $this->getPayoutMethod(),
+			'foreignCurrency' => $this->getForeignCurrency(),
+			'foreignAmount' => $this->getForeignAmount() !== null ? (float) $this->getForeignAmount() : null,
 			'createdAt' => $this->getCreatedAt(),
 			'updatedAt' => $this->getUpdatedAt(),
 		];

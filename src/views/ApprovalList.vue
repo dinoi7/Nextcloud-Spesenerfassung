@@ -26,6 +26,7 @@
             <span>{{ expense.category }}</span>
             <span>{{ formatDate(expense.expenseDate) }}</span>
             <span v-if="expense.payoutMethod" class="spes-card-payout">{{ expense.payoutMethod === 'bank' ? t('payoutBank') : t('payoutCash') }}</span>
+            <span v-if="expense.foreignCurrency" class="spes-card-foreign">{{ formatAmount(expense.foreignAmount) }} {{ expense.foreignCurrency }}</span>
           </div>
         </div>
         <div class="spes-card-actions" @click.stop>

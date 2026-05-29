@@ -42,6 +42,14 @@
           <span class="spes-detail-label">{{ t('payoutMethod') }}</span>
           <span class="spes-detail-value">{{ expense.payoutMethod === 'bank' ? t('payoutBank') : t('payoutCash') }}</span>
         </div>
+        <div v-if="expense.foreignCurrency" class="spes-detail-item">
+          <span class="spes-detail-label">{{ t('foreignCurrency') }}</span>
+          <span class="spes-detail-value">{{ expense.foreignCurrency }}</span>
+        </div>
+        <div v-if="expense.foreignAmount !== null && expense.foreignAmount !== undefined" class="spes-detail-item">
+          <span class="spes-detail-label">{{ t('foreignAmount') }}</span>
+          <span class="spes-detail-value">{{ formatAmount(expense.foreignAmount) }} {{ expense.foreignCurrency }}</span>
+        </div>
       </div>
 
       <div v-if="expense.description" class="spes-detail-desc">

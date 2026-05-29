@@ -58,6 +58,8 @@ class ExpenseService {
 		$expense->setCategory($data['category']);
 		$expense->setExpenseDate($data['expenseDate']);
 		$expense->setPayoutMethod($data['payoutMethod'] ?? '');
+		$expense->setForeignCurrency($data['foreignCurrency'] ?? null);
+		$expense->setForeignAmount(isset($data['foreignAmount']) ? number_format((float) $data['foreignAmount'], 2, '.', '') : null);
 		$expense->setStatus($data['status'] ?? Expense::STATUS_DRAFT);
 		$expense->setCreatedAt($now);
 		$expense->setUpdatedAt($now);
@@ -101,6 +103,12 @@ class ExpenseService {
 		}
 		if (array_key_exists('payoutMethod', $data)) {
 			$expense->setPayoutMethod($data['payoutMethod']);
+		}
+		if (array_key_exists('foreignCurrency', $data)) {
+			$expense->setForeignCurrency($data['foreignCurrency']);
+		}
+		if (array_key_exists('foreignAmount', $data)) {
+			$expense->setForeignAmount($data['foreignAmount'] !== null ? number_format((float) $data['foreignAmount'], 2, '.', '') : null);
 		}
 		if (isset($data['status'])) {
 			$newStatus = $data['status'];

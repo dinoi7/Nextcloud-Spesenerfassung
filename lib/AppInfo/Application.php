@@ -5,6 +5,7 @@ namespace OCA\Spesenerfassung\AppInfo;
 
 use OCA\Spesenerfassung\Dashboard\SpesenWidget;
 use OCA\Spesenerfassung\Service\SettingsService;
+use OCA\Spesenerfassung\Service\UserSettingsService;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IBootContext;
@@ -26,5 +27,7 @@ class Application extends App implements IBootstrap {
 		$container = $context->getAppContainer();
 		$appConfig = $container->get(IAppConfig::class);
 		SettingsService::setConfig($appConfig);
+
+		$container->get(UserSettingsService::class);
 	}
 }

@@ -4,6 +4,7 @@ import ExpenseForm from './views/ExpenseForm.vue'
 import ExpenseDetail from './views/ExpenseDetail.vue'
 import ApprovalList from './views/ApprovalList.vue'
 import SettingsView from './views/SettingsView.vue'
+import UserSettings from './views/UserSettings.vue'
 
 const routes = [
   { path: '/', name: 'dashboard', component: Dashboard },
@@ -12,6 +13,7 @@ const routes = [
   { path: '/expenses/:id/edit', name: 'expense-edit', component: ExpenseForm, props: { edit: true } },
   { path: '/approvals', name: 'approvals', component: ApprovalList },
   { path: '/settings', name: 'settings', component: SettingsView },
+  { path: '/profile', name: 'profile', component: UserSettings },
 ]
 
 const router = createRouter({

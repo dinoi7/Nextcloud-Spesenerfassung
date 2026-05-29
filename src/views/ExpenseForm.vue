@@ -11,22 +11,6 @@
       </div>
 
       <div class="spes-form-group">
-        <label class="spes-label" for="description">{{ t('descriptionOptional') }}</label>
-        <textarea id="description" v-model="form.description" class="spes-input spes-textarea" rows="3"></textarea>
-      </div>
-
-      <div class="spes-form-row">
-        <div class="spes-form-group">
-          <label class="spes-label" for="amount">{{ t('amount') }} *</label>
-          <input id="amount" v-model.number="form.amount" class="spes-input" type="number" step="0.01" min="0.01" required />
-        </div>
-        <div class="spes-form-group">
-          <label class="spes-label" for="expenseDate">{{ t('expenseDate') }} *</label>
-          <input id="expenseDate" v-model="form.expenseDate" class="spes-input" type="date" required />
-        </div>
-      </div>
-
-      <div class="spes-form-group">
         <label class="spes-label" for="category">{{ t('category') }} *</label>
         <select id="category" v-model="form.category" class="spes-input" required>
           <option value="" disabled>--</option>
@@ -35,11 +19,38 @@
       </div>
 
       <div class="spes-form-group">
+        <label class="spes-label" for="description">{{ t('descriptionOptional') }}</label>
+        <textarea id="description" v-model="form.description" class="spes-input spes-textarea" rows="3"></textarea>
+      </div>
+
+      <div class="spes-form-group">
         <label class="spes-label" for="payoutMethod">{{ t('payoutMethod') }}</label>
         <select id="payoutMethod" v-model="form.payoutMethod" class="spes-input">
           <option value="bank">{{ t('payoutBank') }}</option>
           <option value="">{{ t('payoutCash') }}</option>
         </select>
+      </div>
+
+      <div class="spes-form-row">
+        <div class="spes-form-group">
+          <label class="spes-label" for="amount">{{ t('amount') }} *</label>
+          <input id="amount" v-model.number="form.amount" class="spes-input" type="number" step="0.01" min="0.01" required />
+        </div>
+        <div class="spes-form-group">
+          <label class="spes-label" for="foreignAmount">{{ t('foreignAmount') }}</label>
+          <input id="foreignAmount" v-model.number="form.foreignAmount" class="spes-input" type="number" step="0.01" min="0" />
+        </div>
+      </div>
+
+      <div class="spes-form-row">
+        <div class="spes-form-group">
+          <label class="spes-label" for="expenseDate">{{ t('expenseDate') }} *</label>
+          <input id="expenseDate" v-model="form.expenseDate" class="spes-input" type="date" required />
+        </div>
+        <div class="spes-form-group">
+          <label class="spes-label" for="foreignCurrency">{{ t('foreignCurrency') }}</label>
+          <input id="foreignCurrency" v-model="form.foreignCurrency" class="spes-input" maxlength="32" placeholder="z.B. USD, EUR" />
+        </div>
       </div>
 
       <div class="spes-form-group">
@@ -85,6 +96,8 @@ const form = ref({
   category: '',
   expenseDate: defaultDate,
   payoutMethod: 'bank',
+  foreignCurrency: '',
+  foreignAmount: null,
 })
 
 const categories = computed(() => settingsStore.settings.categories || [])
@@ -102,6 +115,8 @@ onMounted(async () => {
         category: expense.category,
         expenseDate: expense.expenseDate,
         payoutMethod: expense.payoutMethod || '',
+        foreignCurrency: expense.foreignCurrency || '',
+        foreignAmount: expense.foreignAmount !== null ? expense.foreignAmount : null,
       }
       existingReceipts.value = expense.receipts || []
     }
