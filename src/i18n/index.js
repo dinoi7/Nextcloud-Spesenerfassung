@@ -23,7 +23,7 @@ const locale = ref(getLocale())
 
 const messages = {
   de: {
-    dashboard: 'Dashboard',
+    dashboard: 'Erfassung',
     approvals: 'Genehmigungen',
     settings: 'Einstellungen',
     newExpense: 'Neue Spesen',
@@ -90,7 +90,7 @@ const messages = {
     deleted: 'Spesen gelöscht',
   },
   en: {
-    dashboard: 'Dashboard',
+    dashboard: 'Record',
     approvals: 'Approvals',
     settings: 'Settings',
     newExpense: 'New Expense',

@@ -11,7 +11,7 @@
     </div>
 
     <div v-else class="spes-card-list">
-      <div v-for="expense in pending" :key="expense.id" class="spes-card" @click="$router.push(`/expenses/${expense.id}`)">
+      <div v-for="expense in pending" :key="expense.id" class="spes-card" @click="$router.push(`/expenses/${expense.id}?from=approvals`)">
         <div class="spes-card-header">
           <div class="spes-card-header-left">
             <span class="spes-card-title">{{ expense.title }}</span>

@@ -44,7 +44,7 @@ class SpesenWidget implements IAPIWidgetV2, IIconWidget {
 	}
 
 	public function getIconClass(): string {
-		return 'icon-files';
+		return '';
 	}
 
 	public function getIconUrl(): string {
@@ -109,6 +109,7 @@ class SpesenWidget implements IAPIWidgetV2, IIconWidget {
 				(string) $actionCount,
 				'Spesen zu bearbeiten',
 				$this->urlGenerator->linkToRoute('spesenerfassung.page.index'),
+				$this->urlGenerator->imagePath('spesenerfassung', 'expense.svg'),
 			);
 		}
 
@@ -116,7 +117,8 @@ class SpesenWidget implements IAPIWidgetV2, IIconWidget {
 			$items[] = new WidgetItem(
 				(string) $approvalCount,
 				'Spesen zu genehmigen',
-				$this->urlGenerator->linkToRoute('spesenerfassung.page.index') . '#/approvals'
+				$this->urlGenerator->linkToRoute('spesenerfassung.page.index') . '#/approvals',
+				$this->urlGenerator->imagePath('spesenerfassung', 'approval.svg'),
 			);
 		}
 

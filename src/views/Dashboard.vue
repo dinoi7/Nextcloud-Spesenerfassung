@@ -1,7 +1,14 @@
 <template>
   <div class="spes-page">
     <div class="spes-page-header">
-      <h1>{{ t('dashboard') }}</h1>
+      <div class="spes-page-title-row">
+        <h1>{{ t('dashboard') }}</h1>
+        <select v-model="selectedYear" class="spes-year-select">
+          <option v-for="y in availableYears" :key="y.value" :value="y.value">
+            {{ y.label }} ({{ y.actionCount }})
+          </option>
+        </select>
+      </div>
       <button class="spes-btn spes-btn-primary" @click="$router.push('/new')">+ {{ t('newExpense') }}</button>
     </div>
 
@@ -78,16 +85,51 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useExpenseStore } from '../store/expenses'
+import { useSettingsStore } from '../store/settings'
 import { useI18n } from '../i18n'
 import ExpenseCard from '../components/ExpenseCard.vue'
 
 const store = useExpenseStore()
+const settingsStore = useSettingsStore()
 const { t } = useI18n()
 
+const currentYear = new Date().getFullYear()
+const selectedYear = ref(currentYear)
+
+const availableYears = computed(() => {
+  const years = {}
+  store.expenses.forEach(e => {
+    if (!e.expenseDate) return
+    const y = new Date(e.expenseDate).getFullYear()
+    if (!years[y]) years[y] = 0
+    if (['draft', 'rejected', 'paid'].includes(e.status)) {
+      years[y]++
+    }
+  })
+
+  const allYears = Object.keys(years).map(Number).sort((a, b) => b - a)
+
+  if (!(currentYear in years)) {
+    years[currentYear] = 0
+    allYears.unshift(currentYear)
+  }
+
+  return allYears.map(y => {
+    return { value: y, label: String(y), actionCount: years[y] || 0 }
+  })
+})
+
+const filteredExpenses = computed(() => {
+  return store.expenses.filter(e => {
+    if (!e.expenseDate) return true
+    return new Date(e.expenseDate).getFullYear() === selectedYear.value
+  })
+})
+
 const totalAmount = computed(() => {
-  const sum = store.expenses.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0)
+  const sum = filteredExpenses.value.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0)
   return sum.toFixed(2)
 })
 
@@ -96,14 +138,15 @@ const submittedAmount = computed(() => sumAmount(submitted.value))
 const paidAmount = computed(() => sumAmount(paid.value))
 const doneAmount = computed(() => sumAmount(done.value))
 
-const drafts = computed(() => store.expenses.filter(e => e.status === 'draft'))
-const submitted = computed(() => store.expenses.filter(e => e.status === 'submitted'))
-const approved = computed(() => store.expenses.filter(e => e.status === 'approved'))
-const rejected = computed(() => store.expenses.filter(e => e.status === 'rejected'))
-const paid = computed(() => store.expenses.filter(e => e.status === 'paid'))
-const done = computed(() => store.expenses.filter(e => e.status === 'done'))
+const drafts = computed(() => filteredExpenses.value.filter(e => e.status === 'draft'))
+const submitted = computed(() => filteredExpenses.value.filter(e => e.status === 'submitted'))
+const approved = computed(() => filteredExpenses.value.filter(e => e.status === 'approved'))
+const rejected = computed(() => filteredExpenses.value.filter(e => e.status === 'rejected'))
+const paid = computed(() => filteredExpenses.value.filter(e => e.status === 'paid'))
+const done = computed(() => filteredExpenses.value.filter(e => e.status === 'done'))
 
-onMounted(() => {
-  store.loadExpenses()
+onMounted(async () => {
+  await settingsStore.loadSettings()
+  await store.loadExpenses()
 })
 </script>

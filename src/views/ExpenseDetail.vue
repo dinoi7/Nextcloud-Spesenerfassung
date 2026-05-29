@@ -1,7 +1,7 @@
 <template>
   <div class="spes-page">
     <div class="spes-page-header" v-if="expense">
-      <button class="spes-btn" @click="$router.back()">&larr; {{ t('dashboard') }}</button>
+      <button class="spes-btn" @click="goBack">&larr; {{ backLabel }}</button>
       <div class="spes-header-right">
         <button
           v-if="canEdit"
@@ -84,6 +84,16 @@ const router = useRouter()
 const store = useExpenseStore()
 const settingsStore = useSettingsStore()
 const { t } = useI18n()
+
+const backLabel = computed(() => route.query.from === 'approvals' ? t('approvals') : t('dashboard'))
+
+function goBack() {
+  if (route.query.from === 'approvals') {
+    router.push('/approvals')
+  } else {
+    router.push('/')
+  }
+}
 
 const expense = ref(null)
 const history = ref([])
