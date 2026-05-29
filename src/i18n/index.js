@@ -2,6 +2,14 @@ import { ref, computed } from 'vue'
 
 function getLocale() {
   try {
+    const el = document.getElementById('spesenerfassung-initial-data')
+    if (el && el.textContent) {
+      const data = JSON.parse(el.textContent)
+      if (data.locale === 'de') return 'de'
+      if (data.locale === 'en') return 'en'
+    }
+  } catch {}
+  try {
     const htmlLang = document.documentElement?.lang || ''
     if (htmlLang.startsWith('de')) return 'de'
   } catch {}

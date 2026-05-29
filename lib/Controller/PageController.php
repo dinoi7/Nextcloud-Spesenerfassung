@@ -23,12 +23,22 @@ class PageController extends Controller {
 	#[NoCSRFRequired]
 	public function index(): TemplateResponse {
 		$user = $this->userSession->getUser();
+		$uid = $user !== null ? $user->getUID() : '';
 		$isAdmin = $user !== null && \OC::$server->getGroupManager()->isAdmin($user->getUID());
+		$locale = $uid !== ''
+			? \OC::$server->getConfig()->getUserValue($uid, 'core', 'lang', 'en')
+			: 'en';
+		if (str_starts_with($locale, 'de')) {
+			$locale = 'de';
+		} else {
+			$locale = 'en';
+		}
 
 		$data = [
 			'initialData' => json_encode([
-				'currentUser' => $user !== null ? $user->getUID() : '',
+				'currentUser' => $uid,
 				'isAdmin' => $isAdmin,
+				'locale' => $locale,
 				'settings' => SettingsService::getAll(),
 			]),
 		];
