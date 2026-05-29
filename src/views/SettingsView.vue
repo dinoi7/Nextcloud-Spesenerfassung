@@ -26,6 +26,14 @@
       </div>
 
       <div class="spes-form-group">
+        <label class="spes-label">{{ t('defaultPayoutMethod') }}</label>
+        <select v-model="form.defaultPayoutMethod" class="spes-input">
+          <option value="bank">{{ t('payoutBank') }}</option>
+          <option value="">{{ t('payoutCash') }}</option>
+        </select>
+      </div>
+
+      <div class="spes-form-group">
         <label class="spes-label">{{ t('categories') }}</label>
         <div class="spes-categories">
           <div v-for="(cat, idx) in form.categories" :key="idx" class="spes-category-row">
@@ -63,6 +71,7 @@ const form = ref({
   treasurerUid: '',
   threshold: 250,
   categories: [],
+  defaultPayoutMethod: 'bank',
 })
 
 onMounted(async () => {

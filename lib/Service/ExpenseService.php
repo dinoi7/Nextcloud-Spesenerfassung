@@ -57,6 +57,7 @@ class ExpenseService {
 		$expense->setAmount(number_format((float) $data['amount'], 2, '.', ''));
 		$expense->setCategory($data['category']);
 		$expense->setExpenseDate($data['expenseDate']);
+		$expense->setPayoutMethod($data['payoutMethod'] ?? '');
 		$expense->setStatus($data['status'] ?? Expense::STATUS_DRAFT);
 		$expense->setCreatedAt($now);
 		$expense->setUpdatedAt($now);
@@ -97,6 +98,9 @@ class ExpenseService {
 		}
 		if (isset($data['expenseDate'])) {
 			$expense->setExpenseDate($data['expenseDate']);
+		}
+		if (array_key_exists('payoutMethod', $data)) {
+			$expense->setPayoutMethod($data['payoutMethod']);
 		}
 		if (isset($data['status'])) {
 			$newStatus = $data['status'];

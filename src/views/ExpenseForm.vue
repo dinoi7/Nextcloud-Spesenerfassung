@@ -35,6 +35,14 @@
       </div>
 
       <div class="spes-form-group">
+        <label class="spes-label" for="payoutMethod">{{ t('payoutMethod') }}</label>
+        <select id="payoutMethod" v-model="form.payoutMethod" class="spes-input">
+          <option value="bank">{{ t('payoutBank') }}</option>
+          <option value="">{{ t('payoutCash') }}</option>
+        </select>
+      </div>
+
+      <div class="spes-form-group">
         <ReceiptUpload :expense-id="currentExpenseId" :receipts="existingReceipts" @file="handleFile" @delete="onDeleteReceipt" />
       </div>
 
@@ -76,6 +84,7 @@ const form = ref({
   amount: null,
   category: '',
   expenseDate: defaultDate,
+  payoutMethod: 'bank',
 })
 
 const categories = computed(() => settingsStore.settings.categories || [])
@@ -92,6 +101,7 @@ onMounted(async () => {
         amount: expense.amount,
         category: expense.category,
         expenseDate: expense.expenseDate,
+        payoutMethod: expense.payoutMethod || '',
       }
       existingReceipts.value = expense.receipts || []
     }

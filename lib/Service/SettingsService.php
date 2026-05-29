@@ -12,12 +12,14 @@ class SettingsService {
 	private const KEY_TREASURER_UID = 'treasurer_uid';
 	private const KEY_THRESHOLD = 'threshold';
 	private const KEY_CATEGORIES = 'categories';
+	private const KEY_DEFAULT_PAYOUT_METHOD = 'default_payout_method';
 
 	private const DEFAULTS = [
 		self::KEY_PRESIDENT_UID => '',
 		self::KEY_TREASURER_UID => '',
 		self::KEY_THRESHOLD => '250',
 		self::KEY_CATEGORIES => '["Material","Verpflegung","Reise","Büro","Sonstiges"]',
+		self::KEY_DEFAULT_PAYOUT_METHOD => 'bank',
 	];
 
 	public static function setConfig(IAppConfig $config): void {
@@ -103,12 +105,21 @@ class SettingsService {
 		return $categories;
 	}
 
+	public static function getDefaultPayoutMethod(): string {
+		return self::getString(self::KEY_DEFAULT_PAYOUT_METHOD);
+	}
+
+	public static function setDefaultPayoutMethod(string $method): void {
+		self::getConfig()->setValueString('spesenerfassung', self::KEY_DEFAULT_PAYOUT_METHOD, $method);
+	}
+
 	public static function getAll(): array {
 		return [
 			'presidentUid' => self::getPresidentUid(),
 			'treasurerUid' => self::getTreasurerUid(),
 			'threshold' => self::getThreshold(),
 			'categories' => self::getCategories(),
+			'defaultPayoutMethod' => self::getDefaultPayoutMethod(),
 		];
 	}
 
@@ -124,6 +135,9 @@ class SettingsService {
 		}
 		if (isset($data['categories']) && is_array($data['categories'])) {
 			self::setCategories($data['categories']);
+		}
+		if (isset($data['defaultPayoutMethod'])) {
+			self::setDefaultPayoutMethod($data['defaultPayoutMethod']);
 		}
 		return self::getAll();
 	}

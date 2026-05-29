@@ -88,6 +88,10 @@ const messages = {
     paid: 'Spesen ausbezahlt',
     doneSet: 'Spesen als erledigt markiert',
     deleted: 'Spesen gelöscht',
+    payoutMethod: 'Auszahlung',
+    payoutCash: 'Bar',
+    payoutBank: 'Bank',
+    defaultPayoutMethod: 'Standard-Auszahlungsmethode',
   },
   en: {
     dashboard: 'Record',
@@ -155,6 +159,10 @@ const messages = {
     paid: 'Expense marked as paid',
     doneSet: 'Expense marked as done',
     deleted: 'Expense deleted',
+    payoutMethod: 'Payout Method',
+    payoutCash: 'Cash',
+    payoutBank: 'Bank',
+    defaultPayoutMethod: 'Default Payout Method',
   },
 }
 

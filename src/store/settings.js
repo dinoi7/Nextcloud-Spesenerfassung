@@ -20,6 +20,7 @@ export const useSettingsStore = defineStore('settings', () => {
     treasurerUid: defaultSettings.treasurerUid || '',
     threshold: defaultSettings.threshold || 250,
     categories: defaultSettings.categories || ['Material', 'Verpflegung', 'Reise', 'Büro', 'Sonstiges'],
+    defaultPayoutMethod: defaultSettings.defaultPayoutMethod || 'bank',
   })
   const loading = ref(false)
   const error = ref(null)

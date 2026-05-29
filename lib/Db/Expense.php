@@ -22,6 +22,8 @@ use OCP\AppFramework\Db\Entity;
  * @method void setStatus(string $status)
  * @method string getExpenseDate()
  * @method void setExpenseDate(string $expenseDate)
+ * @method string|null getPayoutMethod()
+ * @method void setPayoutMethod(?string $payoutMethod)
  * @method string getCreatedAt()
  * @method void setCreatedAt(string $createdAt)
  * @method string getUpdatedAt()
@@ -51,6 +53,7 @@ class Expense extends Entity {
 	protected string $category = '';
 	protected string $status = self::STATUS_DRAFT;
 	protected string $expenseDate = '';
+	protected ?string $payoutMethod = null;
 	protected string $createdAt = '';
 	protected string $updatedAt = '';
 
@@ -68,6 +71,7 @@ class Expense extends Entity {
 			'category' => $this->getCategory(),
 			'status' => $this->getStatus(),
 			'expenseDate' => $this->getExpenseDate(),
+			'payoutMethod' => $this->getPayoutMethod(),
 			'createdAt' => $this->getCreatedAt(),
 			'updatedAt' => $this->getUpdatedAt(),
 		];

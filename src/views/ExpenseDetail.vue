@@ -38,6 +38,10 @@
           <span class="spes-detail-label">{{ t('expenseDate') }}</span>
           <span class="spes-detail-value">{{ formatDate(expense.expenseDate) }}</span>
         </div>
+        <div v-if="expense.payoutMethod" class="spes-detail-item">
+          <span class="spes-detail-label">{{ t('payoutMethod') }}</span>
+          <span class="spes-detail-value">{{ expense.payoutMethod === 'bank' ? t('payoutBank') : t('payoutCash') }}</span>
+        </div>
       </div>
 
       <div v-if="expense.description" class="spes-detail-desc">
