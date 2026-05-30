@@ -25,6 +25,7 @@ return [
 		['name' => 'approval#paystack', 'url' => '/api/expenses/{id}/paystack', 'verb' => 'POST', 'requirements' => ['id' => '\d+']],
 		['name' => 'approval#paystackList', 'url' => '/api/approvals/paystack', 'verb' => 'GET'],
 		['name' => 'approval#paystackExport', 'url' => '/api/approvals/paystack/export', 'verb' => 'GET'],
+		['name' => 'approval#paystackExportSingle', 'url' => '/api/approvals/paystack/export/{id}', 'verb' => 'GET', 'requirements' => ['id' => '\d+']],
 		['name' => 'approval#paystackPayAll', 'url' => '/api/approvals/paystack/pay-all', 'verb' => 'POST'],
 		['name' => 'approval#evaluation', 'url' => '/api/evaluation', 'verb' => 'GET'],
 

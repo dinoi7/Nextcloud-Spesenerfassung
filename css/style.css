@@ -251,6 +251,10 @@
   padding: 1px 8px;
   border-radius: 10px;
 }
+.spes-card-account {
+  font-size: 11px;
+  color: var(--color-text-maxcontrast, #666);
+}
 .spes-card-foreign {
   font-size: 11px;
   color: var(--color-text-maxcontrast, #888);

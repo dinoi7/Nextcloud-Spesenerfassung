@@ -66,21 +66,36 @@ export const api = {
   getPendingApprovals: () => request('GET', '/approvals/pending'),
   getPaystack: () => request('GET', '/approvals/paystack'),
   payAll: () => request('POST', '/approvals/paystack/pay-all'),
-  exportPaystack: async () => {
-    const base = '/index.php/apps/spesenerfassung/api'
-    const headers = {}
-    const token = document.querySelector('head meta[name="csrf-token"]')?.getAttribute('content')
-    if (token) headers['requesttoken'] = token
-    const res = await fetch(base + '/approvals/paystack/export', { headers, credentials: 'same-origin' })
-    if (!res.ok) throw new Error('Export failed')
-    const blob = await res.blob()
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'zahlstapel.csv'
-    a.click()
-    URL.revokeObjectURL(url)
-  },
+	exportPaystack: async () => {
+		const base = '/index.php/apps/spesenerfassung/api'
+		const headers = {}
+		const token = document.querySelector('head meta[name="csrf-token"]')?.getAttribute('content')
+		if (token) headers['requesttoken'] = token
+		const res = await fetch(base + '/approvals/paystack/export', { headers, credentials: 'same-origin' })
+		if (!res.ok) throw new Error('Export failed')
+		const blob = await res.blob()
+		const url = URL.createObjectURL(blob)
+		const a = document.createElement('a')
+		a.href = url
+		a.download = 'zahlstapel.csv'
+		a.click()
+		URL.revokeObjectURL(url)
+	},
+	exportPaystackSingle: async (id) => {
+		const base = '/index.php/apps/spesenerfassung/api'
+		const headers = {}
+		const token = document.querySelector('head meta[name="csrf-token"]')?.getAttribute('content')
+		if (token) headers['requesttoken'] = token
+		const res = await fetch(base + '/approvals/paystack/export/' + id, { headers, credentials: 'same-origin' })
+		if (!res.ok) throw new Error('Export failed')
+		const blob = await res.blob()
+		const url = URL.createObjectURL(blob)
+		const a = document.createElement('a')
+		a.href = url
+		a.download = 'zahlstapel-' + id + '.csv'
+		a.click()
+		URL.revokeObjectURL(url)
+	},
   getEvaluation: () => request('GET', '/evaluation'),
   getSettings: () => request('GET', '/settings'),
   updateSettings: (data) => request('PUT', '/settings', data),

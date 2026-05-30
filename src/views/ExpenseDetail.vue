@@ -45,6 +45,10 @@
           <span class="spes-detail-label">{{ t('expenseDate') }}</span>
           <span class="spes-detail-value">{{ formatDate(expense.expenseDate) }}</span>
         </div>
+        <div v-if="isPaystackDetail && sollKonto" class="spes-detail-item">
+          <span class="spes-detail-label">{{ t('debitAccounts') }}</span>
+          <span class="spes-detail-value">{{ sollKonto }}</span>
+        </div>
         <div v-if="expense.payoutMethod" class="spes-detail-item">
           <span class="spes-detail-label">{{ t('payoutMethod') }}</span>
           <span class="spes-detail-value">{{ expense.payoutMethod === 'bank' ? t('payoutBank') : t('payoutCash') }}</span>
@@ -85,11 +89,13 @@
         </div>
       </div>
 
-      <div v-if="canApprove || canReject || canAddToPaystack || canPay || canDone" class="spes-detail-actions">
+      <div v-if="canApprove || canReject || canAddToPaystack || canPay || canDone || isPaystackDetail" class="spes-detail-actions">
         <button v-if="canApprove" class="spes-btn spes-btn-success" @click="handleApprove">{{ t('approve') }}</button>
         <button v-if="canReject" class="spes-btn spes-btn-danger" @click="handleReject">{{ t('reject') }}</button>
         <button v-if="canAddToPaystack" class="spes-btn spes-btn-paystack" @click="handleAddToPaystack">{{ t('addToPaystack') }}</button>
         <button v-if="canPay" class="spes-btn spes-btn-success" @click="handlePay">{{ t('pay') }}</button>
+        <button v-if="isPaystackDetail" class="spes-btn spes-btn-success" @click="handlePay">{{ t('pay') }}</button>
+        <button v-if="isPaystackDetail" class="spes-btn" @click="handleExportSingle">{{ t('exportCsv') }}</button>
         <button v-if="canDone" class="spes-btn" @click="handleDone">{{ t('done') }}</button>
       </div>
     </div>
@@ -174,6 +180,17 @@ const canDone = computed(() => {
   return expense.value.status === 'paid'
 })
 
+const isPaystackDetail = computed(() => {
+  if (!expense.value) return false
+  return expense.value.status === 'paystack' && store.userIsTreasurer
+})
+
+const sollKonto = computed(() => {
+  if (!expense.value) return ''
+  const accounts = settingsStore.settings.exportAccounts || {}
+  return accounts[expense.value.category] || ''
+})
+
 const id = computed(() => parseInt(route.params.id))
 
 const categoryValue = ref('')
@@ -251,6 +268,12 @@ async function handleDone() {
   try {
     const exp = await api.done(id.value)
     expense.value = exp
+  } catch (e) { alert(e.message) }
+}
+
+async function handleExportSingle() {
+  try {
+    await api.exportPaystackSingle(id.value)
   } catch (e) { alert(e.message) }
 }
 

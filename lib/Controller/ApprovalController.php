@@ -207,10 +207,12 @@ class ApprovalController extends Controller {
 			$u = $this->userManager->get($uid);
 			$names[$uid] = $u ? $u->getDisplayName() : $uid;
 		}
-		$result = array_map(function ($e) use ($names) {
+		$accounts = SettingsService::getExportAccounts();
+		$result = array_map(function ($e) use ($names, $accounts) {
 			$row = $e->toArray();
 			$row['displayName'] = $names[$e->getUserId()] ?? $e->getUserId();
 			$row['receiptCount'] = count($this->receiptService->findByExpenseId($e->getId()));
+			$row['sollKonto'] = $accounts[$e->getCategory()] ?? '';
 			return $row;
 		}, $expenses);
 		return new DataResponse($result);
@@ -232,14 +234,43 @@ class ApprovalController extends Controller {
 			$id = $e->getId();
 			$date = date('d.m.Y', strtotime($e->getExpenseDate()));
 			$name = $this->sani($this->resolveDisplayName($e->getUserId()));
+			$title = $this->sani($e->getTitle() ?? '');
 			$desc = $this->sani($e->getDescription() ?? '');
-			$text = 'Spesen: ' . $id . ', ' . $name . ', ' . $desc;
+			$text = 'Spesen: ' . $id . ', ' . $name . ', ' . $title . ', ' . $desc;
 			$cat = $e->getCategory();
 			$soll = $this->sani($accounts[$cat] ?? '');
 			$amount = '-' . number_format((float) $e->getAmount(), 2, '.', '');
 			$csv .= "\"$date\";\"$text\";\"$soll\";\"$amount\"\n";
 		}
+
 		return new DataDownloadResponse($csv, 'zahlstapel.csv', 'text/csv; charset=utf-8');
+	}
+
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
+	public function paystackExportSingle(int $id) {
+		if (!$this->checkRole('treasurer')) {
+			return new DataResponse(['error' => 'Only treasurer can export'], Http::STATUS_FORBIDDEN);
+		}
+		$expense = $this->expenseService->findById($id);
+		if ($expense === null || $expense->getStatus() !== \OCA\Spesenerfassung\Db\Expense::STATUS_PAYSTACK) {
+			return new DataResponse(['error' => 'Expense not in paystack'], Http::STATUS_NOT_FOUND);
+		}
+		$accounts = SettingsService::getExportAccounts();
+		$csv = "\xEF\xBB\xBF";
+		$csv .= "\"Datum\";\"Text\";\"Soll\";\"Betrag (CHF)\"\n";
+		$date = date('d.m.Y', strtotime($expense->getExpenseDate()));
+		$name = $this->sani($this->resolveDisplayName($expense->getUserId()));
+		$title = $this->sani($expense->getTitle() ?? '');
+		$desc = $this->sani($expense->getDescription() ?? '');
+		$text = 'Spesen: ' . $expense->getId() . ', ' . $name . ', ' . $title . ', ' . $desc;
+		$cat = $expense->getCategory();
+		$soll = $this->sani($accounts[$cat] ?? '');
+		$amount = '-' . number_format((float) $expense->getAmount(), 2, '.', '');
+		$csv .= "\"$date\";\"$text\";\"$soll\";\"$amount\"\n";
+		return new DataDownloadResponse($csv, 'zahlstapel-' . $id . '.csv', 'text/csv; charset=utf-8');
 	}
 
 	/**

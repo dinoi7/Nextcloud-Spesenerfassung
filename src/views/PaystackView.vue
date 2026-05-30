@@ -29,13 +29,15 @@
             <div v-if="expense.foreignCurrency" class="spes-card-foreign-amount">{{ expense.foreignCurrency }} {{ formatAmount(expense.foreignAmount) }}</div>
           </div>
           <div v-if="expense.description" class="spes-card-desc">{{ expense.description }}</div>
-          <div class="spes-card-meta">
+           <div class="spes-card-meta">
             <span>{{ expense.category }}</span>
+            <span v-if="expense.sollKonto" class="spes-card-account">&rarr; {{ expense.sollKonto }}</span>
             <span>{{ formatDate(expense.expenseDate) }}</span>
             <span v-if="expense.payoutMethod" class="spes-card-payout">{{ expense.payoutMethod === 'bank' ? t('payoutBank') : t('payoutCash') }}</span>
           </div>
         </div>
         <div class="spes-card-actions" @click.stop>
+          <button class="spes-btn spes-btn-sm" @click="handleExportSingle(expense.id)">{{ t('exportCsv') }}</button>
           <button class="spes-btn spes-btn-sm spes-btn-success" @click="payExpense(expense.id)">{{ t('pay') }}</button>
         </div>
       </div>
@@ -95,6 +97,12 @@ async function handlePayAll() {
 async function handleExport() {
   try {
     await api.exportPaystack()
+  } catch (e) { alert(e.message) }
+}
+
+async function handleExportSingle(id) {
+  try {
+    await api.exportPaystackSingle(id)
   } catch (e) { alert(e.message) }
 }
 
