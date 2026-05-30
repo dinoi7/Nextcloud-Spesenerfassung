@@ -108,6 +108,11 @@ const messages = {
     search: 'Suche',
     amountFrom: 'Betrag von',
     amountTo: 'bis',
+    paymentInfo: 'Zahlungsinformationen',
+    paymentIban: 'IBAN Empfänger',
+    scanQr: 'Mit Banking-App scannen',
+    recipient: 'Empfänger',
+    categoryChanged: 'Kategorie geändert',
   },
   en: {
     dashboard: 'Record',
@@ -195,6 +200,11 @@ const messages = {
     search: 'Search',
     amountFrom: 'Amount from',
     amountTo: 'to',
+    paymentInfo: 'Payment Information',
+    paymentIban: 'Recipient IBAN',
+    scanQr: 'Scan with banking app',
+    recipient: 'Recipient',
+    categoryChanged: 'Category changed',
   },
 }
 

@@ -165,6 +165,21 @@ class ExpenseService {
 		return $this->transition($id, $userId, Expense::STATUS_DONE, Approval::ACTION_DONE);
 	}
 
+	public function updateCategory(int $id, string $category, string $actorId): ?Expense {
+		$expense = $this->findById($id);
+		if ($expense === null) {
+			return null;
+		}
+
+		$oldCategory = $expense->getCategory();
+		$expense->setCategory($category);
+		$this->expenseMapper->update($expense);
+
+		$this->logAction($id, $actorId, 'category_changed', $oldCategory . ' → ' . $category);
+
+		return $expense;
+	}
+
 	public function getPendingForPresident(): array {
 		$submitted = $this->expenseMapper->findByStatus(Expense::STATUS_SUBMITTED);
 		$threshold = SettingsService::getThreshold();

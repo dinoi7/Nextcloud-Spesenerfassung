@@ -43,6 +43,7 @@ function actionLabel(action) {
     rejected: 'statusRejected',
     paid: 'statusPaid',
     done: 'statusDone',
+    category_changed: 'categoryChanged',
   }
   return t(map[action] || action)
 }

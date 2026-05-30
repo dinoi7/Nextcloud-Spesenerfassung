@@ -32,7 +32,10 @@
         </div>
         <div class="spes-detail-item">
           <span class="spes-detail-label">{{ t('category') }}</span>
-          <span class="spes-detail-value">{{ expense.category }}</span>
+          <select v-if="canPay" v-model="categoryValue" @change="onCategoryChange" class="spes-input spes-input-sm">
+            <option v-for="cat in settingsStore.settings.categories" :key="cat" :value="cat">{{ cat }}</option>
+          </select>
+          <span v-else class="spes-detail-value">{{ expense.category }}</span>
         </div>
         <div v-if="expense.foreignCurrency" class="spes-detail-item">
           <span class="spes-detail-label">{{ t('foreignAmount') }}</span>
@@ -67,6 +70,21 @@
 
       <HistoryTimeline :history="history" />
 
+      <div v-if="canPay && expense.payoutMethod === 'bank' && expense.iban" class="spes-payment-info">
+        <h3>{{ t('paymentInfo') }}</h3>
+        <div class="spes-payment-body">
+          <div class="spes-payment-details">
+            <span class="spes-payment-label">{{ t('paymentIban') }}</span>
+            <span class="spes-payment-iban">{{ expense.iban }}</span>
+            <span class="spes-payment-label">{{ t('recipient') }}</span>
+            <span class="spes-payment-value">{{ expense.submitterName }}</span>
+            <span class="spes-payment-label">{{ t('amount') }}</span>
+            <span class="spes-payment-value">CHF {{ formatAmount(expense.amount) }}</span>
+          </div>
+          <SwissQrCode :iban="expense.iban" :name="expense.submitterName" :amount="expense.amount" :reference="'SpesenNr. ' + expense.id + ': ' + expense.title" />
+        </div>
+      </div>
+
       <div v-if="canApprove || canReject || canPay || canDone" class="spes-detail-actions">
         <button v-if="canApprove" class="spes-btn spes-btn-success" @click="handleApprove">{{ t('approve') }}</button>
         <button v-if="canReject" class="spes-btn spes-btn-danger" @click="handleReject">{{ t('reject') }}</button>
@@ -78,7 +96,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useExpenseStore } from '../store/expenses'
 import { useSettingsStore } from '../store/settings'
@@ -86,6 +104,7 @@ import { useI18n } from '../i18n'
 import { api } from '../api'
 import StatusBadge from '../components/StatusBadge.vue'
 import HistoryTimeline from '../components/HistoryTimeline.vue'
+import SwissQrCode from '../components/SwissQrCode.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -148,6 +167,12 @@ const canDone = computed(() => {
 
 const id = computed(() => parseInt(route.params.id))
 
+const categoryValue = ref('')
+
+watch(expense, (val) => {
+  if (val) categoryValue.value = val.category
+})
+
 onMounted(async () => {
   await settingsStore.loadSettings()
   try {
@@ -155,6 +180,7 @@ onMounted(async () => {
     expense.value = data
     history.value = data.history || []
     receipts.value = data.receipts || []
+    categoryValue.value = data.category
   } catch (e) {
     expense.value = null
   } finally {
@@ -216,5 +242,23 @@ async function handleDelete() {
   if (!confirm(t('confirmDelete'))) return
   await store.deleteExpense(id.value)
   router.push('/')
+}
+
+async function onCategoryChange() {
+  const oldCat = expense.value.category
+  try {
+    const data = await api.updateExpenseCategory(id.value, categoryValue.value)
+    expense.value = data
+    history.value.unshift({
+      action: 'category_changed',
+      comment: oldCat + ' → ' + categoryValue.value,
+      userId: store.currentUser,
+      displayName: store.currentUser,
+      createdAt: new Date().toISOString(),
+    })
+  } catch (e) {
+    categoryValue.value = oldCat
+    alert(e.message)
+  }
 }
 </script>

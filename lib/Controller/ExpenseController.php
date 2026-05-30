@@ -6,6 +6,8 @@ namespace OCA\Spesenerfassung\Controller;
 use OCA\Spesenerfassung\Db\Expense;
 use OCA\Spesenerfassung\Service\ExpenseService;
 use OCA\Spesenerfassung\Service\ReceiptService;
+use OCA\Spesenerfassung\Service\SettingsService;
+use OCA\Spesenerfassung\Service\UserSettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -20,6 +22,7 @@ use Psr\Log\LoggerInterface;
 class ExpenseController extends Controller {
 	private ExpenseService $expenseService;
 	private ReceiptService $receiptService;
+	private UserSettingsService $userSettingsService;
 	private IUserSession $userSession;
 	private IUserManager $userManager;
 	private LoggerInterface $logger;
@@ -29,6 +32,7 @@ class ExpenseController extends Controller {
 		IRequest $request,
 		ExpenseService $expenseService,
 		ReceiptService $receiptService,
+		UserSettingsService $userSettingsService,
 		IUserSession $userSession,
 		IUserManager $userManager,
 		LoggerInterface $logger,
@@ -36,6 +40,7 @@ class ExpenseController extends Controller {
 		parent::__construct($appName, $request);
 		$this->expenseService = $expenseService;
 		$this->receiptService = $receiptService;
+		$this->userSettingsService = $userSettingsService;
 		$this->userSession = $userSession;
 		$this->userManager = $userManager;
 		$this->logger = $logger;
@@ -101,6 +106,16 @@ class ExpenseController extends Controller {
 			$row['displayName'] = $names[$a->getUserId()] ?? $a->getUserId();
 			return $row;
 		}, $history);
+
+		$treasurerUid = SettingsService::getTreasurerUid();
+		if ($treasurerUid !== '' && $this->getUserId() === $treasurerUid && $expense->getPayoutMethod() === 'bank') {
+			$iban = $this->userSettingsService->getIban($expense->getUserId());
+			if ($iban !== '') {
+				$data['iban'] = $iban;
+				$data['submitterName'] = $data['displayName'];
+			}
+		}
+
 		return new DataResponse($data);
 	}
 
@@ -215,6 +230,30 @@ class ExpenseController extends Controller {
 
 		$this->receiptService->delete($receiptId);
 		return new DataResponse(['success' => true]);
+	}
+
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
+	public function updateCategory(int $id): DataResponse {
+		$treasurerUid = SettingsService::getTreasurerUid();
+		if ($treasurerUid === '' || $this->getUserId() !== $treasurerUid) {
+			return new DataResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		}
+
+		$data = $this->request->getParams();
+		$category = $data['category'] ?? '';
+		if ($category === '') {
+			return new DataResponse(['error' => 'Category required'], Http::STATUS_BAD_REQUEST);
+		}
+
+		$expense = $this->expenseService->updateCategory($id, $category, $this->getUserId());
+		if ($expense === null) {
+			return new DataResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
+		}
+
+		return new DataResponse($expense->toArray());
 	}
 
 	/**

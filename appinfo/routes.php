@@ -10,6 +10,7 @@ return [
 		['name' => 'expense#create', 'url' => '/api/expenses', 'verb' => 'POST'],
 		['name' => 'expense#ping', 'url' => '/api/ping', 'verb' => 'POST'],
 		['name' => 'expense#update', 'url' => '/api/expenses/{id}', 'verb' => 'PUT', 'requirements' => ['id' => '\d+']],
+		['name' => 'expense#updateCategory', 'url' => '/api/expenses/{id}/category', 'verb' => 'PUT', 'requirements' => ['id' => '\d+']],
 		['name' => 'expense#destroy', 'url' => '/api/expenses/{id}', 'verb' => 'DELETE', 'requirements' => ['id' => '\d+']],
 		['name' => 'expense#uploadReceipt', 'url' => '/api/expenses/{id}/receipts', 'verb' => 'POST', 'requirements' => ['id' => '\d+']],
 		['name' => 'expense#deleteReceipt', 'url' => '/api/expenses/{id}/receipts/{receiptId}', 'verb' => 'DELETE', 'requirements' => ['id' => '\d+', 'receiptId' => '\d+']],

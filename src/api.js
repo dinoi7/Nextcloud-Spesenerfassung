@@ -60,6 +60,7 @@ export const api = {
   reject: (id, reason) => request('POST', `/expenses/${id}/reject`, { reason }),
   pay: (id) => request('POST', `/expenses/${id}/pay`),
   done: (id) => request('POST', `/expenses/${id}/done`),
+  updateExpenseCategory: (id, category) => request('PUT', `/expenses/${id}/category`, { category }),
 
   getPendingApprovals: () => request('GET', '/approvals/pending'),
   getEvaluation: () => request('GET', '/evaluation'),

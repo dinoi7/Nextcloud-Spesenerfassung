@@ -20,11 +20,12 @@
           <span v-if="expense.receiptCount > 0" class="spes-card-receipt-badge" :title="expense.receiptCount + ' Belege'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg> {{ expense.receiptCount }}</span>
           <StatusBadge :status="expense.status" />
         </div>
-        <div class="spes-card-body">
+          <div class="spes-card-body">
           <div>
             <div class="spes-card-amount">CHF {{ formatAmount(expense.amount) }}</div>
             <div v-if="expense.foreignCurrency" class="spes-card-foreign-amount">{{ expense.foreignCurrency }} {{ formatAmount(expense.foreignAmount) }}</div>
           </div>
+          <div v-if="expense.description" class="spes-card-desc">{{ expense.description }}</div>
           <div class="spes-card-meta">
             <span>{{ expense.category }}</span>
             <span>{{ formatDate(expense.expenseDate) }}</span>
