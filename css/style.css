@@ -120,14 +120,21 @@
 }
 
 .spes-year-select {
-  padding: 4px 10px;
+  padding: 8px 36px 8px 14px;
+  min-width: 130px;
   border: 1px solid var(--color-border, #ccc);
   border-radius: var(--spes-radius);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   font-family: inherit;
   color: var(--color-main-text, #222);
   background: var(--color-main-background, #fff);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='3' stroke-linecap='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px;
+  appearance: none;
+  -webkit-appearance: none;
   cursor: pointer;
 }
 .spes-year-select:focus {
@@ -247,6 +254,12 @@
 .spes-card-foreign {
   font-size: 11px;
   color: var(--color-text-maxcontrast, #888);
+  font-style: italic;
+}
+.spes-card-foreign-amount {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-maxcontrast, #666);
   font-style: italic;
 }
 .spes-card-actions {
@@ -594,13 +607,89 @@
 .spes-add-category { display: flex; gap: 8px; margin-top: 4px; }
 .spes-add-category .spes-input { flex: 1; }
 
+.spes-evaluation-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+.spes-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.spes-filter-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-maxcontrast, #555);
+  text-transform: uppercase;
+  letter-spacing: .3px;
+}
+.spes-evaluation-filters select,
+.spes-evaluation-filters input {
+  padding: 6px 10px;
+  border: 1px solid var(--color-border, #ccc);
+  border-radius: var(--spes-radius);
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--color-main-background, #fff);
+  color: var(--color-main-text, #222);
+}
+.spes-evaluation-filters select {
+  min-width: 140px;
+}
+.spes-evaluation-filters input {
+  min-width: 180px;
+}
+.spes-evaluation-filters select:focus,
+.spes-evaluation-filters input:focus {
+  outline: none;
+  border-color: var(--color-primary, #0082c9);
+}
+.spes-evaluation-summary {
+  margin-top: 16px;
+  display: flex;
+  gap: 24px;
+  font-size: 14px;
+  color: var(--color-text-maxcontrast, #888);
+}
+.spes-evaluation-summary strong {
+  color: var(--color-main-text, #222);
+}
+.spes-history-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+.spes-history-table th.sortable:hover {
+  color: var(--color-primary, #0082c9);
+}
+.spes-history-table th.sortable::after {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  margin-left: 4px;
+  opacity: 0.4;
+}
+.spes-history-table th.sort-desc::after {
+  content: '▼';
+  opacity: 1;
+}
+.spes-history-table th.sort-asc::after {
+  content: '▲';
+  opacity: 1;
+}
+
 @media (min-width: 900px) {
-  .spes-app { max-width: none; padding: 0 32px 80px; }
-  .spes-card-list { grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); }
-  .spes-card { padding: 12px 16px; gap: 6px; }
+  .spes-app { max-width: none; padding: 0 48px 80px; }
+  .spes-card-list { grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 20px; }
+  .spes-card { padding: 16px 20px; gap: 6px; }
   .spes-card-body { flex-direction: row; align-items: center; justify-content: space-between; gap: 16px; }
-  .spes-card-amount { font-size: 20px; }
+  .spes-card-amount { font-size: 22px; }
+  .spes-card-meta { gap: 16px; font-size: 13px; }
   .spes-summary { grid-template-columns: repeat(4, 1fr); }
+  .spes-form { max-width: 860px; }
+  .spes-detail { max-width: 860px; }
 }
 
 @media (max-width: 600px) {

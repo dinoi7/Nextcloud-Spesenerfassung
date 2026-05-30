@@ -40,6 +40,10 @@ class ExpenseService {
 		return $this->expenseMapper->findByUser($userId);
 	}
 
+	public function findAll(): array {
+		return $this->expenseMapper->findAll();
+	}
+
 	/**
 	 * @return Approval[]
 	 */

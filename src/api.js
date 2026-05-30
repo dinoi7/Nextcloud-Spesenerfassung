@@ -62,6 +62,7 @@ export const api = {
   done: (id) => request('POST', `/expenses/${id}/done`),
 
   getPendingApprovals: () => request('GET', '/approvals/pending'),
+  getEvaluation: () => request('GET', '/evaluation'),
   getSettings: () => request('GET', '/settings'),
   updateSettings: (data) => request('PUT', '/settings', data),
   getUserSettings: () => request('GET', '/settings/user'),

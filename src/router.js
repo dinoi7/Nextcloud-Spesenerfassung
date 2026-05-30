@@ -5,6 +5,7 @@ import ExpenseDetail from './views/ExpenseDetail.vue'
 import ApprovalList from './views/ApprovalList.vue'
 import SettingsView from './views/SettingsView.vue'
 import UserSettings from './views/UserSettings.vue'
+import EvaluationView from './views/EvaluationView.vue'
 
 const routes = [
   { path: '/', name: 'dashboard', component: Dashboard },
@@ -14,6 +15,7 @@ const routes = [
   { path: '/approvals', name: 'approvals', component: ApprovalList },
   { path: '/settings', name: 'settings', component: SettingsView },
   { path: '/profile', name: 'profile', component: UserSettings },
+  { path: '/evaluation', name: 'evaluation', component: EvaluationView },
 ]
 
 const router = createRouter({

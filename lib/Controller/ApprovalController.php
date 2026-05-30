@@ -171,4 +171,26 @@ class ApprovalController extends Controller {
 		}, $pending);
 		return new DataResponse($result);
 	}
+
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	public function evaluation(): DataResponse {
+		if (!$this->checkRole('president') && !$this->checkRole('treasurer')) {
+			return new DataResponse(['error' => 'Not authorized'], Http::STATUS_FORBIDDEN);
+		}
+		$expenses = $this->expenseService->findAll();
+		$userIds = array_map(fn($e) => $e->getUserId(), $expenses);
+		$names = [];
+		foreach (array_unique($userIds) as $uid) {
+			$u = $this->userManager->get($uid);
+			$names[$uid] = $u ? $u->getDisplayName() : $uid;
+		}
+		$result = array_map(function ($e) use ($names) {
+			$row = $e->toArray();
+			$row['displayName'] = $names[$e->getUserId()] ?? $e->getUserId();
+			$row['receiptCount'] = count($this->receiptService->findByExpenseId($e->getId()));
+			return $row;
+		}, $expenses);
+		return new DataResponse($result);
+	}
 }

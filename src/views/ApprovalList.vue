@@ -21,12 +21,14 @@
           <StatusBadge :status="expense.status" />
         </div>
         <div class="spes-card-body">
-          <div class="spes-card-amount">CHF {{ formatAmount(expense.amount) }}</div>
+          <div>
+            <div class="spes-card-amount">CHF {{ formatAmount(expense.amount) }}</div>
+            <div v-if="expense.foreignCurrency" class="spes-card-foreign-amount">{{ expense.foreignCurrency }} {{ formatAmount(expense.foreignAmount) }}</div>
+          </div>
           <div class="spes-card-meta">
             <span>{{ expense.category }}</span>
             <span>{{ formatDate(expense.expenseDate) }}</span>
             <span v-if="expense.payoutMethod" class="spes-card-payout">{{ expense.payoutMethod === 'bank' ? t('payoutBank') : t('payoutCash') }}</span>
-            <span v-if="expense.foreignCurrency" class="spes-card-foreign">{{ formatAmount(expense.foreignAmount) }} {{ expense.foreignCurrency }}</span>
           </div>
         </div>
         <div class="spes-card-actions" @click.stop>

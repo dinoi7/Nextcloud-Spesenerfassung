@@ -21,6 +21,10 @@
           <span class="spes-nav-label">{{ t('approvals') }}</span>
           <span v-if="expenseStore.approvalCount > 0" class="spes-nav-badge">{{ expenseStore.approvalCount }}</span>
         </router-link>
+        <router-link v-if="isReviewer" to="/evaluation" class="spes-nav-link" active-class="spes-nav-link--active">
+          <span class="spes-nav-icon">&#128202;</span>
+          <span class="spes-nav-label">{{ t('evaluation') }}</span>
+        </router-link>
         <router-link to="/profile" class="spes-nav-link" active-class="spes-nav-link--active">
           <span class="spes-nav-icon">&#128100;</span>
           <span class="spes-nav-label">{{ t('profile') }}</span>
