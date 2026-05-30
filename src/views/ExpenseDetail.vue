@@ -34,6 +34,10 @@
           <span class="spes-detail-label">{{ t('category') }}</span>
           <span class="spes-detail-value">{{ expense.category }}</span>
         </div>
+        <div v-if="expense.foreignCurrency" class="spes-detail-item">
+          <span class="spes-detail-label">{{ t('foreignAmount') }}</span>
+          <span class="spes-detail-value">{{ expense.foreignCurrency }} {{ formatAmount(expense.foreignAmount) }}</span>
+        </div>
         <div class="spes-detail-item">
           <span class="spes-detail-label">{{ t('expenseDate') }}</span>
           <span class="spes-detail-value">{{ formatDate(expense.expenseDate) }}</span>
