@@ -42,6 +42,7 @@ function actionLabel(action) {
     approved: 'statusApproved',
     rejected: 'statusRejected',
     paid: 'statusPaid',
+    paystack: 'toPaystack',
     done: 'statusDone',
     category_changed: 'categoryChanged',
   }

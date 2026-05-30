@@ -39,6 +39,7 @@ class Expense extends Entity {
 	public const STATUS_APPROVED = 'approved';
 	public const STATUS_REJECTED = 'rejected';
 	public const STATUS_PAID = 'paid';
+	public const STATUS_PAYSTACK = 'paystack';
 	public const STATUS_DONE = 'done';
 
 	public const STATUSES = [
@@ -47,6 +48,7 @@ class Expense extends Entity {
 		self::STATUS_APPROVED,
 		self::STATUS_REJECTED,
 		self::STATUS_PAID,
+		self::STATUS_PAYSTACK,
 		self::STATUS_DONE,
 	];
 

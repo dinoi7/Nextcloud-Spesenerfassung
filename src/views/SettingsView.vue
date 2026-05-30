@@ -34,16 +34,26 @@
       </div>
 
       <div class="spes-form-group">
-        <label class="spes-label">{{ t('categories') }}</label>
-        <div class="spes-categories">
-          <div v-for="(cat, idx) in form.categories" :key="idx" class="spes-category-row">
-            <input v-model="form.categories[idx]" class="spes-input" />
-            <button class="spes-btn spes-btn-sm spes-btn-danger" @click="removeCategory(idx)">&times;</button>
-          </div>
-        </div>
+        <label class="spes-label">{{ t('debitAccounts') }}</label>
+        <table class="spes-accounts-table" v-if="rows.length">
+          <thead>
+            <tr>
+              <th>{{ t('category') }}</th>
+              <th>Soll-Konto</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(row, idx) in rows" :key="idx">
+              <td><input v-model="row.category" class="spes-input" /></td>
+              <td><input v-model="row.account" class="spes-input" placeholder="z.B. 4450 Projekte/Anlässe" /></td>
+              <td><button class="spes-btn spes-btn-sm spes-btn-danger" @click="removeRow(idx)">&times;</button></td>
+            </tr>
+          </tbody>
+        </table>
         <div class="spes-add-category">
           <input v-model="newCategory" class="spes-input" :placeholder="t('categoryName')" />
-          <button class="spes-btn spes-btn-sm" @click="addCategory">{{ t('addCategory') }}</button>
+          <button class="spes-btn spes-btn-sm" @click="addRow">{{ t('addCategory') }}</button>
         </div>
       </div>
 
@@ -72,35 +82,61 @@ const form = ref({
   threshold: 250,
   categories: [],
   defaultPayoutMethod: 'bank',
+  exportAccounts: {},
 })
+
+const rows = ref([])
 
 onMounted(async () => {
   await settingsStore.loadSettings()
   form.value = { ...settingsStore.settings }
+  buildRows()
   try {
     users.value = await api.getUsers()
   } catch {}
   loading.value = false
 })
 
+function buildRows() {
+  const accounts = form.value.exportAccounts || {}
+  rows.value = form.value.categories.map(cat => ({
+    category: cat,
+    account: accounts[cat] || '',
+  }))
+}
+
+function syncForm() {
+  form.value.categories = rows.value.map(r => r.category.trim()).filter(Boolean)
+  const accounts = {}
+  for (const r of rows.value) {
+    const cat = r.category.trim()
+    if (cat) {
+      accounts[cat] = r.account
+    }
+  }
+  form.value.exportAccounts = accounts
+}
+
 async function save() {
+  syncForm()
   try {
     await settingsStore.saveSettings(form.value)
+    buildRows()
     alert(t('settingsSaved'))
   } catch (e) {
     alert(e.message)
   }
 }
 
-function addCategory() {
+function addRow() {
   const name = newCategory.value.trim()
-  if (name && !form.value.categories.includes(name)) {
-    form.value.categories.push(name)
-    newCategory.value = ''
-  }
+  if (!name) return
+  if (rows.value.some(r => r.category.trim() === name)) return
+  rows.value.push({ category: name, account: '' })
+  newCategory.value = ''
 }
 
-function removeCategory(idx) {
-  form.value.categories.splice(idx, 1)
+function removeRow(idx) {
+  rows.value.splice(idx, 1)
 }
 </script>

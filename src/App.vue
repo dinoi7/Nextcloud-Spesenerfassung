@@ -25,6 +25,10 @@
           <span class="spes-nav-icon">&#128202;</span>
           <span class="spes-nav-label">{{ t('evaluation') }}</span>
         </router-link>
+        <router-link v-if="expenseStore.userIsTreasurer" to="/paystack" class="spes-nav-link" active-class="spes-nav-link--active">
+          <span class="spes-nav-icon">&#128179;</span>
+          <span class="spes-nav-label">{{ t('paystack') }}</span>
+        </router-link>
         <router-link to="/profile" class="spes-nav-link" active-class="spes-nav-link--active">
           <span class="spes-nav-icon">&#128100;</span>
           <span class="spes-nav-label">{{ t('profile') }}</span>

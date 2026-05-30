@@ -60,9 +60,27 @@ export const api = {
   reject: (id, reason) => request('POST', `/expenses/${id}/reject`, { reason }),
   pay: (id) => request('POST', `/expenses/${id}/pay`),
   done: (id) => request('POST', `/expenses/${id}/done`),
+  addToPaystack: (id) => request('POST', `/expenses/${id}/paystack`),
   updateExpenseCategory: (id, category) => request('PUT', `/expenses/${id}/category`, { category }),
 
   getPendingApprovals: () => request('GET', '/approvals/pending'),
+  getPaystack: () => request('GET', '/approvals/paystack'),
+  payAll: () => request('POST', '/approvals/paystack/pay-all'),
+  exportPaystack: async () => {
+    const base = '/index.php/apps/spesenerfassung/api'
+    const headers = {}
+    const token = document.querySelector('head meta[name="csrf-token"]')?.getAttribute('content')
+    if (token) headers['requesttoken'] = token
+    const res = await fetch(base + '/approvals/paystack/export', { headers, credentials: 'same-origin' })
+    if (!res.ok) throw new Error('Export failed')
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'zahlstapel.csv'
+    a.click()
+    URL.revokeObjectURL(url)
+  },
   getEvaluation: () => request('GET', '/evaluation'),
   getSettings: () => request('GET', '/settings'),
   updateSettings: (data) => request('PUT', '/settings', data),

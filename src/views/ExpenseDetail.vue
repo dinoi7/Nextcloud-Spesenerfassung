@@ -85,9 +85,10 @@
         </div>
       </div>
 
-      <div v-if="canApprove || canReject || canPay || canDone" class="spes-detail-actions">
+      <div v-if="canApprove || canReject || canAddToPaystack || canPay || canDone" class="spes-detail-actions">
         <button v-if="canApprove" class="spes-btn spes-btn-success" @click="handleApprove">{{ t('approve') }}</button>
         <button v-if="canReject" class="spes-btn spes-btn-danger" @click="handleReject">{{ t('reject') }}</button>
+        <button v-if="canAddToPaystack" class="spes-btn spes-btn-paystack" @click="handleAddToPaystack">{{ t('addToPaystack') }}</button>
         <button v-if="canPay" class="spes-btn spes-btn-success" @click="handlePay">{{ t('pay') }}</button>
         <button v-if="canDone" class="spes-btn" @click="handleDone">{{ t('done') }}</button>
       </div>
@@ -112,11 +113,13 @@ const store = useExpenseStore()
 const settingsStore = useSettingsStore()
 const { t } = useI18n()
 
-const backLabel = computed(() => route.query.from === 'approvals' ? t('approvals') : t('dashboard'))
+const backLabel = computed(() => route.query.from === 'approvals' ? t('approvals') : route.query.from === 'paystack' ? t('paystack') : t('dashboard'))
 
 function goBack() {
   if (route.query.from === 'approvals') {
     router.push('/approvals')
+  } else if (route.query.from === 'paystack') {
+    router.push('/paystack')
   } else {
     router.push('/')
   }
@@ -155,6 +158,12 @@ const canReject = computed(() => {
 })
 
 const canPay = computed(() => {
+  if (!expense.value) return false
+  return store.userIsTreasurer && (expense.value.status === 'submitted' && parseFloat(expense.value.amount) <= settingsStore.settings.threshold
+    || expense.value.status === 'approved')
+})
+
+const canAddToPaystack = computed(() => {
   if (!expense.value) return false
   return store.userIsTreasurer && (expense.value.status === 'submitted' && parseFloat(expense.value.amount) <= settingsStore.settings.threshold
     || expense.value.status === 'approved')
@@ -227,6 +236,13 @@ async function handleReject() {
 async function handlePay() {
   try {
     const exp = await api.pay(id.value)
+    expense.value = exp
+  } catch (e) { alert(e.message) }
+}
+
+async function handleAddToPaystack() {
+  try {
+    const exp = await api.addToPaystack(id.value)
     expense.value = exp
   } catch (e) { alert(e.message) }
 }

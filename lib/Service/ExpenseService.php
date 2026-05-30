@@ -165,6 +165,26 @@ class ExpenseService {
 		return $this->transition($id, $userId, Expense::STATUS_DONE, Approval::ACTION_DONE);
 	}
 
+	public function addToPaystack(int $id, string $userId): ?Expense {
+		return $this->transition($id, $userId, Expense::STATUS_PAYSTACK, Approval::ACTION_PAYSTACK);
+	}
+
+	public function getPaystackExpenses(): array {
+		return $this->expenseMapper->findByStatus(Expense::STATUS_PAYSTACK);
+	}
+
+	public function payAllFromPaystack(string $userId): array {
+		$expenses = $this->getPaystackExpenses();
+		$results = [];
+		foreach ($expenses as $expense) {
+			$result = $this->pay($expense->getId(), $userId);
+			if ($result !== null) {
+				$results[] = $result->toArray();
+			}
+		}
+		return $results;
+	}
+
 	public function updateCategory(int $id, string $category, string $actorId): ?Expense {
 		$expense = $this->findById($id);
 		if ($expense === null) {

@@ -13,6 +13,7 @@ class SettingsService {
 	private const KEY_THRESHOLD = 'threshold';
 	private const KEY_CATEGORIES = 'categories';
 	private const KEY_DEFAULT_PAYOUT_METHOD = 'default_payout_method';
+	private const KEY_EXPORT_ACCOUNTS = 'export_accounts';
 
 	private const DEFAULTS = [
 		self::KEY_PRESIDENT_UID => '',
@@ -20,6 +21,7 @@ class SettingsService {
 		self::KEY_THRESHOLD => '250',
 		self::KEY_CATEGORIES => '["Material","Verpflegung","Reise","Büro","Sonstiges"]',
 		self::KEY_DEFAULT_PAYOUT_METHOD => 'bank',
+		self::KEY_EXPORT_ACCOUNTS => '{}',
 	];
 
 	public static function setConfig(IAppConfig $config): void {
@@ -113,6 +115,16 @@ class SettingsService {
 		self::getConfig()->setValueString('spesenerfassung', self::KEY_DEFAULT_PAYOUT_METHOD, $method);
 	}
 
+	public static function getExportAccounts(): array {
+		$raw = self::getString(self::KEY_EXPORT_ACCOUNTS);
+		$accounts = json_decode($raw, true);
+		return is_array($accounts) ? $accounts : [];
+	}
+
+	public static function setExportAccounts(array $accounts): void {
+		self::getConfig()->setValueString('spesenerfassung', self::KEY_EXPORT_ACCOUNTS, json_encode($accounts));
+	}
+
 	public static function getAll(): array {
 		return [
 			'presidentUid' => self::getPresidentUid(),
@@ -120,6 +132,7 @@ class SettingsService {
 			'threshold' => self::getThreshold(),
 			'categories' => self::getCategories(),
 			'defaultPayoutMethod' => self::getDefaultPayoutMethod(),
+			'exportAccounts' => self::getExportAccounts(),
 		];
 	}
 
@@ -138,6 +151,9 @@ class SettingsService {
 		}
 		if (isset($data['defaultPayoutMethod'])) {
 			self::setDefaultPayoutMethod($data['defaultPayoutMethod']);
+		}
+		if (isset($data['exportAccounts']) && is_array($data['exportAccounts'])) {
+			self::setExportAccounts($data['exportAccounts']);
 		}
 		return self::getAll();
 	}

@@ -285,6 +285,7 @@
 .spes-badge--approved { background: #e8f5e9; color: #2e7d32; }
 .spes-badge--rejected { background: #ffebee; color: #c62828; }
 .spes-badge--paid { background: #e3f2fd; color: #1565c0; }
+.spes-badge--paystack { background: #fff8e1; color: #f57f17; }
 .spes-badge--done { background: #f3e5f5; color: #6a1b9a; }
 
 .spes-form {
@@ -380,6 +381,12 @@
   border-color: #c62828;
 }
 .spes-btn-danger:hover { opacity: .9; }
+.spes-btn-paystack {
+  background: #f57f17;
+  color: #fff;
+  border-color: #f57f17;
+}
+.spes-btn-paystack:hover { opacity: .9; }
 .spes-btn-sm { padding: 4px 10px; font-size: 12px; }
 
 .spes-form-actions {
@@ -543,6 +550,7 @@
 .spes-timeline-action--approved { background: #e8f5e9; color: #2e7d32; }
 .spes-timeline-action--rejected { background: #ffebee; color: #c62828; }
 .spes-timeline-action--paid { background: #e3f2fd; color: #1565c0; }
+.spes-timeline-action--paystack { background: #fff8e1; color: #f57f17; }
 .spes-timeline-action--done { background: #f3e5f5; color: #6a1b9a; }
 .spes-timeline-user { color: var(--color-text-maxcontrast, #777); }
 .spes-timeline-date { color: var(--color-text-maxcontrast, #888); font-size: 12px; }
@@ -799,4 +807,34 @@
   padding: 2px 6px;
   width: auto;
   max-width: 200px;
+}
+
+.spes-paystack-count {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--color-text-maxcontrast, #888);
+}
+
+.spes-paystack-header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.spes-accounts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.spes-account-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spes-account-cat {
+  min-width: 130px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-main-text, #222);
 }

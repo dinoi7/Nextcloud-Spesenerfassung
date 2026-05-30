@@ -119,6 +119,7 @@ const statuses = [
   { value: 'approved', label: t('statusApproved') },
   { value: 'rejected', label: t('statusRejected') },
   { value: 'paid', label: t('statusPaid') },
+  { value: 'paystack', label: t('statusPaystack') },
   { value: 'done', label: t('statusDone') },
 ]
 

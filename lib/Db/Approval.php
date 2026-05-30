@@ -24,6 +24,7 @@ class Approval extends Entity {
 	public const ACTION_APPROVED = 'approved';
 	public const ACTION_REJECTED = 'rejected';
 	public const ACTION_PAID = 'paid';
+	public const ACTION_PAYSTACK = 'paystack';
 	public const ACTION_DONE = 'done';
 
 	protected int $expenseId = 0;

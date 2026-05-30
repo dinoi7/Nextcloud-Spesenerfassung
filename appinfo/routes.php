@@ -22,6 +22,10 @@ return [
 		['name' => 'approval#pay', 'url' => '/api/expenses/{id}/pay', 'verb' => 'POST', 'requirements' => ['id' => '\d+']],
 		['name' => 'approval#done', 'url' => '/api/expenses/{id}/done', 'verb' => 'POST', 'requirements' => ['id' => '\d+']],
 		['name' => 'approval#pending', 'url' => '/api/approvals/pending', 'verb' => 'GET'],
+		['name' => 'approval#paystack', 'url' => '/api/expenses/{id}/paystack', 'verb' => 'POST', 'requirements' => ['id' => '\d+']],
+		['name' => 'approval#paystackList', 'url' => '/api/approvals/paystack', 'verb' => 'GET'],
+		['name' => 'approval#paystackExport', 'url' => '/api/approvals/paystack/export', 'verb' => 'GET'],
+		['name' => 'approval#paystackPayAll', 'url' => '/api/approvals/paystack/pay-all', 'verb' => 'POST'],
 		['name' => 'approval#evaluation', 'url' => '/api/evaluation', 'verb' => 'GET'],
 
 		['name' => 'settings#get', 'url' => '/api/settings', 'verb' => 'GET'],

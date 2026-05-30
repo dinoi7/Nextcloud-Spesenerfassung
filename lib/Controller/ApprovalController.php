@@ -6,8 +6,10 @@ namespace OCA\Spesenerfassung\Controller;
 use OCA\Spesenerfassung\Service\ExpenseService;
 use OCA\Spesenerfassung\Service\ReceiptService;
 use OCA\Spesenerfassung\Service\SettingsService;
+use OCA\Spesenerfassung\Service\UserSettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\IRequest;
 use OCP\IUserManager;
@@ -18,6 +20,7 @@ class ApprovalController extends Controller {
 	private IUserSession $userSession;
 	private IUserManager $userManager;
 	private ReceiptService $receiptService;
+	private UserSettingsService $userSettingsService;
 
 	public function __construct(
 		string $appName,
@@ -26,12 +29,14 @@ class ApprovalController extends Controller {
 		IUserSession $userSession,
 		IUserManager $userManager,
 		ReceiptService $receiptService,
+		UserSettingsService $userSettingsService,
 	) {
 		parent::__construct($appName, $request);
 		$this->expenseService = $expenseService;
 		$this->userSession = $userSession;
 		$this->userManager = $userManager;
 		$this->receiptService = $receiptService;
+		$this->userSettingsService = $userSettingsService;
 	}
 
 	private function getUserId(): string {
@@ -170,6 +175,96 @@ class ApprovalController extends Controller {
 			return $row;
 		}, $pending);
 		return new DataResponse($result);
+	}
+
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
+	public function paystack(int $id): DataResponse {
+		if (!$this->checkRole('treasurer')) {
+			return new DataResponse(['error' => 'Only treasurer can set paystack'], Http::STATUS_FORBIDDEN);
+		}
+		$expense = $this->expenseService->addToPaystack($id, $this->getUserId());
+		if ($expense === null) {
+			return new DataResponse(['error' => 'Cannot transition to paystack'], Http::STATUS_FORBIDDEN);
+		}
+		return new DataResponse($expense->toArray());
+	}
+
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
+	public function paystackList(): DataResponse {
+		if (!$this->checkRole('treasurer')) {
+			return new DataResponse(['error' => 'Only treasurer can view paystack'], Http::STATUS_FORBIDDEN);
+		}
+		$expenses = $this->expenseService->getPaystackExpenses();
+		$userIds = array_map(fn($e) => $e->getUserId(), $expenses);
+		$names = [];
+		foreach (array_unique($userIds) as $uid) {
+			$u = $this->userManager->get($uid);
+			$names[$uid] = $u ? $u->getDisplayName() : $uid;
+		}
+		$result = array_map(function ($e) use ($names) {
+			$row = $e->toArray();
+			$row['displayName'] = $names[$e->getUserId()] ?? $e->getUserId();
+			$row['receiptCount'] = count($this->receiptService->findByExpenseId($e->getId()));
+			return $row;
+		}, $expenses);
+		return new DataResponse($result);
+	}
+
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
+	public function paystackExport() {
+		if (!$this->checkRole('treasurer')) {
+			return new DataResponse(['error' => 'Only treasurer can export'], Http::STATUS_FORBIDDEN);
+		}
+		$expenses = $this->expenseService->getPaystackExpenses();
+		$accounts = SettingsService::getExportAccounts();
+		$csv = "\xEF\xBB\xBF";
+		$csv .= "\"Datum\";\"Text\";\"Soll\";\"Betrag (CHF)\"\n";
+		foreach ($expenses as $e) {
+			$id = $e->getId();
+			$date = date('d.m.Y', strtotime($e->getExpenseDate()));
+			$name = $this->sani($this->resolveDisplayName($e->getUserId()));
+			$desc = $this->sani($e->getDescription() ?? '');
+			$text = 'Spesen: ' . $id . ', ' . $name . ', ' . $desc;
+			$cat = $e->getCategory();
+			$soll = $this->sani($accounts[$cat] ?? '');
+			$amount = '-' . number_format((float) $e->getAmount(), 2, '.', '');
+			$csv .= "\"$date\";\"$text\";\"$soll\";\"$amount\"\n";
+		}
+		return new DataDownloadResponse($csv, 'zahlstapel.csv', 'text/csv; charset=utf-8');
+	}
+
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
+	public function paystackPayAll(): DataResponse {
+		if (!$this->checkRole('treasurer')) {
+			return new DataResponse(['error' => 'Only treasurer can pay all'], Http::STATUS_FORBIDDEN);
+		}
+		$results = $this->expenseService->payAllFromPaystack($this->getUserId());
+		return new DataResponse(['paid' => count($results), 'expenses' => $results]);
+	}
+
+	private function sani(string $field): string {
+		return str_replace(['"', ';'], '_', $field);
+	}
+
+	private function resolveDisplayName(string $userId): string {
+		$u = $this->userManager->get($userId);
+		return $u ? $u->getDisplayName() : $userId;
+	}
+
+	private function getUserIban(string $userId): string {
+		return $this->userSettingsService->getIban($userId);
 	}
 
 	#[NoAdminRequired]

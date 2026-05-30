@@ -12,6 +12,7 @@ class WorkflowService {
 	private const STATE_APPROVED = Expense::STATUS_APPROVED;
 	private const STATE_REJECTED = Expense::STATUS_REJECTED;
 	private const STATE_PAID = Expense::STATUS_PAID;
+	private const STATE_PAYSTACK = Expense::STATUS_PAYSTACK;
 	private const STATE_DONE = Expense::STATUS_DONE;
 
 	/**
@@ -25,10 +26,17 @@ class WorkflowService {
 			self::STATE_APPROVED,
 			self::STATE_REJECTED,
 			self::STATE_PAID,
+			self::STATE_PAYSTACK,
 		],
 		self::STATE_APPROVED => [
 			self::STATE_PAID,
+			self::STATE_PAYSTACK,
 			self::STATE_REJECTED,
+		],
+		self::STATE_PAYSTACK => [
+			self::STATE_PAID,
+			self::STATE_APPROVED,
+			self::STATE_SUBMITTED,
 		],
 		self::STATE_REJECTED => [
 			self::STATE_DRAFT,
