@@ -21,13 +21,19 @@
           <span class="spes-nav-label">{{ t('approvals') }}</span>
           <span v-if="expenseStore.approvalCount > 0" class="spes-nav-badge">{{ expenseStore.approvalCount }}</span>
         </router-link>
-        <router-link v-if="isReviewer" to="/evaluation" class="spes-nav-link" active-class="spes-nav-link--active">
-          <span class="spes-nav-icon">&#128202;</span>
-          <span class="spes-nav-label">{{ t('evaluation') }}</span>
+        <router-link v-if="expenseStore.userIsTreasurer" to="/bookkeeping" class="spes-nav-link" active-class="spes-nav-link--active">
+          <span class="spes-nav-icon">&#128214;</span>
+          <span class="spes-nav-label">{{ t('bookkeeping') }}</span>
+          <span v-if="expenseStore.bookkeepingCount > 0" class="spes-nav-badge">{{ expenseStore.bookkeepingCount }}</span>
         </router-link>
         <router-link v-if="expenseStore.userIsTreasurer" to="/paystack" class="spes-nav-link" active-class="spes-nav-link--active">
           <span class="spes-nav-icon">&#128179;</span>
           <span class="spes-nav-label">{{ t('paystack') }}</span>
+          <span v-if="expenseStore.paystackCount > 0" class="spes-nav-badge">{{ expenseStore.paystackCount }}</span>
+        </router-link>
+        <router-link v-if="isReviewer" to="/evaluation" class="spes-nav-link" active-class="spes-nav-link--active">
+          <span class="spes-nav-icon">&#128202;</span>
+          <span class="spes-nav-label">{{ t('evaluation') }}</span>
         </router-link>
         <router-link to="/profile" class="spes-nav-link" active-class="spes-nav-link--active">
           <span class="spes-nav-icon">&#128100;</span>
@@ -59,6 +65,10 @@ const isReviewer = computed(() => expenseStore.userIsPresident || expenseStore.u
 onMounted(() => {
   if (expenseStore.userIsPresident || expenseStore.userIsTreasurer) {
     expenseStore.loadApprovalCount()
+  }
+  if (expenseStore.userIsTreasurer) {
+    expenseStore.loadBookkeepingCount()
+    expenseStore.loadPaystackCount()
   }
 })
 </script>

@@ -45,7 +45,7 @@
           <span class="spes-detail-label">{{ t('expenseDate') }}</span>
           <span class="spes-detail-value">{{ formatDate(expense.expenseDate) }}</span>
         </div>
-        <div v-if="isPaystackDetail && sollKonto" class="spes-detail-item">
+        <div v-if="(isPaystackDetail || isBookkeepingDetail) && sollKonto" class="spes-detail-item">
           <span class="spes-detail-label">{{ t('debitAccounts') }}</span>
           <span class="spes-detail-value">{{ sollKonto }}</span>
         </div>
@@ -74,7 +74,7 @@
 
       <HistoryTimeline :history="history" />
 
-      <div v-if="(canPay || isPaystackDetail) && expense.payoutMethod === 'bank' && expense.iban" class="spes-payment-info">
+      <div v-if="(canPay || isPaystackDetail || isBookkeepingDetail) && expense.payoutMethod === 'bank' && expense.iban" class="spes-payment-info">
         <h3>{{ t('paymentInfo') }}</h3>
         <div class="spes-payment-body">
           <div class="spes-payment-details">
@@ -89,13 +89,16 @@
         </div>
       </div>
 
-      <div v-if="canApprove || canReject || canAddToPaystack || canPay || canDone || isPaystackDetail" class="spes-detail-actions">
+      <div v-if="canApprove || canReject || canAddToPaystack || canPay || canDone || isPaystackDetail || isBookkeepingDetail || canAddToBookkeeping" class="spes-detail-actions">
         <button v-if="canApprove" class="spes-btn spes-btn-success" @click="handleApprove">{{ t('approve') }}</button>
         <button v-if="canReject" class="spes-btn spes-btn-danger" @click="handleReject">{{ t('reject') }}</button>
+        <button v-if="canAddToBookkeeping" class="spes-btn spes-btn-bookkeeping" @click="handleAddToBookkeeping">{{ t('addToBookkeeping') }}</button>
         <button v-if="canAddToPaystack" class="spes-btn spes-btn-paystack" @click="handleAddToPaystack">{{ t('addToPaystack') }}</button>
         <button v-if="canPay" class="spes-btn spes-btn-success" @click="handlePay">{{ t('pay') }}</button>
+        <button v-if="isBookkeepingDetail && expense.payoutMethod === 'bank'" class="spes-btn spes-btn-paystack" @click="handleAddToPaystack">{{ t('addToPaystack') }}</button>
+        <button v-if="isBookkeepingDetail && expense.payoutMethod !== 'bank'" class="spes-btn spes-btn-success" @click="handlePay">{{ t('pay') }}</button>
+        <button v-if="isBookkeepingDetail" class="spes-btn" @click="handleExportSingle">{{ t('exportCsv') }}</button>
         <button v-if="isPaystackDetail" class="spes-btn spes-btn-success" @click="handlePay">{{ t('pay') }}</button>
-        <button v-if="isPaystackDetail" class="spes-btn" @click="handleExportSingle">{{ t('exportCsv') }}</button>
         <button v-if="canDone" class="spes-btn" @click="handleDone">{{ t('done') }}</button>
       </div>
     </div>
@@ -119,13 +122,15 @@ const store = useExpenseStore()
 const settingsStore = useSettingsStore()
 const { t } = useI18n()
 
-const backLabel = computed(() => route.query.from === 'approvals' ? t('approvals') : route.query.from === 'paystack' ? t('paystack') : t('dashboard'))
+const backLabel = computed(() => route.query.from === 'approvals' ? t('approvals') : route.query.from === 'paystack' ? t('paystack') : route.query.from === 'bookkeeping' ? t('bookkeeping') : t('dashboard'))
 
 function goBack() {
   if (route.query.from === 'approvals') {
     router.push('/approvals')
   } else if (route.query.from === 'paystack') {
     router.push('/paystack')
+  } else if (route.query.from === 'bookkeeping') {
+    router.push('/bookkeeping')
   } else {
     router.push('/')
   }
@@ -157,7 +162,7 @@ const canReject = computed(() => {
     return store.userIsPresident && parseFloat(expense.value.amount) > settingsStore.settings.threshold
       || store.userIsTreasurer && parseFloat(expense.value.amount) <= settingsStore.settings.threshold
   }
-  if (expense.value.status === 'approved') {
+  if (expense.value.status === 'approved' || expense.value.status === 'bookkeeping' || expense.value.status === 'paystack') {
     return store.userIsTreasurer
   }
   return false
@@ -165,14 +170,17 @@ const canReject = computed(() => {
 
 const canPay = computed(() => {
   if (!expense.value) return false
-  return store.userIsTreasurer && (expense.value.status === 'submitted' && parseFloat(expense.value.amount) <= settingsStore.settings.threshold
-    || expense.value.status === 'approved')
+  return store.userIsTreasurer && expense.value.status === 'submitted' && parseFloat(expense.value.amount) <= settingsStore.settings.threshold
 })
 
 const canAddToPaystack = computed(() => {
   if (!expense.value) return false
-  return store.userIsTreasurer && (expense.value.status === 'submitted' && parseFloat(expense.value.amount) <= settingsStore.settings.threshold
-    || expense.value.status === 'approved')
+  return store.userIsTreasurer && expense.value.status === 'submitted' && parseFloat(expense.value.amount) <= settingsStore.settings.threshold
+})
+
+const canAddToBookkeeping = computed(() => {
+  if (!expense.value) return false
+  return store.userIsTreasurer && expense.value.status === 'approved'
 })
 
 const canDone = computed(() => {
@@ -183,6 +191,11 @@ const canDone = computed(() => {
 const isPaystackDetail = computed(() => {
   if (!expense.value) return false
   return expense.value.status === 'paystack' && store.userIsTreasurer
+})
+
+const isBookkeepingDetail = computed(() => {
+  if (!expense.value) return false
+  return expense.value.status === 'bookkeeping' && store.userIsTreasurer
 })
 
 const sollKonto = computed(() => {
@@ -260,6 +273,13 @@ async function handlePay() {
 async function handleAddToPaystack() {
   try {
     const exp = await api.addToPaystack(id.value)
+    expense.value = exp
+  } catch (e) { alert(e.message) }
+}
+
+async function handleAddToBookkeeping() {
+  try {
+    const exp = await api.addToBookkeeping(id.value)
     expense.value = exp
   } catch (e) { alert(e.message) }
 }

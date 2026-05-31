@@ -43,6 +43,7 @@ function actionLabel(action) {
     rejected: 'statusRejected',
     paid: 'statusPaid',
     paystack: 'toPaystack',
+    bookkeeping: 'toBookkeeping',
     done: 'statusDone',
     category_changed: 'categoryChanged',
   }

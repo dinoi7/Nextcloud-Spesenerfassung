@@ -96,7 +96,39 @@ export const api = {
 		a.click()
 		URL.revokeObjectURL(url)
 	},
-  getEvaluation: () => request('GET', '/evaluation'),
+	addToBookkeeping: (id) => request('POST', `/expenses/${id}/bookkeeping`),
+	getBookkeeping: () => request('GET', '/approvals/bookkeeping'),
+	exportBookkeeping: async () => {
+		const base = '/index.php/apps/spesenerfassung/api'
+		const headers = {}
+		const token = document.querySelector('head meta[name="csrf-token"]')?.getAttribute('content')
+		if (token) headers['requesttoken'] = token
+		const res = await fetch(base + '/approvals/bookkeeping/export', { headers, credentials: 'same-origin' })
+		if (!res.ok) throw new Error('Export failed')
+		const blob = await res.blob()
+		const url = URL.createObjectURL(blob)
+		const a = document.createElement('a')
+		a.href = url
+		a.download = 'buchhaltung.csv'
+		a.click()
+		URL.revokeObjectURL(url)
+	},
+	exportBookkeepingSingle: async (id) => {
+		const base = '/index.php/apps/spesenerfassung/api'
+		const headers = {}
+		const token = document.querySelector('head meta[name="csrf-token"]')?.getAttribute('content')
+		if (token) headers['requesttoken'] = token
+		const res = await fetch(base + '/approvals/bookkeeping/export/' + id, { headers, credentials: 'same-origin' })
+		if (!res.ok) throw new Error('Export failed')
+		const blob = await res.blob()
+		const url = URL.createObjectURL(blob)
+		const a = document.createElement('a')
+		a.href = url
+		a.download = 'buchhaltung-' + id + '.csv'
+		a.click()
+		URL.revokeObjectURL(url)
+	},
+	getEvaluation: () => request('GET', '/evaluation'),
   getSettings: () => request('GET', '/settings'),
   updateSettings: (data) => request('PUT', '/settings', data),
   getUserSettings: () => request('GET', '/settings/user'),

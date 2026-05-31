@@ -88,6 +88,8 @@ export const useExpenseStore = defineStore('expenses', () => {
   )
 
   const approvalCount = ref(0)
+  const bookkeepingCount = ref(0)
+  const paystackCount = ref(0)
 
   async function loadApprovalCount() {
     try {
@@ -98,6 +100,24 @@ export const useExpenseStore = defineStore('expenses', () => {
     }
   }
 
+  async function loadBookkeepingCount() {
+    try {
+      const data = await api.getBookkeeping()
+      bookkeepingCount.value = Array.isArray(data) ? data.length : 0
+    } catch {
+      bookkeepingCount.value = 0
+    }
+  }
+
+  async function loadPaystackCount() {
+    try {
+      const data = await api.getPaystack()
+      paystackCount.value = Array.isArray(data) ? data.length : 0
+    } catch {
+      paystackCount.value = 0
+    }
+  }
+
   return {
     expenses, loading, error, currentUser,
     userIsPresident, userIsTreasurer, userIsAdmin,
@@ -105,6 +125,6 @@ export const useExpenseStore = defineStore('expenses', () => {
     loadExpenses, createExpense, updateExpense, deleteExpense,
     submitExpense, getExpense,
     filteredExpenses, draftExpenses, submittedExpenses, doneExpenses,
-    actionCount, approvalCount, loadApprovalCount,
+    actionCount, approvalCount, bookkeepingCount, paystackCount, loadApprovalCount, loadBookkeepingCount, loadPaystackCount,
   }
 })

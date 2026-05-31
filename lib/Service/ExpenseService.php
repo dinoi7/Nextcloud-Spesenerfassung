@@ -169,8 +169,16 @@ class ExpenseService {
 		return $this->transition($id, $userId, Expense::STATUS_PAYSTACK, Approval::ACTION_PAYSTACK);
 	}
 
+	public function addToBookkeeping(int $id, string $userId): ?Expense {
+		return $this->transition($id, $userId, Expense::STATUS_BOOKKEEPING, Approval::ACTION_BOOKKEEPING);
+	}
+
 	public function getPaystackExpenses(): array {
 		return $this->expenseMapper->findByStatus(Expense::STATUS_PAYSTACK);
+	}
+
+	public function getBookkeepingExpenses(): array {
+		return $this->expenseMapper->findByStatus(Expense::STATUS_BOOKKEEPING);
 	}
 
 	public function payAllFromPaystack(string $userId): array {

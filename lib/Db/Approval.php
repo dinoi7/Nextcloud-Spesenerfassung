@@ -22,6 +22,7 @@ use OCP\AppFramework\Db\Entity;
 class Approval extends Entity {
 	public const ACTION_SUBMITTED = 'submitted';
 	public const ACTION_APPROVED = 'approved';
+	public const ACTION_BOOKKEEPING = 'bookkeeping';
 	public const ACTION_REJECTED = 'rejected';
 	public const ACTION_PAID = 'paid';
 	public const ACTION_PAYSTACK = 'paystack';

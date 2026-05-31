@@ -290,6 +290,7 @@
 .spes-badge--rejected { background: #ffebee; color: #c62828; }
 .spes-badge--paid { background: #e3f2fd; color: #1565c0; }
 .spes-badge--paystack { background: #fff8e1; color: #f57f17; }
+.spes-badge--bookkeeping { background: #e0f2f1; color: #00695c; }
 .spes-badge--done { background: #f3e5f5; color: #6a1b9a; }
 
 .spes-form {
@@ -391,6 +392,12 @@
   border-color: #f57f17;
 }
 .spes-btn-paystack:hover { opacity: .9; }
+.spes-btn-bookkeeping {
+  background: #00695c;
+  color: #fff;
+  border-color: #00695c;
+}
+.spes-btn-bookkeeping:hover { opacity: .9; }
 .spes-btn-sm { padding: 4px 10px; font-size: 12px; }
 
 .spes-form-actions {
@@ -555,6 +562,7 @@
 .spes-timeline-action--rejected { background: #ffebee; color: #c62828; }
 .spes-timeline-action--paid { background: #e3f2fd; color: #1565c0; }
 .spes-timeline-action--paystack { background: #fff8e1; color: #f57f17; }
+.spes-timeline-action--bookkeeping { background: #e0f2f1; color: #00695c; }
 .spes-timeline-action--done { background: #f3e5f5; color: #6a1b9a; }
 .spes-timeline-user { color: var(--color-text-maxcontrast, #777); }
 .spes-timeline-date { color: var(--color-text-maxcontrast, #888); font-size: 12px; }

@@ -10,33 +10,33 @@ class WorkflowService {
 	private const STATE_DRAFT = Expense::STATUS_DRAFT;
 	private const STATE_SUBMITTED = Expense::STATUS_SUBMITTED;
 	private const STATE_APPROVED = Expense::STATUS_APPROVED;
+	private const STATE_BOOKKEEPING = Expense::STATUS_BOOKKEEPING;
 	private const STATE_REJECTED = Expense::STATUS_REJECTED;
 	private const STATE_PAID = Expense::STATUS_PAID;
 	private const STATE_PAYSTACK = Expense::STATUS_PAYSTACK;
 	private const STATE_DONE = Expense::STATUS_DONE;
 
-	/**
-	 * Allowed transitions: from => [to]
-	 */
 	private const TRANSITIONS = [
 		self::STATE_DRAFT => [
 			self::STATE_SUBMITTED,
 		],
 		self::STATE_SUBMITTED => [
 			self::STATE_APPROVED,
+			self::STATE_BOOKKEEPING,
 			self::STATE_REJECTED,
-			self::STATE_PAID,
-			self::STATE_PAYSTACK,
 		],
 		self::STATE_APPROVED => [
-			self::STATE_PAID,
+			self::STATE_BOOKKEEPING,
+			self::STATE_REJECTED,
+		],
+		self::STATE_BOOKKEEPING => [
 			self::STATE_PAYSTACK,
+			self::STATE_PAID,
 			self::STATE_REJECTED,
 		],
 		self::STATE_PAYSTACK => [
 			self::STATE_PAID,
-			self::STATE_APPROVED,
-			self::STATE_SUBMITTED,
+			self::STATE_REJECTED,
 		],
 		self::STATE_REJECTED => [
 			self::STATE_DRAFT,

@@ -37,6 +37,7 @@ class Expense extends Entity {
 	public const STATUS_DRAFT = 'draft';
 	public const STATUS_SUBMITTED = 'submitted';
 	public const STATUS_APPROVED = 'approved';
+	public const STATUS_BOOKKEEPING = 'bookkeeping';
 	public const STATUS_REJECTED = 'rejected';
 	public const STATUS_PAID = 'paid';
 	public const STATUS_PAYSTACK = 'paystack';
@@ -46,6 +47,7 @@ class Expense extends Entity {
 		self::STATUS_DRAFT,
 		self::STATUS_SUBMITTED,
 		self::STATUS_APPROVED,
+		self::STATUS_BOOKKEEPING,
 		self::STATUS_REJECTED,
 		self::STATUS_PAID,
 		self::STATUS_PAYSTACK,

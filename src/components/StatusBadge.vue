@@ -22,6 +22,7 @@ const label = computed(() => {
     rejected: 'statusRejected',
     paid: 'statusPaid',
     paystack: 'statusPaystack',
+    bookkeeping: 'statusBookkeeping',
     done: 'statusDone',
   }
   return t(map[props.status] || props.status)

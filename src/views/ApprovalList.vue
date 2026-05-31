@@ -34,9 +34,8 @@
         </div>
         <div class="spes-card-actions" @click.stop>
           <button v-if="userIsPresident && expense.status === 'submitted'" class="spes-btn spes-btn-sm spes-btn-success" @click="approveExpense(expense.id)">{{ t('approve') }}</button>
+          <button v-if="canAddToBookkeeping(expense)" class="spes-btn spes-btn-sm spes-btn-bookkeeping" @click="addToBookkeepingExpense(expense.id)">{{ t('addToBookkeeping') }}</button>
           <button v-if="canReject(expense)" class="spes-btn spes-btn-sm spes-btn-danger" @click="rejectExpense(expense.id)">{{ t('reject') }}</button>
-          <button v-if="canAddToPaystack(expense)" class="spes-btn spes-btn-sm spes-btn-paystack" @click="addToPaystackExpense(expense.id)">{{ t('addToPaystack') }}</button>
-          <button v-if="canPay(expense)" class="spes-btn spes-btn-sm spes-btn-success" @click="payExpense(expense.id)">{{ t('pay') }}</button>
         </div>
       </div>
     </div>
@@ -73,16 +72,10 @@ function canReject(expense) {
   return false
 }
 
-function canPay(expense) {
+function canAddToBookkeeping(expense) {
   if (!store.userIsTreasurer) return false
-  return expense.status === 'submitted' && parseFloat(expense.amount) <= settingsStore.settings.threshold
-    || expense.status === 'approved'
-}
-
-function canAddToPaystack(expense) {
-  if (!store.userIsTreasurer) return false
-  return expense.status === 'submitted' && parseFloat(expense.amount) <= settingsStore.settings.threshold
-    || expense.status === 'approved'
+  return expense.status === 'approved'
+    || (expense.status === 'submitted' && parseFloat(expense.amount) <= settingsStore.settings.threshold)
 }
 
 function formatAmount(amount) {
@@ -129,16 +122,9 @@ async function rejectExpense(id) {
   } catch (e) { alert(e.message) }
 }
 
-async function payExpense(id) {
+async function addToBookkeepingExpense(id) {
   try {
-    await api.pay(id)
-    await loadPending()
-  } catch (e) { alert(e.message) }
-}
-
-async function addToPaystackExpense(id) {
-  try {
-    await api.addToPaystack(id)
+    await api.addToBookkeeping(id)
     await loadPending()
   } catch (e) { alert(e.message) }
 }

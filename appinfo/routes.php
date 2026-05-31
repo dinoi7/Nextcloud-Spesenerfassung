@@ -27,6 +27,10 @@ return [
 		['name' => 'approval#paystackExport', 'url' => '/api/approvals/paystack/export', 'verb' => 'GET'],
 		['name' => 'approval#paystackExportSingle', 'url' => '/api/approvals/paystack/export/{id}', 'verb' => 'GET', 'requirements' => ['id' => '\d+']],
 		['name' => 'approval#paystackPayAll', 'url' => '/api/approvals/paystack/pay-all', 'verb' => 'POST'],
+		['name' => 'approval#bookkeeping', 'url' => '/api/expenses/{id}/bookkeeping', 'verb' => 'POST', 'requirements' => ['id' => '\d+']],
+		['name' => 'approval#bookkeepingList', 'url' => '/api/approvals/bookkeeping', 'verb' => 'GET'],
+		['name' => 'approval#bookkeepingExport', 'url' => '/api/approvals/bookkeeping/export', 'verb' => 'GET'],
+		['name' => 'approval#bookkeepingExportSingle', 'url' => '/api/approvals/bookkeeping/export/{id}', 'verb' => 'GET', 'requirements' => ['id' => '\d+']],
 		['name' => 'approval#evaluation', 'url' => '/api/evaluation', 'verb' => 'GET'],
 
 		['name' => 'settings#get', 'url' => '/api/settings', 'verb' => 'GET'],

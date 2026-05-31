@@ -285,6 +285,101 @@ class ApprovalController extends Controller {
 		return new DataResponse(['paid' => count($results), 'expenses' => $results]);
 	}
 
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
+	public function bookkeeping(int $id): DataResponse {
+		if (!$this->checkRole('treasurer')) {
+			return new DataResponse(['error' => 'Only treasurer can set bookkeeping'], Http::STATUS_FORBIDDEN);
+		}
+		$expense = $this->expenseService->addToBookkeeping($id, $this->getUserId());
+		if ($expense === null) {
+			return new DataResponse(['error' => 'Cannot transition to bookkeeping'], Http::STATUS_FORBIDDEN);
+		}
+		return new DataResponse($expense->toArray());
+	}
+
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
+	public function bookkeepingList(): DataResponse {
+		if (!$this->checkRole('treasurer')) {
+			return new DataResponse(['error' => 'Only treasurer can view bookkeeping'], Http::STATUS_FORBIDDEN);
+		}
+		$expenses = $this->expenseService->getBookkeepingExpenses();
+		$userIds = array_map(fn($e) => $e->getUserId(), $expenses);
+		$names = [];
+		foreach (array_unique($userIds) as $uid) {
+			$u = $this->userManager->get($uid);
+			$names[$uid] = $u ? $u->getDisplayName() : $uid;
+		}
+		$accounts = SettingsService::getExportAccounts();
+		$result = array_map(function ($e) use ($names, $accounts) {
+			$row = $e->toArray();
+			$row['displayName'] = $names[$e->getUserId()] ?? $e->getUserId();
+			$row['receiptCount'] = count($this->receiptService->findByExpenseId($e->getId()));
+			$row['sollKonto'] = $accounts[$e->getCategory()] ?? '';
+			return $row;
+		}, $expenses);
+		return new DataResponse($result);
+	}
+
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
+	public function bookkeepingExport() {
+		if (!$this->checkRole('treasurer')) {
+			return new DataResponse(['error' => 'Only treasurer can export'], Http::STATUS_FORBIDDEN);
+		}
+		$expenses = $this->expenseService->getBookkeepingExpenses();
+		$accounts = SettingsService::getExportAccounts();
+		$csv = "\xEF\xBB\xBF";
+		$csv .= "\"Datum\";\"Text\";\"Soll\";\"Betrag (CHF)\"\n";
+		foreach ($expenses as $e) {
+			$id = $e->getId();
+			$date = date('d.m.Y', strtotime($e->getExpenseDate()));
+			$name = $this->sani($this->resolveDisplayName($e->getUserId()));
+			$title = $this->sani($e->getTitle() ?? '');
+			$desc = $this->sani($e->getDescription() ?? '');
+			$text = 'Spesen: ' . $id . ', ' . $name . ', ' . $title . ', ' . $desc;
+			$cat = $e->getCategory();
+			$soll = $this->sani($accounts[$cat] ?? '');
+			$amount = '-' . number_format((float) $e->getAmount(), 2, '.', '');
+			$csv .= "\"$date\";\"$text\";\"$soll\";\"$amount\"\n";
+		}
+		return new DataDownloadResponse($csv, 'buchhaltung.csv', 'text/csv; charset=utf-8');
+	}
+
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
+	public function bookkeepingExportSingle(int $id) {
+		if (!$this->checkRole('treasurer')) {
+			return new DataResponse(['error' => 'Only treasurer can export'], Http::STATUS_FORBIDDEN);
+		}
+		$expense = $this->expenseService->findById($id);
+		if ($expense === null || $expense->getStatus() !== \OCA\Spesenerfassung\Db\Expense::STATUS_BOOKKEEPING) {
+			return new DataResponse(['error' => 'Expense not in bookkeeping'], Http::STATUS_NOT_FOUND);
+		}
+		$accounts = SettingsService::getExportAccounts();
+		$csv = "\xEF\xBB\xBF";
+		$csv .= "\"Datum\";\"Text\";\"Soll\";\"Betrag (CHF)\"\n";
+		$date = date('d.m.Y', strtotime($expense->getExpenseDate()));
+		$name = $this->sani($this->resolveDisplayName($expense->getUserId()));
+		$title = $this->sani($expense->getTitle() ?? '');
+		$desc = $this->sani($expense->getDescription() ?? '');
+		$text = 'Spesen: ' . $expense->getId() . ', ' . $name . ', ' . $title . ', ' . $desc;
+		$cat = $expense->getCategory();
+		$soll = $this->sani($accounts[$cat] ?? '');
+		$amount = '-' . number_format((float) $expense->getAmount(), 2, '.', '');
+		$csv .= "\"$date\";\"$text\";\"$soll\";\"$amount\"\n";
+		return new DataDownloadResponse($csv, 'buchhaltung-' . $id . '.csv', 'text/csv; charset=utf-8');
+	}
+
 	private function sani(string $field): string {
 		return str_replace(['"', ';'], '_', $field);
 	}
