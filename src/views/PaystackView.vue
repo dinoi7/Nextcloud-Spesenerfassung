@@ -71,7 +71,13 @@ async function loadPaystack() {
   loading.value = true
   error.value = null
   try {
-    expenses.value = await api.getPaystack()
+    const data = await api.getPaystack()
+    data.sort((a, b) => {
+      const d = (a.expenseDate || '').localeCompare(b.expenseDate || '')
+      if (d !== 0) return d
+      return (a.createdAt || '').localeCompare(b.createdAt || '')
+    })
+    expenses.value = data
   } catch (e) {
     error.value = e.message
   } finally {

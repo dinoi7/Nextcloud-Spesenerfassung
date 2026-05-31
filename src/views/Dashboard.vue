@@ -122,9 +122,19 @@ const availableYears = computed(() => {
 })
 
 const filteredExpenses = computed(() => {
-  return store.expenses.filter(e => {
-    if (!e.expenseDate) return true
-    return new Date(e.expenseDate).getFullYear() === selectedYear.value
+  let list = store.expenses
+  if (selectedYear.value) {
+    list = list.filter(e => {
+      if (!e.expenseDate) return true
+      return new Date(e.expenseDate).getFullYear() === selectedYear.value
+    })
+  }
+  return [...list].sort((a, b) => {
+    const catCompare = (a.category || '').localeCompare(b.category || '')
+    if (catCompare !== 0) return catCompare
+    const dateCompare = (a.expenseDate || '').localeCompare(b.expenseDate || '')
+    if (dateCompare !== 0) return dateCompare
+    return (a.createdAt || '').localeCompare(b.createdAt || '')
   })
 })
 
