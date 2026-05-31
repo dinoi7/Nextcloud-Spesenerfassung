@@ -74,7 +74,7 @@
 
       <HistoryTimeline :history="history" />
 
-      <div v-if="canPay && expense.payoutMethod === 'bank' && expense.iban" class="spes-payment-info">
+      <div v-if="(canPay || isPaystackDetail) && expense.payoutMethod === 'bank' && expense.iban" class="spes-payment-info">
         <h3>{{ t('paymentInfo') }}</h3>
         <div class="spes-payment-body">
           <div class="spes-payment-details">
