@@ -13,7 +13,7 @@ Features:
 - Email notifications on status changes
 - Full audit trail with rejection reasons
 - Responsive UI for desktop and mobile]]></description>
-    <version>1.0.3</version>
+    <version>1.0.4</version>
 	<licence>agpl</licence>
 	<author>Makerspace Reinach</author>
 	<namespace>Spesenerfassung</namespace>

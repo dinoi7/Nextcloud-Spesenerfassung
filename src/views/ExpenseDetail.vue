@@ -63,11 +63,27 @@
       <div v-if="receipts.length" class="spes-detail-receipts">
         <h3>{{ t('uploadReceipt') }} ({{ receipts.length }})</h3>
         <div class="spes-receipt-list">
-          <div v-for="rec in receipts" :key="rec.id" class="spes-receipt-item">
+          <div v-for="rec in receipts" :key="rec.id" class="spes-receipt-item"
+               @mouseenter="previewReceipt = rec.id" @mouseleave="previewReceipt = null">
+            <span class="spes-receipt-icon">
+              <svg v-if="isImage(rec.mimeType)" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+              <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </span>
             <a :href="getReceiptUrl(rec)" target="_blank" class="spes-receipt-link">
               <span>{{ rec.fileName }}</span>
               <span class="spes-receipt-size">{{ formatSize(rec.size) }}</span>
             </a>
+            <a :href="getReceiptUrl(rec)" :download="rec.fileName" class="spes-receipt-download" :title="t('download')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </a>
+            <div v-if="previewReceipt === rec.id" class="spes-receipt-preview">
+              <img v-if="isImage(rec.mimeType)" :src="getReceiptUrl(rec)" :alt="rec.fileName" />
+              <iframe v-else-if="rec.mimeType === 'application/pdf'" :src="getReceiptUrl(rec)" />
+              <div v-else class="spes-receipt-preview-unknown">
+                <span class="spes-receipt-preview-icon">&#128196;</span>
+                <span>{{ rec.fileName }}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -90,16 +106,16 @@
       </div>
 
       <div v-if="canApprove || canReject || canAddToPaystack || canPay || canDone || isPaystackDetail || isBookkeepingDetail || canAddToBookkeeping" class="spes-detail-actions">
+        <button v-if="isBookkeepingDetail" class="spes-btn" @click="handleExportSingle">{{ t('exportCsv') }}</button>
         <button v-if="canApprove" class="spes-btn spes-btn-success" @click="handleApprove">{{ t('approve') }}</button>
-        <button v-if="canReject" class="spes-btn spes-btn-danger" @click="handleReject">{{ t('reject') }}</button>
         <button v-if="canAddToBookkeeping" class="spes-btn spes-btn-bookkeeping" @click="handleAddToBookkeeping">{{ t('addToBookkeeping') }}</button>
         <button v-if="canAddToPaystack" class="spes-btn spes-btn-paystack" @click="handleAddToPaystack">{{ t('addToPaystack') }}</button>
         <button v-if="canPay" class="spes-btn spes-btn-success" @click="handlePay">{{ t('pay') }}</button>
         <button v-if="isBookkeepingDetail && expense.payoutMethod === 'bank'" class="spes-btn spes-btn-paystack" @click="handleAddToPaystack">{{ t('addToPaystack') }}</button>
         <button v-if="isBookkeepingDetail && expense.payoutMethod !== 'bank'" class="spes-btn spes-btn-success" @click="handlePay">{{ t('pay') }}</button>
-        <button v-if="isBookkeepingDetail" class="spes-btn" @click="handleExportSingle">{{ t('exportCsv') }}</button>
         <button v-if="isPaystackDetail" class="spes-btn spes-btn-success" @click="handlePay">{{ t('pay') }}</button>
         <button v-if="canDone" class="spes-btn" @click="handleDone">{{ t('done') }}</button>
+        <button v-if="canReject" class="spes-btn spes-btn-danger" @click="handleReject">{{ t('reject') }}</button>
       </div>
     </div>
   </div>
@@ -140,6 +156,7 @@ const expense = ref(null)
 const history = ref([])
 const receipts = ref([])
 const loading = ref(true)
+const previewReceipt = ref(null)
 
 const canEdit = computed(() => {
   if (!expense.value) return false
@@ -235,6 +252,10 @@ function formatDate(dateStr) {
   if (!dateStr) return ''
   const d = new Date(dateStr)
   return d.toLocaleDateString('de-CH')
+}
+
+function isImage(mimeType) {
+  return mimeType && mimeType.startsWith('image/')
 }
 
 function formatSize(bytes) {

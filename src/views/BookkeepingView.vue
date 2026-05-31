@@ -36,9 +36,9 @@
           </div>
         </div>
         <div class="spes-card-actions" @click.stop>
-          <button class="spes-btn spes-btn-sm" @click="handleExportSingle(expense.id)">{{ t('exportCsv') }}</button>
           <button v-if="expense.payoutMethod === 'bank'" class="spes-btn spes-btn-sm spes-btn-paystack" @click="toPaystack(expense.id)">{{ t('addToPaystack') }}</button>
           <button v-else class="spes-btn spes-btn-sm spes-btn-success" @click="payExpense(expense.id)">{{ t('pay') }}</button>
+          <button class="spes-btn spes-btn-sm" @click="handleExportSingle(expense.id)">{{ t('exportCsv') }}</button>
           <button class="spes-btn spes-btn-sm spes-btn-danger" @click="rejectExpense(expense.id)">{{ t('reject') }}</button>
         </div>
       </div>
