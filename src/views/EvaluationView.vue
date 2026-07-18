@@ -74,6 +74,7 @@
                 <th @click="toggleSort('amount')" class="sortable" :class="sortClass('amount')">{{ t('amount') }}</th>
                 <th>Fremdw.</th>
                 <th>{{ t('payoutMethod') }}</th>
+                <th>{{ t('receipts') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -88,6 +89,34 @@
                   <span v-if="expense.foreignCurrency">{{ expense.foreignCurrency }} {{ formatAmount(expense.foreignAmount) }}</span>
                 </td>
                 <td>{{ expense.payoutMethod === 'bank' ? t('payoutBank') : (expense.payoutMethod ? t('payoutCash') : '') }}</td>
+                <td class="spes-eval-receipts">
+                  <template v-if="expense.receipts && expense.receipts.length">
+                    <div v-for="rec in expense.receipts" :key="rec.id" class="spes-eval-receipt-item">
+                      <span class="spes-receipt-icon">
+                        <svg v-if="isImage(rec.mimeType)" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                        <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                      </span>
+                      <a :href="getReceiptDownloadUrl(expense.id, rec.id)" :download="rec.fileName" class="spes-eval-receipt-link" :title="rec.fileName"
+                         @mouseenter="previewRec = rec.id" @mouseleave="previewRec = null">{{ rec.fileName }}</a>
+                      <a :href="getReceiptDownloadUrl(expense.id, rec.id)" :download="rec.fileName" class="spes-eval-receipt-download" :title="t('download')">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                      </a>
+                      <div v-if="previewRec === rec.id" class="spes-receipt-preview spes-eval-receipt-preview">
+                        <img v-if="isImage(rec.mimeType)" :src="getReceiptPreviewUrl(expense.id, rec.id)" :alt="rec.fileName" />
+                        <div v-else-if="rec.mimeType === 'application/pdf'" class="spes-receipt-preview-pdf">
+                          <span class="spes-receipt-preview-icon">&#128196;</span>
+                          <span>{{ rec.fileName }}</span>
+                          <a :href="getReceiptPreviewUrl(expense.id, rec.id)" target="_blank">{{ t('openPreview') }}</a>
+                        </div>
+                        <div v-else class="spes-receipt-preview-unknown">
+                          <span class="spes-receipt-preview-icon">&#128196;</span>
+                          <span>{{ rec.fileName }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                  <span v-else class="spes-empty">—</span>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -137,6 +166,7 @@ const filters = ref({
 
 const sortKey = ref('expenseDate')
 const sortDir = ref('desc')
+const previewRec = ref(null)
 
 const availableYears = computed(() => {
   const years = new Set()
@@ -240,6 +270,18 @@ function formatDate(dateStr) {
   if (!dateStr) return ''
   const d = new Date(dateStr)
   return d.toLocaleDateString('de-CH')
+}
+
+function isImage(mime) {
+  return mime && mime.startsWith('image/')
+}
+
+function getReceiptDownloadUrl(expenseId, receiptId) {
+  return '/index.php/apps/spesenerfassung/api/expenses/' + expenseId + '/receipts/' + receiptId + '/download'
+}
+
+function getReceiptPreviewUrl(expenseId, receiptId) {
+  return '/index.php/apps/spesenerfassung/api/expenses/' + expenseId + '/receipts/' + receiptId + '/preview'
 }
 
 async function handleExport() {

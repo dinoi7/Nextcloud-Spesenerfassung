@@ -63,13 +63,13 @@
       <div v-if="receipts.length" class="spes-detail-receipts">
         <h3>{{ t('uploadReceipt') }} ({{ receipts.length }})</h3>
         <div class="spes-receipt-list">
-          <div v-for="rec in receipts" :key="rec.id" class="spes-receipt-item"
-               @mouseenter="previewReceipt = rec.id" @mouseleave="previewReceipt = null">
+          <div v-for="rec in receipts" :key="rec.id" class="spes-receipt-item">
             <span class="spes-receipt-icon">
               <svg v-if="isImage(rec.mimeType)" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
               <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             </span>
-            <a :href="getReceiptUrl(rec)" target="_blank" class="spes-receipt-link">
+            <a :href="getReceiptUrl(rec)" target="_blank" class="spes-receipt-link"
+               @mouseenter="previewReceipt = rec.id" @mouseleave="previewReceipt = null">
               <span>{{ rec.fileName }}</span>
               <span class="spes-receipt-size">{{ formatSize(rec.size) }}</span>
             </a>
@@ -77,8 +77,12 @@
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             </a>
             <div v-if="previewReceipt === rec.id" class="spes-receipt-preview">
-              <img v-if="isImage(rec.mimeType)" :src="getReceiptUrl(rec)" :alt="rec.fileName" />
-              <iframe v-else-if="rec.mimeType === 'application/pdf'" :src="getReceiptUrl(rec)" />
+              <img v-if="isImage(rec.mimeType)" :src="getReceiptPreviewUrl(rec)" :alt="rec.fileName" />
+              <div v-else-if="rec.mimeType === 'application/pdf'" class="spes-receipt-preview-pdf">
+                <span class="spes-receipt-preview-icon">&#128196;</span>
+                <span>{{ rec.fileName }}</span>
+                <a :href="getReceiptPreviewUrl(rec)" target="_blank" class="spes-receipt-preview-open">{{ t('openPreview') }}</a>
+              </div>
               <div v-else class="spes-receipt-preview-unknown">
                 <span class="spes-receipt-preview-icon">&#128196;</span>
                 <span>{{ rec.fileName }}</span>
@@ -265,6 +269,10 @@ function formatSize(bytes) {
 
 function getReceiptUrl(rec) {
   return '/index.php/apps/spesenerfassung/api/expenses/' + expense.value.id + '/receipts/' + rec.id + '/download'
+}
+
+function getReceiptPreviewUrl(rec) {
+  return '/index.php/apps/spesenerfassung/api/expenses/' + expense.value.id + '/receipts/' + rec.id + '/preview'
 }
 
 async function handleApprove() {

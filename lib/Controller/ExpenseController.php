@@ -12,6 +12,7 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\DataDisplayResponse;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\IRequest;
@@ -272,5 +273,23 @@ class ExpenseController extends Controller {
 		}
 
 		return new DataDownloadResponse($content, $receipt->getFileName(), $receipt->getMimeType());
+	}
+
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
+	public function previewReceipt(int $id, int $receiptId): DataDisplayResponse|DataResponse {
+		$receipt = $this->receiptService->findById($receiptId);
+		if ($receipt === null || $receipt->getExpenseId() !== $id) {
+			return new DataResponse(['error' => 'Receipt not found'], Http::STATUS_NOT_FOUND);
+		}
+
+		$content = $this->receiptService->getContent($receipt);
+		if ($content === null) {
+			return new DataResponse(['error' => 'File not found'], Http::STATUS_NOT_FOUND);
+		}
+
+		return new DataDisplayResponse($content, 200, ['Content-Type' => $receipt->getMimeType()]);
 	}
 }

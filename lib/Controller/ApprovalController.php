@@ -174,7 +174,7 @@ class ApprovalController extends Controller {
 			$row['receiptCount'] = count($this->receiptService->findByExpenseId($e->getId()));
 			return $row;
 		}, $pending);
-		return new DataResponse($result);
+		return new DataResponse(array_values($result));
 	}
 
 	/**
@@ -411,10 +411,12 @@ class ApprovalController extends Controller {
 		$result = array_map(function ($e) use ($names) {
 			$row = $e->toArray();
 			$row['displayName'] = $names[$e->getUserId()] ?? $e->getUserId();
-			$row['receiptCount'] = count($this->receiptService->findByExpenseId($e->getId()));
+			$receipts = $this->receiptService->findByExpenseId($e->getId());
+			$row['receipts'] = array_map(fn($r) => $r->toArray(), $receipts);
+			$row['receiptCount'] = count($receipts);
 			return $row;
 		}, $expenses);
-		return new DataResponse($result);
+		return new DataResponse(array_values($result));
 	}
 
 	/**

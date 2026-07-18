@@ -93,12 +93,14 @@ async function loadPending() {
   error.value = null
   try {
     const data = await api.getPendingApprovals()
-    data.sort((a, b) => {
-      const d = (a.expenseDate || '').localeCompare(b.expenseDate || '')
-      if (d !== 0) return d
-      return (a.createdAt || '').localeCompare(b.createdAt || '')
-    })
-    pending.value = data
+    if (Array.isArray(data)) {
+      data.sort((a, b) => {
+        const d = (a.expenseDate || '').localeCompare(b.expenseDate || '')
+        if (d !== 0) return d
+        return (a.createdAt || '').localeCompare(b.createdAt || '')
+      })
+    }
+    pending.value = Array.isArray(data) ? data : []
   } catch (e) {
     error.value = e.message
   } finally {

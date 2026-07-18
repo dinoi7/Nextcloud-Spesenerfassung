@@ -509,7 +509,21 @@
 .spes-receipt-preview iframe { width: 400px; height: 520px; border: none; }
 .spes-receipt-preview-unknown { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 20px; text-align: center; font-size: 13px; color: var(--color-text-maxcontrast, #888); }
 .spes-receipt-preview-icon { font-size: 32px; }
+.spes-receipt-preview-pdf { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 16px 24px; text-align: center; font-size: 13px; }
+.spes-receipt-preview-pdf span { color: var(--color-text-maxcontrast, #888); }
+.spes-receipt-preview-pdf a { color: var(--color-primary, #0082c9); font-weight: 600; text-decoration: none; }
+.spes-receipt-preview-pdf a:hover { text-decoration: underline; }
 .spes-receipt-delete { background: none; border: none; color: #c62828; cursor: pointer; font-size: 18px; padding: 0 4px; }
+
+.spes-eval-receipts { min-width: 160px; }
+.spes-eval-receipt-item { display: flex; align-items: center; gap: 4px; padding: 2px 0; position: relative; white-space: nowrap; }
+.spes-eval-receipt-link { font-size: 11px; color: var(--color-text-maxcontrast, #888); text-decoration: none; overflow: hidden; text-overflow: ellipsis; max-width: 110px; }
+.spes-eval-receipt-link:hover { color: var(--color-primary, #0082c9); text-decoration: underline; }
+.spes-eval-receipt-download { flex-shrink: 0; color: var(--color-text-maxcontrast, #888); display: flex; align-items: center; padding: 1px; border-radius: 3px; text-decoration: none; }
+.spes-eval-receipt-download:hover { background: var(--color-background-hover, #eee); color: var(--color-primary, #0082c9); }
+.spes-eval-receipt-preview { max-width: 320px; }
+.spes-eval-receipt-preview img { max-width: 300px; max-height: 380px; }
+.spes-eval-receipt-preview iframe { width: 300px; height: 400px; }
 
 .spes-detail-actions {
   display: flex;

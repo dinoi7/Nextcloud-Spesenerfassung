@@ -15,6 +15,7 @@ return [
 		['name' => 'expense#uploadReceipt', 'url' => '/api/expenses/{id}/receipts', 'verb' => 'POST', 'requirements' => ['id' => '\d+']],
 		['name' => 'expense#deleteReceipt', 'url' => '/api/expenses/{id}/receipts/{receiptId}', 'verb' => 'DELETE', 'requirements' => ['id' => '\d+', 'receiptId' => '\d+']],
 		['name' => 'expense#downloadReceipt', 'url' => '/api/expenses/{id}/receipts/{receiptId}/download', 'verb' => 'GET', 'requirements' => ['id' => '\d+', 'receiptId' => '\d+']],
+		['name' => 'expense#previewReceipt', 'url' => '/api/expenses/{id}/receipts/{receiptId}/preview', 'verb' => 'GET', 'requirements' => ['id' => '\d+', 'receiptId' => '\d+']],
 
 		['name' => 'approval#submit', 'url' => '/api/expenses/{id}/submit', 'verb' => 'POST', 'requirements' => ['id' => '\d+']],
 		['name' => 'approval#approve', 'url' => '/api/expenses/{id}/approve', 'verb' => 'POST', 'requirements' => ['id' => '\d+']],

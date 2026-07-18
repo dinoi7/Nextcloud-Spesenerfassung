@@ -71,12 +71,14 @@ async function loadPaystack() {
   error.value = null
   try {
     const data = await api.getPaystack()
-    data.sort((a, b) => {
-      const d = (a.expenseDate || '').localeCompare(b.expenseDate || '')
-      if (d !== 0) return d
-      return (a.createdAt || '').localeCompare(b.createdAt || '')
-    })
-    expenses.value = data
+    if (Array.isArray(data)) {
+      data.sort((a, b) => {
+        const d = (a.expenseDate || '').localeCompare(b.expenseDate || '')
+        if (d !== 0) return d
+        return (a.createdAt || '').localeCompare(b.createdAt || '')
+      })
+    }
+    expenses.value = Array.isArray(data) ? data : []
   } catch (e) {
     error.value = e.message
   } finally {
