@@ -7,6 +7,7 @@ use OCA\Spesenerfassung\Service\ExpenseService;
 use OCA\Spesenerfassung\Service\ReceiptService;
 use OCA\Spesenerfassung\Service\SettingsService;
 use OCA\Spesenerfassung\Service\UserSettingsService;
+use OCA\Spesenerfassung\Service\BookingReceiptService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -21,6 +22,7 @@ class ApprovalController extends Controller {
 	private IUserManager $userManager;
 	private ReceiptService $receiptService;
 	private UserSettingsService $userSettingsService;
+	private BookingReceiptService $bookingReceiptService;
 
 	public function __construct(
 		string $appName,
@@ -30,6 +32,7 @@ class ApprovalController extends Controller {
 		IUserManager $userManager,
 		ReceiptService $receiptService,
 		UserSettingsService $userSettingsService,
+		BookingReceiptService $bookingReceiptService,
 	) {
 		parent::__construct($appName, $request);
 		$this->expenseService = $expenseService;
@@ -37,6 +40,7 @@ class ApprovalController extends Controller {
 		$this->userManager = $userManager;
 		$this->receiptService = $receiptService;
 		$this->userSettingsService = $userSettingsService;
+		$this->bookingReceiptService = $bookingReceiptService;
 	}
 
 	private function getUserId(): string {
@@ -122,11 +126,26 @@ class ApprovalController extends Controller {
 		if (!$this->checkRole('treasurer')) {
 			return new DataResponse(['error' => 'Only treasurer can pay'], Http::STATUS_FORBIDDEN);
 		}
-		$expense = $this->expenseService->pay($id, $this->getUserId());
+		$expense = $this->expenseService->findById($id);
 		if ($expense === null) {
-			return new DataResponse(['error' => 'Cannot pay'], Http::STATUS_FORBIDDEN);
+			return new DataResponse(['error' => 'Expense not found'], Http::STATUS_NOT_FOUND);
 		}
-		return new DataResponse($expense->toArray());
+		try {
+			$booking = $this->bookingReceiptService->generate($expense, $this->getUserId());
+		} catch (\Throwable $e) {
+			$booking = ['success' => false, 'message' => 'Fehler beim Erstellen des Buchungsbelegs: ' . $e->getMessage()];
+		}
+		if ($booking['success']) {
+			$result = $this->expenseService->pay($id, $this->getUserId());
+			if ($result === null) {
+				return new DataResponse(['error' => 'Cannot pay'], Http::STATUS_FORBIDDEN);
+			}
+			$data = $result->toArray();
+		} else {
+			$data = $expense->toArray();
+		}
+		$data['bookingReceipt'] = $booking;
+		return new DataResponse($data);
 	}
 
 	/**
@@ -281,8 +300,42 @@ class ApprovalController extends Controller {
 		if (!$this->checkRole('treasurer')) {
 			return new DataResponse(['error' => 'Only treasurer can pay all'], Http::STATUS_FORBIDDEN);
 		}
-		$results = $this->expenseService->payAllFromPaystack($this->getUserId());
-		return new DataResponse(['paid' => count($results), 'expenses' => $results]);
+		$expenses = $this->expenseService->getPaystackExpenses();
+		$results = [];
+		$paidCount = 0;
+		$messages = [];
+
+		foreach ($expenses as $expense) {
+			try {
+				$booking = $this->bookingReceiptService->generate($expense, $this->getUserId());
+			} catch (\Throwable $e) {
+				$booking = ['success' => false, 'message' => 'Fehler: ' . $e->getMessage()];
+			}
+
+			if ($booking['success']) {
+				$result = $this->expenseService->pay($expense->getId(), $this->getUserId());
+				if ($result !== null) {
+					$row = $result->toArray();
+					$row['bookingReceipt'] = $booking;
+					$results[] = $row;
+					$paidCount++;
+					$messages[] = $booking['message'];
+				}
+			} else {
+				$row = $expense->toArray();
+				$row['bookingReceipt'] = $booking;
+				$results[] = $row;
+				$messages[] = 'Spesen ' . $expense->getId() . ': ' . $booking['message'];
+			}
+		}
+
+		$summaryMsg = implode("\n", $messages);
+		return new DataResponse([
+			'paid' => $paidCount,
+			'total' => count($expenses),
+			'expenses' => $results,
+			'bookingReceipt' => ['success' => $paidCount === count($expenses), 'message' => $summaryMsg],
+		]);
 	}
 
 	/**

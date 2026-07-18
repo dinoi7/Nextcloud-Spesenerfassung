@@ -4,7 +4,10 @@
 	"type": "nextcloud-app",
 	"license": "AGPL-3.0-or-later",
 	"require": {
-		"php": ">=8.2"
+		"php": ">=8.2",
+		"tecnickcom/tcpdf": "^6.3.5",
+		"setasign/fpdi": "^2.6",
+		"setasign/fpdi-tcpdf": "^2.3"
 	},
 	"autoload": {
 		"psr-4": {

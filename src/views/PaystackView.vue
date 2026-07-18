@@ -88,16 +88,18 @@ async function loadPaystack() {
 
 async function payExpense(id) {
   try {
-    await api.pay(id)
+    const exp = await api.pay(id)
     await loadPaystack()
+    if (exp.bookingReceipt?.message) alert(exp.bookingReceipt.message)
   } catch (e) { alert(e.message) }
 }
 
 async function handlePayAll() {
   if (!confirm(t('payAllConfirm') || 'Alle Zahlstapel-Einträge ausbezahlen?')) return
   try {
-    await api.payAll()
+    const result = await api.payAll()
     await loadPaystack()
+    if (result.bookingReceipt?.message) alert(result.bookingReceipt.message)
   } catch (e) { alert(e.message) }
 }
 

@@ -17,6 +17,10 @@ class Application extends App implements IBootstrap {
 
 	public function __construct() {
 		parent::__construct(self::APP_ID);
+		$autoloadPath = __DIR__ . '/../../vendor/autoload.php';
+		if (file_exists($autoloadPath)) {
+			require_once $autoloadPath;
+		}
 	}
 
 	public function register(IRegistrationContext $context): void {

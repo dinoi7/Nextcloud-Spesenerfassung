@@ -8,6 +8,7 @@ use OCA\Spesenerfassung\Service\UserSettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataResponse;
+use OCP\Files\IRootFolder;
 use OCP\IRequest;
 use OCP\IUserManager;
 use OCP\IUserSession;
@@ -16,6 +17,7 @@ class SettingsController extends Controller {
 	private IUserSession $userSession;
 	private IUserManager $userManager;
 	private UserSettingsService $userSettingsService;
+	private IRootFolder $rootFolder;
 
 	public function __construct(
 		string $appName,
@@ -23,19 +25,24 @@ class SettingsController extends Controller {
 		IUserSession $userSession,
 		IUserManager $userManager,
 		UserSettingsService $userSettingsService,
+		IRootFolder $rootFolder,
 	) {
 		parent::__construct($appName, $request);
 		$this->userSession = $userSession;
 		$this->userManager = $userManager;
 		$this->userSettingsService = $userSettingsService;
+		$this->rootFolder = $rootFolder;
 	}
 
-	private function requireAdmin(): bool {
+	private function requireAdmin(): ?string {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
-			return false;
+			return null;
 		}
-		return \OC::$server->getGroupManager()->isAdmin($user->getUID());
+		if (!\OC::$server->getGroupManager()->isAdmin($user->getUID())) {
+			return null;
+		}
+		return $user->getUID();
 	}
 
 	/**
@@ -50,10 +57,39 @@ class SettingsController extends Controller {
 	 * @NoCSRFRequired
 	 */
 	public function update(): DataResponse {
-		if (!$this->requireAdmin()) {
+		$adminUid = $this->requireAdmin();
+		if ($adminUid === null) {
 			return new DataResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
 		}
 		$data = $this->request->getParams();
+
+		if (isset($data['bookingFolder'])) {
+			$folder = str_replace('\\', '/', trim($data['bookingFolder']));
+			$data['bookingFolder'] = $folder;
+			if ($folder === '') {
+				return new DataResponse(['error' => 'Der Ordnerpfad darf nicht leer sein.'], Http::STATUS_BAD_REQUEST);
+			}
+			if (str_contains($folder, '..')) {
+				return new DataResponse(['error' => 'Der Ordnerpfad enthält ungültige Zeichen.'], Http::STATUS_BAD_REQUEST);
+			}
+			try {
+				$userFolder = $this->rootFolder->getUserFolder($adminUid);
+				$parts = explode('/', trim($folder, '/'));
+				$current = $userFolder;
+				foreach ($parts as $part) {
+					if ($part === '') {
+						continue;
+					}
+					if (!$current->nodeExists($part)) {
+						return new DataResponse(['error' => 'Der Ordner "' . $folder . '" existiert nicht.'], Http::STATUS_BAD_REQUEST);
+					}
+					$current = $current->get($part);
+				}
+			} catch (\Throwable $e) {
+				return new DataResponse(['error' => 'Der Ordner "' . $folder . '" konnte nicht gefunden werden.'], Http::STATUS_BAD_REQUEST);
+			}
+		}
+
 		$result = SettingsService::updateAll($data);
 		return new DataResponse($result);
 	}
@@ -70,7 +106,7 @@ class SettingsController extends Controller {
 	 * @NoCSRFRequired
 	 */
 	public function createCategory(): DataResponse {
-		if (!$this->requireAdmin()) {
+		if ($this->requireAdmin() === null) {
 			return new DataResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
 		}
 		$data = $this->request->getParams();
@@ -85,7 +121,7 @@ class SettingsController extends Controller {
 	 * @NoCSRFRequired
 	 */
 	public function updateCategory(int $id): DataResponse {
-		if (!$this->requireAdmin()) {
+		if ($this->requireAdmin() === null) {
 			return new DataResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
 		}
 		$data = $this->request->getParams();
@@ -100,7 +136,7 @@ class SettingsController extends Controller {
 	 * @NoCSRFRequired
 	 */
 	public function deleteCategory(int $id): DataResponse {
-		if (!$this->requireAdmin()) {
+		if ($this->requireAdmin() === null) {
 			return new DataResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
 		}
 		return new DataResponse(SettingsService::deleteCategory($id));

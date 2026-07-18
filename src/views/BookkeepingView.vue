@@ -97,8 +97,9 @@ async function toPaystack(id) {
 
 async function payExpense(id) {
   try {
-    await api.pay(id)
+    const exp = await api.pay(id)
     await loadBookkeeping()
+    if (exp.bookingReceipt?.message) alert(exp.bookingReceipt.message)
   } catch (e) { alert(e.message) }
 }
 

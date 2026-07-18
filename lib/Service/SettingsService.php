@@ -14,6 +14,7 @@ class SettingsService {
 	private const KEY_CATEGORIES = 'categories';
 	private const KEY_DEFAULT_PAYOUT_METHOD = 'default_payout_method';
 	private const KEY_EXPORT_ACCOUNTS = 'export_accounts';
+	private const KEY_BOOKING_FOLDER = 'booking_folder';
 
 	private const DEFAULTS = [
 		self::KEY_PRESIDENT_UID => '',
@@ -22,6 +23,7 @@ class SettingsService {
 		self::KEY_CATEGORIES => '["Material","Verpflegung","Reise","Büro","Sonstiges"]',
 		self::KEY_DEFAULT_PAYOUT_METHOD => 'bank',
 		self::KEY_EXPORT_ACCOUNTS => '{}',
+		self::KEY_BOOKING_FOLDER => 'Buchungsbelege',
 	];
 
 	public static function setConfig(IAppConfig $config): void {
@@ -125,6 +127,14 @@ class SettingsService {
 		self::getConfig()->setValueString('spesenerfassung', self::KEY_EXPORT_ACCOUNTS, json_encode($accounts));
 	}
 
+	public static function getBookingFolder(): string {
+		return self::getString(self::KEY_BOOKING_FOLDER);
+	}
+
+	public static function setBookingFolder(string $folder): void {
+		self::getConfig()->setValueString('spesenerfassung', self::KEY_BOOKING_FOLDER, $folder);
+	}
+
 	public static function getAll(): array {
 		return [
 			'presidentUid' => self::getPresidentUid(),
@@ -133,6 +143,7 @@ class SettingsService {
 			'categories' => self::getCategories(),
 			'defaultPayoutMethod' => self::getDefaultPayoutMethod(),
 			'exportAccounts' => self::getExportAccounts(),
+			'bookingFolder' => self::getBookingFolder(),
 		];
 	}
 
@@ -154,6 +165,9 @@ class SettingsService {
 		}
 		if (isset($data['exportAccounts']) && is_array($data['exportAccounts'])) {
 			self::setExportAccounts($data['exportAccounts']);
+		}
+		if (isset($data['bookingFolder'])) {
+			self::setBookingFolder(trim($data['bookingFolder']));
 		}
 		return self::getAll();
 	}

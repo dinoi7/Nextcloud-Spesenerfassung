@@ -130,6 +130,9 @@ const messages = {
 		addToBookkeeping: 'Zur Buchhaltung',
 		toBookkeeping: 'Zur Buchhaltung',
 		noBookkeeping: 'Keine Einträge in der Buchhaltung',
+		bookingFolder: 'Buchungsbeleg-Ordner',
+		bookingFolderHint: 'Relativer Pfad im Nextcloud-Dateisystem, in den PDF-Buchungsbelege gespeichert werden (z.B. "Buchungsbelege"). Wird beim Auszahlen erstellt.',
+		bookingFolderInvalid: 'Ordnerpfad ist ungültig oder kann nicht erstellt werden',
 	},
   en: {
     dashboard: 'Record',
@@ -239,6 +242,9 @@ const messages = {
 		addToBookkeeping: 'To Bookkeeping',
 		toBookkeeping: 'To Bookkeeping',
 		noBookkeeping: 'No entries in bookkeeping',
+		bookingFolder: 'Booking Receipt Folder',
+		bookingFolderHint: 'Relative path in Nextcloud files where PDF booking receipts are saved (e.g. "BookingReceipts"). Created upon payout.',
+		bookingFolderInvalid: 'Folder path is invalid or cannot be created',
 	},
 }
 

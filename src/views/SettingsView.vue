@@ -34,6 +34,12 @@
       </div>
 
       <div class="spes-form-group">
+        <label class="spes-label">{{ t('bookingFolder') }}</label>
+        <input v-model="form.bookingFolder" class="spes-input" placeholder="Buchungsbelege" />
+        <p class="spes-hint">{{ t('bookingFolderHint') }}</p>
+      </div>
+
+      <div class="spes-form-group">
         <label class="spes-label">{{ t('debitAccounts') }}</label>
         <table class="spes-accounts-table" v-if="rows.length">
           <thead>
@@ -83,6 +89,7 @@ const form = ref({
   categories: [],
   defaultPayoutMethod: 'bank',
   exportAccounts: {},
+  bookingFolder: 'Buchungsbelege',
 })
 
 const rows = ref([])

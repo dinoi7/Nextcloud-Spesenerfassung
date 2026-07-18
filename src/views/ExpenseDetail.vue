@@ -296,6 +296,7 @@ async function handlePay() {
   try {
     const exp = await api.pay(id.value)
     expense.value = exp
+    if (exp.bookingReceipt?.message) alert(exp.bookingReceipt.message)
   } catch (e) { alert(e.message) }
 }
 
