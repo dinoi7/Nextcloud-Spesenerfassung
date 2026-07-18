@@ -40,6 +40,9 @@
 | 2026-07-18 | Nav-Erweiterung: Buchhaltung + Zahlstapel + Badges | Neues Menü: Erfassung → Genehmigungen → Buchhaltung → Zahlstapel → Auswertung → Profil → Einstellungen; Pending-Counts auf Buchhaltung/Zahlstapel |
 | 2026-07-18 | Beleg-Vorschau (Hover) im Detail | Image-Preview als `<img>`, PDF als `<iframe>`, Download-Button; unterhalb des Receipt-Items positioniert |
 | 2026-07-18 | Detail/Form-Ansicht verbreitert | `max-width: none` ab 900px für `.spes-detail` und `.spes-form` |
+| 2026-07-18 | PDF-Spesenbeleg via TCPDF + FPDI | `BookingReceiptService` generiert PDF in kassier-Ordner: Logo im Header, "Spesenbeleg"-Titel, Verlauf-Tabelle, Anhang-Embedding (FPDI `getTemplateSize`-Fix), keine TCPDF-Header/Footer-Linien |
+| 2026-07-18 | Spesenbeleg in kassier-User-Ordner | Ablage via `IRootFolder->getUserFolder('kassier')` statt IAppData — nur kassier hat Zugriff |
+| 2026-07-18 | Backslash-Fix in Buchungsordner-Pfad | `str_replace('\\', '/', $folderPath)` in BookingReceiptService + SettingsController |
 
 ## Nächste Schritte
 

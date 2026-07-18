@@ -61,7 +61,8 @@ spesenerfassung/
 │   │   ├── WorkflowService.php         # State Machine (TRANSITIONS Matrix)
 │   │   ├── ReceiptService.php          # Datei-Upload via IAppData
 │   │   ├── SettingsService.php         # AppConfig-Getter/Setter
-│   │   └── MailService.php             # DE/EN Mail-Versand via IMailer
+│   │   ├── MailService.php             # DE/EN Mail-Versand via IMailer
+│   │   └── BookingReceiptService.php   # PDF-Spesenbeleg (TCPDF+FPDI) in kassier-Ordner
 │   └── Settings/
 │       ├── AdminSettings.php           # Admin-Form
 │       └── AdminSection.php            # Admin-Navigations-Abschnitt
@@ -95,7 +96,9 @@ spesenerfassung/
 ├── templates/
 │   ├── index.php                       # SPA Mountpoint
 │   └── admin.php                       # Admin-Seite
-├── img/app.svg
+├── img/
+│   ├── app.svg
+│   └── logo.png                        # Makerspace-Logo für PDF-Spesenbeleg
 ├── composer.json
 ├── package.json
 ├── vite.config.js
@@ -295,3 +298,7 @@ GET    /                                    → PageController#index
 ### 10. Docblock-Annotationen statt PHP-8-Attribute für Controller (2026-07-18)
 
 **Begründung:** Nextcloud 33 verarbeitet `@NoAdminRequired`/`@NoCSRFRequired` ausschliesslich als Docblock-Annotationen. PHP-8-Attribute (`#[NoAdminRequired]`) werden nur dann erkannt, wenn der korrekte Import `OCP\AppFramework\Http\Attribute\NoCSRFRequired` vorhanden ist. Fehlt der Import (wie im ApprovalController), ignoriert PHP das Attribut stillschweigend — CSRF-Check schlägt fehl (412). Einheitliche Docblock-Annotationen im gesamten Projekt vermeiden diesen Fehler.
+
+### 11. PDF-Spesenbeleg mit TCPDF + FPDI (2026-07-18)
+
+**Begründung:** Beim Bezahlen einer Spese wird automatisch ein "Spesenbeleg"-PDF generiert und im kassier-User-Ordner abgelegt. TCPDF (6.11.3) erstellt das Grundgerüst (Layout, Tabellen, Text), FPDI (2.6.8) bettet PDF-Anhänge als weitere Seiten ein. Die Ablage erfolgt im kassier-Ordner (`IRootFolder->getUserFolder('kassier')`), nicht in IAppData, damit der Kassier direkten Zugriff über die Nextcloud-UI hat. Wichtige Fixes: `getTemplateSize()` für korrekte Anhang-Dimensionen, `SetPrintHeader(false)`/`SetPrintFooter(false)` gegen TCPDF-Standard-Rahmenlinien, `str_replace('\\', '/')` gegen Backslash im Ordnerpfad.

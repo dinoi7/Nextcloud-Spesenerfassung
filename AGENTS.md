@@ -14,7 +14,7 @@
 ### PHP (Nextcloud App)
 - `declare(strict_types=1);` in jeder PHP-Datei.
 - PSR-4 Autoloading unter `lib/`, Namespace `OCA\Spesenerfassung\`.
-- Controller erben von `OCP\AppFramework\Controller`, Methoden mit PHP-8-Attributen `#[NoAdminRequired]`, `#[NoCSRFRequired]`.
+- Controller erben von `OCP\AppFramework\Controller`, Methoden mit Docblock-Annotationen `@NoAdminRequired`, `@NoCSRFRequired`.
 - Entities erben von `OCP\AppFramework\Db\Entity`, Mapper von `OCP\AppFramework\Db\QBMapper`.
 - DB-Queries ausschließlich über den Nextcloud `IQueryBuilder` mit named Parameters.
 - Keine direkten `$_GET`/`$_POST`/`$_SESSION` Zugriffe — alles über `IRequest`.
