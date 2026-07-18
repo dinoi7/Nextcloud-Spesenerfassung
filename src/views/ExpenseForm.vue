@@ -54,7 +54,7 @@
       </div>
 
       <div class="spes-form-group">
-        <ReceiptUpload :expense-id="currentExpenseId" :receipts="existingReceipts" @file="handleFile" @delete="onDeleteReceipt" />
+        <ReceiptUpload :expense-id="currentExpenseId" :receipts="existingReceipts" :uploading="uploading" @file="handleFile" @delete="onDeleteReceipt" />
       </div>
 
       <div class="spes-form-actions">
@@ -86,6 +86,8 @@ const expenseId = computed(() => parseInt(route.params.id) || null)
 const currentExpenseId = ref(expenseId.value)
 
 const existingReceipts = ref([])
+
+const uploading = ref(false)
 
 const defaultDate = new Date().toISOString().slice(0, 10)
 
@@ -132,12 +134,15 @@ async function ensureSaved() {
 }
 
 async function handleFile(file) {
+  uploading.value = true
   try {
     const id = await ensureSaved()
     const receipt = await api.uploadReceipt(id, file)
     existingReceipts.value.push(receipt)
   } catch (e) {
     alert(e.message)
+  } finally {
+    uploading.value = false
   }
 }
 

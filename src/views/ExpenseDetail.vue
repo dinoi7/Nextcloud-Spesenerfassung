@@ -70,8 +70,11 @@
             </span>
             <a :href="getReceiptUrl(rec)" target="_blank" class="spes-receipt-link"
                @mouseenter="previewReceipt = rec.id" @mouseleave="previewReceipt = null">
-              <span>{{ rec.fileName }}</span>
-              <span class="spes-receipt-size">{{ formatSize(rec.size) }}</span>
+               <span>{{ rec.fileName }}</span>
+               <span class="spes-receipt-meta">
+                 <span v-if="rec.pageCount" class="spes-receipt-pages">{{ rec.pageCount }} {{ t('pages') }}</span>
+                 <span class="spes-receipt-size">{{ formatKb(rec.size) }}</span>
+               </span>
             </a>
             <a :href="getReceiptUrl(rec)" :download="rec.fileName" class="spes-receipt-download" :title="t('download')">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -94,7 +97,7 @@
 
       <HistoryTimeline :history="history" />
 
-      <div v-if="(canPay || isPaystackDetail || isBookkeepingDetail) && expense.payoutMethod === 'bank' && expense.iban" class="spes-payment-info">
+      <div v-if="(canPay || isPaystackDetail) && expense.payoutMethod === 'bank' && expense.iban" class="spes-payment-info">
         <h3>{{ t('paymentInfo') }}</h3>
         <div class="spes-payment-body">
           <div class="spes-payment-details">
@@ -118,7 +121,7 @@
         <button v-if="isBookkeepingDetail && expense.payoutMethod === 'bank'" class="spes-btn spes-btn-paystack" @click="handleAddToPaystack">{{ t('addToPaystack') }}</button>
         <button v-if="isBookkeepingDetail && expense.payoutMethod !== 'bank'" class="spes-btn spes-btn-success" @click="handlePay">{{ t('pay') }}</button>
         <button v-if="isPaystackDetail" class="spes-btn spes-btn-success" @click="handlePay">{{ t('pay') }}</button>
-        <button v-if="canDone" class="spes-btn" @click="handleDone">{{ t('done') }}</button>
+        <button v-if="canDone && !isPaystackDetail" class="spes-btn" @click="handleDone">{{ t('done') }}</button>
         <button v-if="canReject" class="spes-btn spes-btn-danger" @click="handleReject">{{ t('reject') }}</button>
       </div>
     </div>
@@ -265,6 +268,10 @@ function isImage(mimeType) {
 function formatSize(bytes) {
   if (bytes < 1024) return bytes + ' B'
   return (bytes / 1024).toFixed(0) + ' KB'
+}
+
+function formatKb(bytes) {
+  return (bytes / 1024).toFixed(1) + ' KB'
 }
 
 function getReceiptUrl(rec) {

@@ -133,6 +133,8 @@ const messages = {
 		bookingFolder: 'Buchungsbeleg-Ordner',
 		bookingFolderHint: 'Relativer Pfad im Nextcloud-Dateisystem, in den PDF-Buchungsbelege gespeichert werden (z.B. "Buchungsbelege"). Wird beim Auszahlen erstellt.',
 		bookingFolderInvalid: 'Ordnerpfad ist ungültig oder kann nicht erstellt werden',
+		pages: 'Seiten',
+		uploading: 'Hochladen...',
 	},
   en: {
     dashboard: 'Record',

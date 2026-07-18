@@ -95,7 +95,11 @@ class ExpenseController extends Controller {
 
 		$data = $expense->toArray();
 		$receipts = $this->receiptService->findByExpenseId($id);
-		$data['receipts'] = array_map(fn($r) => $r->toArray(), $receipts);
+		$data['receipts'] = array_map(function ($r) {
+			$row = $r->toArray();
+			$row['pageCount'] = $this->receiptService->getPageCount($r);
+			return $row;
+		}, $receipts);
 		$data['receiptCount'] = count($receipts);
 
 		$history = $this->expenseService->getHistory($id);
@@ -136,6 +140,13 @@ class ExpenseController extends Controller {
 			return new DataResponse(['error' => 'Missing required fields'], Http::STATUS_BAD_REQUEST);
 		}
 
+		if (($data['payoutMethod'] ?? '') === 'bank') {
+			$iban = $this->userSettingsService->getIban($userId);
+			if ($iban === '') {
+				return new DataResponse(['error' => 'IBAN ist erforderlich für Bank-Auszahlung. Bitte im Profil hinterlegen.'], Http::STATUS_BAD_REQUEST);
+			}
+		}
+
 		try {
 			$expense = $this->expenseService->create($userId, $data);
 		} catch (\Throwable $e) {
@@ -155,6 +166,13 @@ class ExpenseController extends Controller {
 	public function update(int $id): DataResponse {
 		$userId = $this->getUserId();
 		$data = $this->request->getParams();
+
+		if (($data['payoutMethod'] ?? '') === 'bank') {
+			$iban = $this->userSettingsService->getIban($userId);
+			if ($iban === '') {
+				return new DataResponse(['error' => 'IBAN ist erforderlich für Bank-Auszahlung. Bitte im Profil hinterlegen.'], Http::STATUS_BAD_REQUEST);
+			}
+		}
 
 		$expense = $this->expenseService->update($id, $userId, $data);
 		if ($expense === null) {

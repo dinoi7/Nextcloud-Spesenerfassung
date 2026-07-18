@@ -232,6 +232,10 @@ class ApprovalController extends Controller {
 			$row['displayName'] = $names[$e->getUserId()] ?? $e->getUserId();
 			$row['receiptCount'] = count($this->receiptService->findByExpenseId($e->getId()));
 			$row['sollKonto'] = $accounts[$e->getCategory()] ?? '';
+			if ($e->getPayoutMethod() === 'bank') {
+				$row['submitterName'] = $row['displayName'];
+				$row['iban'] = $this->userSettingsService->getIban($e->getUserId());
+			}
 			return $row;
 		}, $expenses);
 		return new DataResponse($result);

@@ -1,5 +1,9 @@
 <template>
-  <div class="spes-upload">
+  <div class="spes-upload" :class="{ 'spes-upload--loading': uploading || localUploading }">
+    <div v-if="uploading || localUploading" class="spes-upload-spinner-overlay">
+      <div class="spes-upload-spinner"></div>
+      <span class="spes-upload-spinner-text">{{ t('uploading') }}</span>
+    </div>
     <div v-if="receipts.length >= 5" class="spes-upload-max">
       <p>{{ t('maxReceipts') }}</p>
     </div>
@@ -21,12 +25,13 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { useI18n } from '../i18n'
 
 const props = defineProps({
   expenseId: { type: Number, default: null },
   receipts: { type: Array, default: () => [] },
+  uploading: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['uploaded', 'delete', 'file'])
@@ -34,9 +39,22 @@ const { t } = useI18n()
 
 const isMobile = computed(() => /Mobi|Android/i.test(navigator.userAgent))
 
+const localUploading = ref(false)
+
+watch(() => props.receipts.length, () => {
+  localUploading.value = false
+})
+
+watch(() => props.uploading, (val) => {
+  if (!val) localUploading.value = false
+})
+
 async function handleFileSelect(e) {
   const file = e.target.files?.[0]
   if (file) {
+    localUploading.value = true
+    await nextTick()
+    await new Promise(r => requestAnimationFrame(r))
     emit('file', file)
   }
   e.target.value = ''
@@ -45,6 +63,9 @@ async function handleFileSelect(e) {
 async function handleDrop(e) {
   const file = e.dataTransfer?.files?.[0]
   if (file) {
+    localUploading.value = true
+    await nextTick()
+    await new Promise(r => requestAnimationFrame(r))
     emit('file', file)
   }
 }

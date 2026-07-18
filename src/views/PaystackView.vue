@@ -13,29 +13,37 @@
       <p>{{ t('noPaystack') }}</p>
     </div>
 
-    <div v-else class="spes-card-list">
-      <div v-for="expense in expenses" :key="expense.id" class="spes-card" @click="$router.push(`/expenses/${expense.id}?from=paystack`)">
-        <div class="spes-card-header">
-          <div class="spes-card-header-left">
-            <span class="spes-card-title">{{ expense.title }}</span>
+    <div v-else class="spes-paystack-list">
+      <div v-for="expense in expenses" :key="expense.id" class="spes-paystack-row">
+        <div class="spes-paystack-main" @click="$router.push(`/expenses/${expense.id}?from=paystack`)">
+          <div class="spes-paystack-header">
+            <span class="spes-paystack-title">{{ expense.title }}</span>
             <span class="spes-card-user">{{ expense.displayName || expense.userId }}</span>
+            <StatusBadge :status="expense.status" />
           </div>
-          <StatusBadge :status="expense.status" />
-        </div>
-        <div class="spes-card-body">
-          <div>
-            <div class="spes-card-amount">CHF {{ formatAmount(expense.amount) }}</div>
-            <div v-if="expense.foreignCurrency" class="spes-card-foreign-amount">{{ expense.foreignCurrency }} {{ formatAmount(expense.foreignAmount) }}</div>
-          </div>
-          <div v-if="expense.description" class="spes-card-desc">{{ expense.description }}</div>
-           <div class="spes-card-meta">
+          <div class="spes-paystack-details">
+            <span class="spes-paystack-amount">CHF {{ formatAmount(expense.amount) }}</span>
+            <span v-if="expense.foreignCurrency">{{ expense.foreignCurrency }} {{ formatAmount(expense.foreignAmount) }}</span>
             <span>{{ expense.category }}</span>
-            <span v-if="expense.sollKonto" class="spes-card-account">&rarr; {{ expense.sollKonto }}</span>
+            <span v-if="expense.sollKonto">&rarr; {{ expense.sollKonto }}</span>
             <span>{{ formatDate(expense.expenseDate) }}</span>
-            <span v-if="expense.payoutMethod" class="spes-card-payout">{{ expense.payoutMethod === 'bank' ? t('payoutBank') : t('payoutCash') }}</span>
+            <span v-if="expense.payoutMethod === 'bank'">{{ t('payoutBank') }}</span>
+            <span v-else>{{ t('payoutCash') }}</span>
           </div>
+          <div v-if="expense.description" class="spes-paystack-desc">{{ expense.description }}</div>
         </div>
-        <div class="spes-card-actions" @click.stop>
+
+        <div v-if="expense.payoutMethod === 'bank' && expense.iban" class="spes-paystack-payment">
+          <div class="spes-paystack-payment-details">
+            <span class="spes-payment-label">{{ t('paymentIban') }}</span>
+            <span class="spes-paystack-iban">{{ expense.iban }}</span>
+            <span class="spes-payment-label">{{ t('recipient') }}</span>
+            <span class="spes-payment-value">{{ expense.submitterName || expense.displayName }}</span>
+          </div>
+          <SwissQrCode :iban="expense.iban" :name="expense.submitterName || expense.displayName" :amount="expense.amount" :reference="'SpesenNr. ' + expense.id + ': ' + expense.title" />
+        </div>
+
+        <div class="spes-paystack-actions" @click.stop>
           <button class="spes-btn spes-btn-sm spes-btn-success" @click="payExpense(expense.id)">{{ t('pay') }}</button>
           <button class="spes-btn spes-btn-sm spes-btn-danger" @click="rejectExpense(expense.id)">{{ t('reject') }}</button>
         </div>
@@ -49,6 +57,7 @@ import { ref, onMounted } from 'vue'
 import { useI18n } from '../i18n'
 import { api } from '../api'
 import StatusBadge from '../components/StatusBadge.vue'
+import SwissQrCode from '../components/SwissQrCode.vue'
 
 const { t } = useI18n()
 

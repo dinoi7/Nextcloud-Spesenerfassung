@@ -165,6 +165,20 @@ class ReceiptService {
 		}
 	}
 
+	public function getPageCount(Receipt $receipt): ?int {
+		if ($receipt->getMimeType() !== 'application/pdf') {
+			return null;
+		}
+		$content = $this->getContent($receipt);
+		if ($content === null) {
+			return null;
+		}
+		$matches = [];
+		preg_match_all('/\/Type\s*\/Page[^s]/', $content, $matches);
+		$count = count($matches[0]);
+		return $count > 0 ? $count : 1;
+	}
+
 	private function sanitizeFileName(string $name): string {
 		$name = basename($name);
 		$name = preg_replace('/[^a-zA-Z0-9._\-]/', '_', $name);

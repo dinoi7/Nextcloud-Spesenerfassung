@@ -85,6 +85,11 @@ class BookingReceiptService {
 		$pdf->SetFont('helvetica', '', 10);
 		$pdf->Cell(0, $rowH, $submitterName . ' (' . $expense->getUserId() . ')', 0, 1);
 
+		$pdf->SetFont('helvetica', 'B', 10);
+		$pdf->Cell($labelW, $rowH, 'Status:', 0, 0);
+		$pdf->SetFont('helvetica', '', 10);
+		$pdf->Cell(0, $rowH, 'Ausbezahlt', 0, 1);
+
 		if ($iban) {
 			$pdf->SetFont('helvetica', 'B', 10);
 			$pdf->Cell($labelW, $rowH, 'IBAN:', 0, 0);
@@ -98,9 +103,11 @@ class BookingReceiptService {
 		$pdf->Cell(0, $rowH, $expense->getTitle(), 0, 1);
 
 		if ($expense->getDescription()) {
+			$y = $pdf->GetY();
 			$pdf->SetFont('helvetica', 'B', 10);
 			$pdf->Cell($labelW, $rowH, 'Beschreibung:', 0, 0);
 			$pdf->SetFont('helvetica', '', 10);
+			$pdf->SetXY($pdf->GetX(), $y);
 			$pdf->MultiCell(0, $rowH, $expense->getDescription(), 0, 'L');
 		}
 
@@ -156,6 +163,29 @@ class BookingReceiptService {
 		if (count($receipts) > 0) {
 			$pdf->SetFont('helvetica', 'B', 12);
 			$pdf->Cell(0, 8, 'Anhänge (' . count($receipts) . ')', 0, 1, 'L');
+			$pdf->Ln(2);
+
+			$pdf->SetFont('helvetica', 'B', 9);
+			$pdf->SetFillColor(240, 240, 240);
+			$pdf->Cell(80, 6, 'Dateiname', 0, 0, 'L', true);
+			$pdf->Cell(25, 6, 'Seiten', 0, 0, 'R', true);
+			$pdf->Cell(25, 6, 'Grösse', 0, 1, 'R', true);
+
+			$pdf->SetFont('helvetica', '', 9);
+			foreach ($receipts as $receipt) {
+				$pages = '-';
+				if ($receipt->getMimeType() === 'application/pdf') {
+					$pc = $this->receiptService->getPageCount($receipt);
+					$pages = $pc !== null ? (string) $pc : '-';
+				}
+				$kb = round($receipt->getSize() / 1024, 1) . ' KB';
+				$name = $receipt->getFileName();
+				$pdf->Cell(80, 6, $name, 0, 0, 'L');
+				$pdf->Cell(25, 6, $pages, 0, 0, 'R');
+				$pdf->Cell(25, 6, $kb, 0, 1, 'R');
+			}
+
+			$pdf->Ln(4);
 
 			foreach ($receipts as $receipt) {
 				$content = $this->receiptService->getContent($receipt);
