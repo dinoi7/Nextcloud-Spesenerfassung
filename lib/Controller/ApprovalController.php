@@ -393,8 +393,10 @@ class ApprovalController extends Controller {
 		return $this->userSettingsService->getIban($userId);
 	}
 
-	#[NoAdminRequired]
-	#[NoCSRFRequired]
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
 	public function evaluation(): DataResponse {
 		if (!$this->checkRole('president') && !$this->checkRole('treasurer')) {
 			return new DataResponse(['error' => 'Not authorized'], Http::STATUS_FORBIDDEN);
@@ -413,5 +415,37 @@ class ApprovalController extends Controller {
 			return $row;
 		}, $expenses);
 		return new DataResponse($result);
+	}
+
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
+	public function evaluationExport() {
+		if (!$this->checkRole('president') && !$this->checkRole('treasurer')) {
+			return new DataResponse(['error' => 'Not authorized'], Http::STATUS_FORBIDDEN);
+		}
+		$expenses = $this->expenseService->findAll();
+		$userIds = array_map(fn($e) => $e->getUserId(), $expenses);
+		$names = [];
+		foreach (array_unique($userIds) as $uid) {
+			$u = $this->userManager->get($uid);
+			$names[$uid] = $u ? $u->getDisplayName() : $uid;
+		}
+		$csv = "\xEF\xBB\xBF";
+		$csv .= "\"Status\";\"Datum\";\"Erfasser\";\"Titel\";\"Kategorie\";\"Betrag (CHF)\";\"Fremdwährung\";\"Fremdbetrag\";\"Auszahlungsart\"\n";
+		foreach ($expenses as $e) {
+			$status = $e->getStatus();
+			$date = date('d.m.Y', strtotime($e->getExpenseDate()));
+			$name = $this->sani($names[$e->getUserId()] ?? $e->getUserId());
+			$title = $this->sani($e->getTitle() ?? '');
+			$category = $this->sani($e->getCategory() ?? '');
+			$amount = number_format((float) $e->getAmount(), 2, '.', '');
+			$fc = $this->sani($e->getForeignCurrency() ?? '');
+			$fa = $e->getForeignAmount() !== null ? number_format((float) $e->getForeignAmount(), 2, '.', '') : '';
+			$payout = $e->getPayoutMethod() === 'bank' ? 'Bank' : ($e->getPayoutMethod() ? 'Bar' : '');
+			$csv .= "\"$status\";\"$date\";\"$name\";\"$title\";\"$category\";\"$amount\";\"$fc\";\"$fa\";\"$payout\"\n";
+		}
+		return new DataDownloadResponse($csv, 'auswertung.csv', 'text/csv; charset=utf-8');
 	}
 }

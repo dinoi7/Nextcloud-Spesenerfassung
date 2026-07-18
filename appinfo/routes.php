@@ -32,6 +32,7 @@ return [
 		['name' => 'approval#bookkeepingExport', 'url' => '/api/approvals/bookkeeping/export', 'verb' => 'GET'],
 		['name' => 'approval#bookkeepingExportSingle', 'url' => '/api/approvals/bookkeeping/export/{id}', 'verb' => 'GET', 'requirements' => ['id' => '\d+']],
 		['name' => 'approval#evaluation', 'url' => '/api/evaluation', 'verb' => 'GET'],
+		['name' => 'approval#evaluationExport', 'url' => '/api/evaluation/export', 'verb' => 'GET'],
 
 		['name' => 'settings#get', 'url' => '/api/settings', 'verb' => 'GET'],
 		['name' => 'settings#update', 'url' => '/api/settings', 'verb' => 'PUT'],

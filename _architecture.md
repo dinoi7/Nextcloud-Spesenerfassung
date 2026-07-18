@@ -76,8 +76,12 @@ spesenerfassung/
 │   ├── views/
 │   │   ├── Dashboard.vue               # Übersicht + Summary-Cards
 │   │   ├── ExpenseForm.vue             # Neu/Bearbeiten
-│   │   ├── ExpenseDetail.vue           # Detail + History + Workflow-Aktionen
+│   │   ├── ExpenseDetail.vue           # Detail + History + Workflow-Aktionen + Beleg-Vorschau
 │   │   ├── ApprovalList.vue            # Genehmigungs-Liste (Präsident/Kassier)
+│   │   ├── BookkeepingView.vue         # Buchhaltung (Kassier) mit CSV-Export
+│   │   ├── PaystackView.vue            # Zahlstapel (Kassier) mit QR-Bill
+│   │   ├── EvaluationView.vue          # Auswertung mit Filtern + CSV-Export
+│   │   ├── ProfileView.vue             # Benutzerprofil (IBAN, Sprache)
 │   │   └── SettingsView.vue            # Admin-Einstellungen
 │   ├── components/
 │   │   ├── ExpenseCard.vue
@@ -112,7 +116,7 @@ spesenerfassung/
 | `description` | TEXT nullable | Beschreibung |
 | `amount` | DECIMAL(10,2) | Betrag in CHF |
 | `category` | VARCHAR(128) | Kategorie (aus configurierbarer Liste) |
-| `status` | VARCHAR(32) | `draft`, `submitted`, `approved`, `rejected`, `paid`, `done` |
+| `status` | VARCHAR(32) | `draft`, `submitted`, `approved`, `rejected`, `bookkeeping`, `paystack`, `paid`, `done` |
 | `expense_date` | DATE | Datum der Ausgabe |
 | `created_at` | DATETIME | Erstellungszeitpunkt |
 | `updated_at` | DATETIME | Letzte Änderung |
@@ -140,7 +144,7 @@ FK-Constraint: `expense_id` → `spesenerfassung_expenses.id` ON DELETE CASCADE
 | `id` | BIGINT PK | Auto-ID |
 | `expense_id` | BIGINT FK → expenses.id ON DELETE CASCADE | Zugehörige Spese |
 | `user_id` | VARCHAR(64) | Wer hat gehandelt |
-| `action` | VARCHAR(32) | `submitted`, `approved`, `rejected`, `paid`, `done` |
+| `action` | VARCHAR(32) | `submitted`, `approved`, `rejected`, `bookkeeping`, `paystack`, `paid`, `done` |
 | `comment` | TEXT nullable | Begründung (zwingend bei `rejected`) |
 | `created_at` | DATETIME | Zeitpunkt der Aktion |
 
@@ -164,30 +168,37 @@ FK-Constraint: `expense_id` → `spesenerfassung_expenses.id` ON DELETE CASCADE
        │  Kassier │  │Präsident │       │     │
        └────┬─────┘  └────┬─────┘       │     │
             │             │             │     │
-      pay   │    approve  │    reject   │     │
+   bookkeep │    approve  │    reject   │     │
             │             │   (Grund)   │     │
             ▼             ▼             │     │
-       ┌──────────┐ ┌──────────┐       │     │
-       │  PAID    │ │ APPROVED │       │     │
-       └────┬─────┘ └────┬─────┘       │     │
-            │            │             │     │
-            │      pay   │    reject   │     │
-            │            │   (Kassier, │     │
-            │            │    Grund)   │     │
-            │            │             │     │
-            ▼            ▼             │     │
+       ┌───────────┐ ┌──────────┐      │     │
+       │BOOKKEEPING│ │ APPROVED │      │     │
+       └─────┬─────┘ └────┬─────┘      │     │
+             │            │            │     │
+   paystack  │    bookkeep│   reject   │     │
+   (bank)    │            │   (Kassier,│     │
+             │            │    Grund)  │     │
+             ▼            ▼            │     │
        ┌──────────┐ ┌──────────┐      │     │
-       │  PAID    │ │ REJECTED ├──────┘     │
+       │ PAYSTACK │ │ REJECTED ├──────┘     │
        └────┬─────┘ └──────────┘            │
-            │                                │
-            │ done (Erfasser)                │
-            ▼                                │
+            │                               │
+            │ pay                           │
+            ▼                               │
+       ┌──────────┐                         │
+       │  PAID    │                         │
+       └────┬─────┘                         │
+            │ done (Erfasser)               │
+            ▼                               │
        ┌──────────┐                         │
        │  DONE    │   (Endzustand)          │
        └──────────┘                         │
                                             │
-   ┌─── Löschen nur durch Erfasser ─────────┘
-   │    und nur in DRAFT / REJECTED
+  ┌─── Löschen nur durch Erfasser ──────────┘
+  │    und nur in DRAFT / REJECTED
+
+  BAR-Auszahlung: BOOKKEEPING → pay → PAID
+  Bank-Auszahlung: BOOKKEEPING → paystack → PAYSTACK → pay → PAID
 ```
 
 ## API-Routen
@@ -212,9 +223,20 @@ DELETE /api/expenses/{id}/receipts/{rid}    → ExpenseController#deleteReceipt
 POST   /api/expenses/{id}/submit            → ApprovalController#submit
 POST   /api/expenses/{id}/approve           → ApprovalController#approve
 POST   /api/expenses/{id}/reject            → ApprovalController#reject
+POST   /api/expenses/{id}/bookkeeping       → ApprovalController#bookkeeping
+POST   /api/expenses/{id}/paystack          → ApprovalController#paystack
 POST   /api/expenses/{id}/pay               → ApprovalController#pay
 POST   /api/expenses/{id}/done              → ApprovalController#done
 GET    /api/approvals/pending               → ApprovalController#pending
+GET    /api/approvals/bookkeeping           → ApprovalController#bookkeepingList
+GET    /api/approvals/bookkeeping/export    → ApprovalController#bookkeepingExport
+GET    /api/approvals/bookkeeping/export/{id}→ ApprovalController#bookkeepingExportSingle
+GET    /api/approvals/paystack              → ApprovalController#paystackList
+POST   /api/approvals/paystack/pay-all      → ApprovalController#paystackPayAll
+GET    /api/approvals/paystack/export       → ApprovalController#paystackExport
+GET    /api/approvals/paystack/export/{id}  → ApprovalController#paystackExportSingle
+GET    /api/evaluation                      → ApprovalController#evaluation
+GET    /api/evaluation/export               → ApprovalController#evaluationExport
 ```
 
 ### Einstellungen
@@ -269,3 +291,7 @@ GET    /                                    → PageController#index
 ### 9. Mail-Templates bilingual (DE/EN) (2026-05-25)
 
 **Begründung:** Makerspace Reinach hat deutsch- und englischsprachige Mitglieder. Mails enthalten beide Sprachen (DE-Block + `---` + EN-Block), damit der Empfänger die präferierte Sprache lesen kann, ohne dass die App die Empfänger-Sprache kennen muss.
+
+### 10. Docblock-Annotationen statt PHP-8-Attribute für Controller (2026-07-18)
+
+**Begründung:** Nextcloud 33 verarbeitet `@NoAdminRequired`/`@NoCSRFRequired` ausschliesslich als Docblock-Annotationen. PHP-8-Attribute (`#[NoAdminRequired]`) werden nur dann erkannt, wenn der korrekte Import `OCP\AppFramework\Http\Attribute\NoCSRFRequired` vorhanden ist. Fehlt der Import (wie im ApprovalController), ignoriert PHP das Attribut stillschweigend — CSRF-Check schlägt fehl (412). Einheitliche Docblock-Annotationen im gesamten Projekt vermeiden diesen Fehler.

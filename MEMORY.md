@@ -35,9 +35,16 @@
 | 2026-05-28 | `nodeExists()` → `fileExists()` | NC 33 SimpleFolder API-Änderung; Upload funktioniert jetzt |
 | 2026-05-28 | Display Name via IUserManager-Map | UID → DisplayName Mapping im Controller, nicht im Frontend; alle Responses enthalten `displayName` |
 | 2026-05-28 | Widget via IAPIWidget | Dashboard-Widget mit Counts für "Spesen zu bearbeiten" + "Spesen zu genehmigen" |
+| 2026-07-18 | Docblock-Annotationen statt PHP-8-Attribute | Nextcloud 33 verarbeitet nur `@NoAdminRequired`/`@NoCSRFRequired` im Docblock, nicht `#[...]` Attribute. CSRF-412-Fehler an Auswertung war Folge von fehlenden Imports für Attribute im ApprovalController. |
+| 2026-07-18 | Workflow: SUBMITTED → BOOKKEEPING | "Zum Zahlstapel"/"Auszahlen" aus ApprovalList entfernt; Eingereichte unterhalb der Schwelle gehen direkt zur Buchhaltung |
+| 2026-07-18 | Nav-Erweiterung: Buchhaltung + Zahlstapel + Badges | Neues Menü: Erfassung → Genehmigungen → Buchhaltung → Zahlstapel → Auswertung → Profil → Einstellungen; Pending-Counts auf Buchhaltung/Zahlstapel |
+| 2026-07-18 | Beleg-Vorschau (Hover) im Detail | Image-Preview als `<img>`, PDF als `<iframe>`, Download-Button; unterhalb des Receipt-Items positioniert |
+| 2026-07-18 | Detail/Form-Ansicht verbreitert | `max-width: none` ab 900px für `.spes-detail` und `.spes-form` |
 
 ## Nächste Schritte
 
 - [ ] Mail-Server in Nextcloud konfigurieren (für Benachrichtigungen)
 - [ ] Nextcloud Notification-Integration (zusätzlich zu Mails)
-- [ ] Export-Funktionalität (CSV/PDF)
+- [x] Export-Funktionalität (CSV für Buchhaltung, Zahlstapel, Auswertung)
+- [x] Buchhaltung-Ansicht mit Soll-Konto-Zuordnung
+- [x] Zahlstapel-Ansicht mit QR-Bill / IBAN

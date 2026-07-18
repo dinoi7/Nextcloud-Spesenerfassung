@@ -129,6 +129,21 @@ export const api = {
 		URL.revokeObjectURL(url)
 	},
 	getEvaluation: () => request('GET', '/evaluation'),
+	exportEvaluation: async () => {
+		const base = '/index.php/apps/spesenerfassung/api'
+		const headers = {}
+		const token = document.querySelector('head meta[name="csrf-token"]')?.getAttribute('content')
+		if (token) headers['requesttoken'] = token
+		const res = await fetch(base + '/evaluation/export', { headers, credentials: 'same-origin' })
+		if (!res.ok) throw new Error('Export failed')
+		const blob = await res.blob()
+		const url = URL.createObjectURL(blob)
+		const a = document.createElement('a')
+		a.href = url
+		a.download = 'auswertung.csv'
+		a.click()
+		URL.revokeObjectURL(url)
+	},
   getSettings: () => request('GET', '/settings'),
   updateSettings: (data) => request('PUT', '/settings', data),
   getUserSettings: () => request('GET', '/settings/user'),

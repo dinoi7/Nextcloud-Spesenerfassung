@@ -2,6 +2,7 @@
   <div class="spes-page">
     <div class="spes-page-header">
       <h1>{{ t('evaluation') }}</h1>
+      <button v-if="allExpenses.length" class="spes-btn" @click="handleExport">{{ t('exportCsv') }}</button>
     </div>
 
     <div v-if="loading" class="spes-loading">{{ t('loading') }}</div>
@@ -239,6 +240,14 @@ function formatDate(dateStr) {
   if (!dateStr) return ''
   const d = new Date(dateStr)
   return d.toLocaleDateString('de-CH')
+}
+
+async function handleExport() {
+  try {
+    await api.exportEvaluation()
+  } catch (e) {
+    error.value = e.message
+  }
 }
 
 onMounted(async () => {
