@@ -135,6 +135,7 @@ const messages = {
 		bookingFolderInvalid: 'Ordnerpfad ist ungültig oder kann nicht erstellt werden',
 		pages: 'Seiten',
 		uploading: 'Hochladen...',
+		expenseNumber: 'Spesennummer',
 	},
   en: {
     dashboard: 'Record',
@@ -247,6 +248,7 @@ const messages = {
 		bookingFolder: 'Booking Receipt Folder',
 		bookingFolderHint: 'Relative path in Nextcloud files where PDF booking receipts are saved (e.g. "BookingReceipts"). Created upon payout.',
 		bookingFolderInvalid: 'Folder path is invalid or cannot be created',
+		expenseNumber: 'Expense No.',
 	},
 }
 

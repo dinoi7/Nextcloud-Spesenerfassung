@@ -7,50 +7,85 @@ use OCA\Spesenerfassung\Db\Approval;
 use OCA\Spesenerfassung\Db\Expense;
 use OCP\Mail\IMailer;
 use OCP\IURLGenerator;
-use OCP\IL10N;
+use OCP\IUserManager;
+use Psr\Log\LoggerInterface;
 
 class MailService {
 	private IMailer $mailer;
 	private IURLGenerator $urlGenerator;
+	private IUserManager $userManager;
+	private LoggerInterface $logger;
 
-	public function __construct(IMailer $mailer, IURLGenerator $urlGenerator) {
+	public function __construct(
+		IMailer $mailer,
+		IURLGenerator $urlGenerator,
+		IUserManager $userManager,
+		LoggerInterface $logger,
+	) {
 		$this->mailer = $mailer;
 		$this->urlGenerator = $urlGenerator;
+		$this->userManager = $userManager;
+		$this->logger = $logger;
+	}
+
+	private function resolveEmail(string $uid): ?string {
+		$user = $this->userManager->get($uid);
+		if ($user === null) {
+			$this->logger->warning("Spesennerfassung: User '$uid' not found for email notification", ['app' => 'spesenerfassung']);
+			return null;
+		}
+		$email = $user->getEMailAddress();
+		if ($email === null || $email === '') {
+			$this->logger->warning("Spesennerfassung: User '$uid' has no email address set", ['app' => 'spesenerfassung']);
+			return null;
+		}
+		return $email;
 	}
 
 	public function sendStatusNotification(Expense $expense, string $action, string $recipientUid): void {
+		$recipientEmail = $this->resolveEmail($recipientUid);
+		if ($recipientEmail === null) {
+			return;
+		}
+
 		$subject = $this->getSubject($expense, $action);
 		$bodyText = $this->getBodyText($expense, $action);
 		$bodyHtml = $this->getBodyHtml($expense, $action);
 
 		try {
 			$message = $this->mailer->createMessage();
-			$message->setTo([$recipientUid => $recipientUid]);
+			$message->setTo([$recipientEmail => $recipientUid]);
 			$message->setFrom(['noreply@makerspace-reinach.ch' => 'Makerspace Reinach']);
 			$message->setSubject($subject);
 			$message->setPlainBody($bodyText);
 			$message->setHtmlBody($bodyHtml);
 
-			$this->mailer->send($message);
+			$failed = $this->mailer->send($message);
+			if (!empty($failed)) {
+				$this->logger->error("Spesennerfassung: Failed to send status notification to $recipientEmail (uid: $recipientUid)", ['app' => 'spesenerfassung', 'failed' => $failed]);
+			}
 		} catch (\Throwable $e) {
-			// Log failure but don't block the operation
+			$this->logger->error("Spesennerfassung: Error sending status notification to $recipientEmail (uid: $recipientUid): " . $e->getMessage(), ['app' => 'spesenerfassung', 'exception' => $e]);
 		}
 	}
 
 	public function notifySubmitterSubmitted(Expense $expense): void {
-		// Confirmation to submitter that expense was submitted
+		$submitterUid = $expense->getUserId();
+		$submitterEmail = $this->resolveEmail($submitterUid);
+		if ($submitterEmail === null) {
+			return;
+		}
+
 		try {
 			$message = $this->mailer->createMessage();
-			$message->setTo([$expense->getUserId() => $expense->getUserId()]);
+			$message->setTo([$submitterEmail => $submitterUid]);
 			$message->setFrom(['noreply@makerspace-reinach.ch' => 'Makerspace Reinach']);
-			$message->setSubject('Spese eingereicht: ' . $expense->getTitle());
-			$subjectDe = 'Spese eingereicht: ' . $expense->getTitle();
-			$subjectEn = 'Expense submitted: ' . $expense->getTitle();
-			$message->setSubject($subjectDe);
 
 			$amount = number_format((float) $expense->getAmount(), 2, '.', '\'');
+			$subject = 'Spesen eingereicht: ' . $expense->getTitle();
+			$message->setSubject($subject);
 
-			$bodyText = "Deine Spese wurde erfolgreich eingereicht.\n\n"
+			$bodyText = "Deine Spesen wurde erfolgreich eingereicht.\n\n"
 				. "Titel: {$expense->getTitle()}\n"
 				. "Betrag: CHF {$amount}\n"
 				. "Kategorie: {$expense->getCategory()}\n"
@@ -65,8 +100,12 @@ class MailService {
 				. "You will be notified when the status is updated.\n";
 
 			$message->setPlainBody($bodyText);
-			$this->mailer->send($message);
-		} catch (\Throwable) {
+			$failed = $this->mailer->send($message);
+			if (!empty($failed)) {
+				$this->logger->error("Spesennerfassung: Failed to send submission confirmation to $submitterEmail (uid: $submitterUid)", ['app' => 'spesenerfassung', 'failed' => $failed]);
+			}
+		} catch (\Throwable $e) {
+			$this->logger->error("Spesennerfassung: Error sending submission confirmation to $submitterEmail (uid: $submitterUid): " . $e->getMessage(), ['app' => 'spesenerfassung', 'exception' => $e]);
 		}
 	}
 
@@ -75,10 +114,10 @@ class MailService {
 		$amount = number_format((float) $expense->getAmount(), 2, '.', '\'');
 
 		return match ($action) {
-			Approval::ACTION_APPROVED => "Spese genehmigt: {$title} (CHF {$amount}) / Expense approved: {$title}",
-			Approval::ACTION_REJECTED => "Spese zurückgewiesen: {$title} (CHF {$amount}) / Expense rejected: {$title}",
-			Approval::ACTION_PAID => "Spese ausbezahlt: {$title} (CHF {$amount}) / Expense paid: {$title}",
-			default => "Neue Spese: {$title} (CHF {$amount}) / New expense: {$title}",
+			Approval::ACTION_APPROVED => "Spesen genehmigt: {$title} (CHF {$amount}) / Expense approved: {$title}",
+			Approval::ACTION_REJECTED => "Spesen zurückgewiesen: {$title} (CHF {$amount}) / Expense rejected: {$title}",
+			Approval::ACTION_PAID => "Spesen ausbezahlt: {$title} (CHF {$amount}) / Expense paid: {$title}",
+			default => "Neue Spesen: {$title} (CHF {$amount}) / New expense: {$title}",
 		};
 	}
 
@@ -87,23 +126,23 @@ class MailService {
 		$url = $this->urlGenerator->linkToRouteAbsolute('spesenerfassung.page.index');
 
 		$de = match ($action) {
-			Approval::ACTION_SUBMITTED => "Eine neue Spese zur Genehmigung wurde eingereicht:\n\n"
+			Approval::ACTION_SUBMITTED => "Eine neue Spesen zur Genehmigung wurde eingereicht:\n\n"
 				. "Titel: {$expense->getTitle()}\n"
 				. "Betrag: CHF {$amount}\n"
 				. "Kategorie: {$expense->getCategory()}\n"
 				. "Datum: {$expense->getExpenseDate()}\n"
 				. "Von: {$expense->getUserId()}\n\n"
 				. "Link: {$url}",
-			Approval::ACTION_APPROVED => "Eine Spese wurde genehmigt und ist zur Auszahlung bereit:\n\n"
+			Approval::ACTION_APPROVED => "Eine Spesen wurde genehmigt und ist zur Auszahlung bereit:\n\n"
 				. "Titel: {$expense->getTitle()}\n"
 				. "Betrag: CHF {$amount}\n"
 				. "Link: {$url}",
-			Approval::ACTION_REJECTED => "Eine Spese wurde zurückgewiesen:\n\n"
+			Approval::ACTION_REJECTED => "Eine Spesen wurde zurückgewiesen:\n\n"
 				. "Titel: {$expense->getTitle()}\n"
 				. "Betrag: CHF {$amount}\n"
 				. "Begründung siehe Applikation.\n"
 				. "Link: {$url}",
-			Approval::ACTION_PAID => "Deine Spese wurde als ausbezahlt markiert:\n\n"
+			Approval::ACTION_PAID => "Deine Spesen wurde als ausbezahlt markiert:\n\n"
 				. "Titel: {$expense->getTitle()}\n"
 				. "Betrag: CHF {$amount}\n"
 				. "Du kannst sie nun auf \"Erledigt\" setzen.\n"
@@ -144,10 +183,10 @@ class MailService {
 		$url = $this->urlGenerator->linkToRouteAbsolute('spesenerfassung.page.index');
 
 		$actionDe = match ($action) {
-			Approval::ACTION_SUBMITTED => 'Neue Spese zur Genehmigung',
-			Approval::ACTION_APPROVED => 'Spese genehmigt und zur Auszahlung bereit',
-			Approval::ACTION_REJECTED => 'Spese zurückgewiesen',
-			Approval::ACTION_PAID => 'Spese ausbezahlt',
+			Approval::ACTION_SUBMITTED => 'Neue Spesen zur Genehmigung',
+			Approval::ACTION_APPROVED => 'Spesen genehmigt und zur Auszahlung bereit',
+			Approval::ACTION_REJECTED => 'Spesen zurückgewiesen',
+			Approval::ACTION_PAID => 'Spesen ausbezahlt',
 			default => 'Statusaktualisierung',
 		};
 

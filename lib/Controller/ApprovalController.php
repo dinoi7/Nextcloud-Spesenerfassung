@@ -492,8 +492,9 @@ class ApprovalController extends Controller {
 			$names[$uid] = $u ? $u->getDisplayName() : $uid;
 		}
 		$csv = "\xEF\xBB\xBF";
-		$csv .= "\"Status\";\"Datum\";\"Erfasser\";\"Titel\";\"Kategorie\";\"Betrag (CHF)\";\"Fremdwährung\";\"Fremdbetrag\";\"Auszahlungsart\"\n";
+		$csv .= "\"Spesennummer\";\"Status\";\"Datum\";\"Erfasser\";\"Titel\";\"Kategorie\";\"Betrag (CHF)\";\"Fremdwährung\";\"Fremdbetrag\";\"Auszahlungsart\"\n";
 		foreach ($expenses as $e) {
+			$id = (string) $e->getId();
 			$status = $e->getStatus();
 			$date = date('d.m.Y', strtotime($e->getExpenseDate()));
 			$name = $this->sani($names[$e->getUserId()] ?? $e->getUserId());
@@ -503,7 +504,7 @@ class ApprovalController extends Controller {
 			$fc = $this->sani($e->getForeignCurrency() ?? '');
 			$fa = $e->getForeignAmount() !== null ? number_format((float) $e->getForeignAmount(), 2, '.', '') : '';
 			$payout = $e->getPayoutMethod() === 'bank' ? 'Bank' : ($e->getPayoutMethod() ? 'Bar' : '');
-			$csv .= "\"$status\";\"$date\";\"$name\";\"$title\";\"$category\";\"$amount\";\"$fc\";\"$fa\";\"$payout\"\n";
+			$csv .= "\"$id\";\"$status\";\"$date\";\"$name\";\"$title\";\"$category\";\"$amount\";\"$fc\";\"$fa\";\"$payout\"\n";
 		}
 		return new DataDownloadResponse($csv, 'auswertung.csv', 'text/csv; charset=utf-8');
 	}

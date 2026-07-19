@@ -45,6 +45,10 @@
           </select>
         </label>
         <label class="spes-filter-group">
+          <span class="spes-filter-label">{{ t('expenseNumber') }}</span>
+          <input v-model="filters.expenseNumber" placeholder="Nr." type="text" class="spes-input" style="width:80px" />
+        </label>
+        <label class="spes-filter-group">
           <span class="spes-filter-label">{{ t('search') }}</span>
           <input v-model="filters.search" :placeholder="t('filterByTitle')" type="text" />
         </label>
@@ -66,6 +70,7 @@
           <table class="spes-history-table spes-evaluation-table">
             <thead>
               <tr>
+                <th @click="toggleSort('id')" class="sortable" :class="sortClass('id')">Nr.</th>
                 <th @click="toggleSort('status')" class="sortable" :class="sortClass('status')">Status</th>
                 <th @click="toggleSort('expenseDate')" class="sortable" :class="sortClass('expenseDate')">{{ t('expenseDate') }}</th>
                 <th @click="toggleSort('displayName')" class="sortable" :class="sortClass('displayName')">Erfasser</th>
@@ -79,7 +84,7 @@
             </thead>
             <tbody>
               <tr v-for="expense in sortedExpenses" :key="expense.id">
-                <td><StatusBadge :status="expense.status" /></td>
+                <td class="spes-eval-number">{{ expense.id }}</td>
                 <td class="spes-history-date">{{ formatDate(expense.expenseDate) }}</td>
                 <td>{{ expense.displayName || expense.userId }}</td>
                 <td>{{ expense.title }}</td>
@@ -159,6 +164,7 @@ const filters = ref({
   userId: '',
   category: '',
   foreignCurrency: '',
+  expenseNumber: '',
   search: '',
   amountFrom: null,
   amountTo: null,
@@ -214,6 +220,9 @@ const filteredExpenses = computed(() => {
     if (filters.value.foreignCurrency && e.foreignCurrency !== filters.value.foreignCurrency) return false
     if (filters.value.amountFrom !== null && filters.value.amountFrom !== '' && parseFloat(e.amount || 0) < parseFloat(filters.value.amountFrom)) return false
     if (filters.value.amountTo !== null && filters.value.amountTo !== '' && parseFloat(e.amount || 0) > parseFloat(filters.value.amountTo)) return false
+    if (filters.value.expenseNumber) {
+      if (!String(e.id).includes(filters.value.expenseNumber.trim())) return false
+    }
     if (filters.value.search) {
       const q = filters.value.search.toLowerCase()
       const title = (e.title || '').toLowerCase()
