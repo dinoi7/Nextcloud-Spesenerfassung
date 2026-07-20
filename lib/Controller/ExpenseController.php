@@ -64,10 +64,8 @@ class ExpenseController extends Controller {
 		return $map;
 	}
 
-	/**
-	 * @NoCSRFRequired
-	 */
 	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function index(): DataResponse {
 		$userId = $this->getUserId();
 		$expenses = $this->expenseService->findAllForUser($userId);
@@ -83,10 +81,8 @@ class ExpenseController extends Controller {
 		return new DataResponse($result);
 	}
 
-	/**
-	 * @NoCSRFRequired
-	 */
 	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function show(int $id): DataResponse {
 		$expense = $this->expenseService->findById($id);
 		if ($expense === null) {
@@ -159,10 +155,8 @@ class ExpenseController extends Controller {
 		return new DataResponse($expense->toArray(), Http::STATUS_CREATED);
 	}
 
-	/**
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
-	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function update(int $id): DataResponse {
 		$userId = $this->getUserId();
 		$data = $this->request->getParams();
@@ -182,10 +176,8 @@ class ExpenseController extends Controller {
 		return new DataResponse($expense->toArray());
 	}
 
-	/**
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
-	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function destroy(int $id): DataResponse {
 		$userId = $this->getUserId();
 		$deleted = $this->expenseService->delete($id, $userId);
@@ -195,10 +187,8 @@ class ExpenseController extends Controller {
 		return new DataResponse(['success' => true]);
 	}
 
-	/**
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
-	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function uploadReceipt(int $id): DataResponse {
 		$userId = $this->getUserId();
 		$expense = $this->expenseService->findById($id);
@@ -230,10 +220,8 @@ class ExpenseController extends Controller {
 		return new DataResponse($receipt->toArray(), Http::STATUS_CREATED);
 	}
 
-	/**
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
-	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function deleteReceipt(int $id, int $receiptId): DataResponse {
 		$userId = $this->getUserId();
 		$expense = $this->expenseService->findById($id);
@@ -251,10 +239,8 @@ class ExpenseController extends Controller {
 		return new DataResponse(['success' => true]);
 	}
 
-	/**
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
-	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function updateCategory(int $id): DataResponse {
 		$treasurerUid = SettingsService::getTreasurerUid();
 		if ($treasurerUid === '' || $this->getUserId() !== $treasurerUid) {
@@ -275,10 +261,8 @@ class ExpenseController extends Controller {
 		return new DataResponse($expense->toArray());
 	}
 
-	/**
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
-	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function downloadReceipt(int $id, int $receiptId): DataDownloadResponse|DataResponse {
 		$receipt = $this->receiptService->findById($receiptId);
 		if ($receipt === null || $receipt->getExpenseId() !== $id) {
@@ -293,10 +277,8 @@ class ExpenseController extends Controller {
 		return new DataDownloadResponse($content, $receipt->getFileName(), $receipt->getMimeType());
 	}
 
-	/**
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
-	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function previewReceipt(int $id, int $receiptId): DataDisplayResponse|DataResponse {
 		$receipt = $this->receiptService->findById($receiptId);
 		if ($receipt === null || $receipt->getExpenseId() !== $id) {

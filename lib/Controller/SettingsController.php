@@ -8,7 +8,10 @@ use OCA\Spesenerfassung\Service\UserSettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataResponse;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\Files\IRootFolder;
+use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserManager;
 use OCP\IUserSession;
@@ -18,6 +21,7 @@ class SettingsController extends Controller {
 	private IUserManager $userManager;
 	private UserSettingsService $userSettingsService;
 	private IRootFolder $rootFolder;
+	private IGroupManager $groupManager;
 
 	public function __construct(
 		string $appName,
@@ -26,12 +30,14 @@ class SettingsController extends Controller {
 		IUserManager $userManager,
 		UserSettingsService $userSettingsService,
 		IRootFolder $rootFolder,
+		IGroupManager $groupManager,
 	) {
 		parent::__construct($appName, $request);
 		$this->userSession = $userSession;
 		$this->userManager = $userManager;
 		$this->userSettingsService = $userSettingsService;
 		$this->rootFolder = $rootFolder;
+		$this->groupManager = $groupManager;
 	}
 
 	private function requireAdmin(): ?string {
@@ -39,23 +45,19 @@ class SettingsController extends Controller {
 		if ($user === null) {
 			return null;
 		}
-		if (!\OC::$server->getGroupManager()->isAdmin($user->getUID())) {
+		if (!$this->groupManager->isAdmin($user->getUID())) {
 			return null;
 		}
 		return $user->getUID();
 	}
 
-	/**
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
-	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function get(): DataResponse {
 		return new DataResponse(SettingsService::getAll());
 	}
 
-	/**
-	 * @NoCSRFRequired
-	 */
+	#[NoCSRFRequired]
 	public function update(): DataResponse {
 		$adminUid = $this->requireAdmin();
 		if ($adminUid === null) {
@@ -94,17 +96,13 @@ class SettingsController extends Controller {
 		return new DataResponse($result);
 	}
 
-	/**
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
-	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function getCategories(): DataResponse {
 		return new DataResponse(SettingsService::getCategories());
 	}
 
-	/**
-	 * @NoCSRFRequired
-	 */
+	#[NoCSRFRequired]
 	public function createCategory(): DataResponse {
 		if ($this->requireAdmin() === null) {
 			return new DataResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
@@ -117,9 +115,7 @@ class SettingsController extends Controller {
 		return new DataResponse(SettingsService::addCategory($name));
 	}
 
-	/**
-	 * @NoCSRFRequired
-	 */
+	#[NoCSRFRequired]
 	public function updateCategory(int $id): DataResponse {
 		if ($this->requireAdmin() === null) {
 			return new DataResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
@@ -132,9 +128,7 @@ class SettingsController extends Controller {
 		return new DataResponse(SettingsService::updateCategory($id, $name));
 	}
 
-	/**
-	 * @NoCSRFRequired
-	 */
+	#[NoCSRFRequired]
 	public function deleteCategory(int $id): DataResponse {
 		if ($this->requireAdmin() === null) {
 			return new DataResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
@@ -147,10 +141,8 @@ class SettingsController extends Controller {
 		return $user !== null ? $user->getUID() : '';
 	}
 
-	/**
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
-	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function getUserSettings(): DataResponse {
 		$userId = $this->getUserId();
 		if ($userId === '') {
@@ -159,10 +151,8 @@ class SettingsController extends Controller {
 		return new DataResponse($this->userSettingsService->getAll($userId));
 	}
 
-	/**
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
-	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function updateUserSettings(): DataResponse {
 		$userId = $this->getUserId();
 		if ($userId === '') {
@@ -175,10 +165,8 @@ class SettingsController extends Controller {
 		return new DataResponse($this->userSettingsService->getAll($userId));
 	}
 
-	/**
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
-	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function getUsers(): DataResponse {
 		$users = $this->userManager->search('');
 		$result = array_map(fn($u) => [

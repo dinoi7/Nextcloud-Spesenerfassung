@@ -21,7 +21,7 @@ Features:
 	<website>https://makerspace-reinach.ch</website>
 	<bugs>https://github.com/makerspace-reinach/spesenerfassung/issues</bugs>
 	<dependencies>
-		<nextcloud min-version="28" max-version="33"/>
+		<nextcloud min-version="28" max-version="34"/>
 	</dependencies>
 	<settings>
 		<admin>OCA\Spesenerfassung\Settings\AdminSettings</admin>
