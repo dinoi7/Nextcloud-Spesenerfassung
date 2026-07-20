@@ -29,7 +29,7 @@
           <div class="spes-card-meta">
             <span>{{ expense.category }}</span>
             <span>{{ formatDate(expense.expenseDate) }}</span>
-            <span v-if="expense.payoutMethod" class="spes-card-payout">{{ expense.payoutMethod === 'bank' ? t('payoutBank') : t('payoutCash') }}</span>
+            <span v-if="expense.payoutMethod != null" class="spes-card-payout">{{ expense.payoutMethod === 'bank' ? t('payoutBank') : t('payoutCash') }}</span>
           </div>
         </div>
         <div class="spes-card-actions" @click.stop>
