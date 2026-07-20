@@ -97,29 +97,29 @@
 
       <HistoryTimeline :history="history" />
 
-      <div v-if="(canPay || isPaystackDetail) && expense.payoutMethod === 'bank' && expense.iban" class="spes-payment-info">
+      <div v-if="isPaystackDetail && expense.payoutMethod === 'bank' && expense.iban" class="spes-payment-info">
         <h3>{{ t('paymentInfo') }}</h3>
         <div class="spes-payment-body">
           <div class="spes-payment-details">
             <span class="spes-payment-label">{{ t('paymentIban') }}</span>
             <span class="spes-payment-iban">{{ expense.iban }}</span>
+            <span class="spes-payment-label">PLZ</span>
+            <span class="spes-payment-value">{{ expense.plz }}</span>
             <span class="spes-payment-label">{{ t('recipient') }}</span>
             <span class="spes-payment-value">{{ expense.submitterName }}</span>
             <span class="spes-payment-label">{{ t('amount') }}</span>
             <span class="spes-payment-value">CHF {{ formatAmount(expense.amount) }}</span>
           </div>
-          <SwissQrCode :iban="expense.iban" :name="expense.submitterName" :amount="expense.amount" :reference="'SpesenNr. ' + expense.id + ': ' + expense.title" />
+          <SwissQrCode :iban="expense.iban" :name="expense.submitterName" :amount="expense.amount" :plz="expense.plz" :reference="'SpesenNr. ' + expense.id + ': ' + expense.title" />
         </div>
       </div>
 
-      <div v-if="canApprove || canReject || canAddToPaystack || canPay || canDone || isPaystackDetail || isBookkeepingDetail || canAddToBookkeeping" class="spes-detail-actions">
-        <button v-if="isBookkeepingDetail" class="spes-btn" @click="handleExportSingle">{{ t('exportCsv') }}</button>
+      <div v-if="canApprove || canReject || canDone || isPaystackDetail || isBookkeepingDetail || canAddToBookkeeping" class="spes-detail-actions">
         <button v-if="canApprove" class="spes-btn spes-btn-success" @click="handleApprove">{{ t('approve') }}</button>
         <button v-if="canAddToBookkeeping" class="spes-btn spes-btn-bookkeeping" @click="handleAddToBookkeeping">{{ t('addToBookkeeping') }}</button>
-        <button v-if="canAddToPaystack" class="spes-btn spes-btn-paystack" @click="handleAddToPaystack">{{ t('addToPaystack') }}</button>
-        <button v-if="canPay" class="spes-btn spes-btn-success" @click="handlePay">{{ t('pay') }}</button>
         <button v-if="isBookkeepingDetail && expense.payoutMethod === 'bank'" class="spes-btn spes-btn-paystack" @click="handleAddToPaystack">{{ t('addToPaystack') }}</button>
         <button v-if="isBookkeepingDetail && expense.payoutMethod !== 'bank'" class="spes-btn spes-btn-success" @click="handlePay">{{ t('pay') }}</button>
+        <button v-if="isBookkeepingDetail" class="spes-btn" @click="handleExportSingle">{{ t('exportCsv') }}</button>
         <button v-if="isPaystackDetail" class="spes-btn spes-btn-success" @click="handlePay">{{ t('pay') }}</button>
         <button v-if="canDone && !isPaystackDetail" class="spes-btn" @click="handleDone">{{ t('done') }}</button>
         <button v-if="canReject" class="spes-btn spes-btn-danger" @click="handleReject">{{ t('reject') }}</button>
@@ -194,18 +194,17 @@ const canReject = computed(() => {
 })
 
 const canPay = computed(() => {
-  if (!expense.value) return false
-  return store.userIsTreasurer && expense.value.status === 'submitted' && parseFloat(expense.value.amount) <= settingsStore.settings.threshold
+  return false
 })
 
 const canAddToPaystack = computed(() => {
-  if (!expense.value) return false
-  return store.userIsTreasurer && expense.value.status === 'submitted' && parseFloat(expense.value.amount) <= settingsStore.settings.threshold
+  return false
 })
 
 const canAddToBookkeeping = computed(() => {
-  if (!expense.value) return false
-  return store.userIsTreasurer && expense.value.status === 'approved'
+  if (!expense.value || !store.userIsTreasurer) return false
+  return expense.value.status === 'approved'
+    || (expense.value.status === 'submitted' && parseFloat(expense.value.amount) <= settingsStore.settings.threshold)
 })
 
 const canDone = computed(() => {

@@ -136,6 +136,11 @@ const messages = {
 		pages: 'Seiten',
 		uploading: 'Hochladen...',
 		expenseNumber: 'Spesennummer',
+		plzLabel: 'PLZ',
+		plzRequired: 'PLZ ist erforderlich für Bank-Auszahlung.',
+		plzInvalid: 'PLZ muss 4 Ziffern sein.',
+		senderEmail: 'Absender-E-Mail',
+		senderName: 'Absender-Name',
 	},
   en: {
     dashboard: 'Record',
@@ -249,6 +254,11 @@ const messages = {
 		bookingFolderHint: 'Relative path in Nextcloud files where PDF booking receipts are saved (e.g. "BookingReceipts"). Created upon payout.',
 		bookingFolderInvalid: 'Folder path is invalid or cannot be created',
 		expenseNumber: 'Expense No.',
+		plzLabel: 'Postal Code',
+		plzRequired: 'Postal code is required for bank payout.',
+		plzInvalid: 'Postal code must be 4 digits.',
+		senderEmail: 'Sender Email',
+		senderName: 'Sender Name',
 	},
 }
 

@@ -40,7 +40,7 @@
             <span class="spes-payment-label">{{ t('recipient') }}</span>
             <span class="spes-payment-value">{{ expense.submitterName || expense.displayName }}</span>
           </div>
-          <SwissQrCode :iban="expense.iban" :name="expense.submitterName || expense.displayName" :amount="expense.amount" :reference="'SpesenNr. ' + expense.id + ': ' + expense.title" />
+          <SwissQrCode :iban="expense.iban" :name="expense.submitterName || expense.displayName" :amount="expense.amount" :plz="expense.plz" :reference="'SpesenNr. ' + expense.id + ': ' + expense.title" />
         </div>
 
         <div class="spes-paystack-actions" @click.stop>

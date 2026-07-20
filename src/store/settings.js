@@ -22,6 +22,8 @@ export const useSettingsStore = defineStore('settings', () => {
     categories: defaultSettings.categories || ['Material', 'Verpflegung', 'Reise', 'Büro', 'Sonstiges'],
 		defaultPayoutMethod: defaultSettings.defaultPayoutMethod || 'bank',
 		exportAccounts: defaultSettings.exportAccounts || {},
+		senderEmail: defaultSettings.senderEmail || '',
+		senderName: defaultSettings.senderName || '',
 	})
   const loading = ref(false)
   const error = ref(null)

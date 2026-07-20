@@ -15,17 +15,20 @@ class MailService {
 	private IURLGenerator $urlGenerator;
 	private IUserManager $userManager;
 	private LoggerInterface $logger;
+	private SettingsService $settingsService;
 
 	public function __construct(
 		IMailer $mailer,
 		IURLGenerator $urlGenerator,
 		IUserManager $userManager,
 		LoggerInterface $logger,
+		SettingsService $settingsService,
 	) {
 		$this->mailer = $mailer;
 		$this->urlGenerator = $urlGenerator;
 		$this->userManager = $userManager;
 		$this->logger = $logger;
+		$this->settingsService = $settingsService;
 	}
 
 	private function resolveEmail(string $uid): ?string {
@@ -55,7 +58,7 @@ class MailService {
 		try {
 			$message = $this->mailer->createMessage();
 			$message->setTo([$recipientEmail => $recipientUid]);
-			$message->setFrom(['noreply@makerspace-reinach.ch' => 'Makerspace Reinach']);
+			$message->setFrom([$this->settingsService->getSenderEmail() => $this->settingsService->getSenderName()]);
 			$message->setSubject($subject);
 			$message->setPlainBody($bodyText);
 			$message->setHtmlBody($bodyHtml);
@@ -79,7 +82,7 @@ class MailService {
 		try {
 			$message = $this->mailer->createMessage();
 			$message->setTo([$submitterEmail => $submitterUid]);
-			$message->setFrom(['noreply@makerspace-reinach.ch' => 'Makerspace Reinach']);
+			$message->setFrom([$this->settingsService->getSenderEmail() => $this->settingsService->getSenderName()]);
 
 			$amount = number_format((float) $expense->getAmount(), 2, '.', '\'');
 			$subject = 'Spesen eingereicht: ' . $expense->getTitle();

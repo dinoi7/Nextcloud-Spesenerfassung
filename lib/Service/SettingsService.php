@@ -13,6 +13,8 @@ class SettingsService {
 	private const KEY_DEFAULT_PAYOUT_METHOD = 'default_payout_method';
 	private const KEY_EXPORT_ACCOUNTS = 'export_accounts';
 	private const KEY_BOOKING_FOLDER = 'booking_folder';
+	private const KEY_SENDER_EMAIL = 'sender_email';
+	private const KEY_SENDER_NAME = 'sender_name';
 
 	private const DEFAULTS = [
 		self::KEY_PRESIDENT_UID => '',
@@ -22,6 +24,8 @@ class SettingsService {
 		self::KEY_DEFAULT_PAYOUT_METHOD => 'bank',
 		self::KEY_EXPORT_ACCOUNTS => '{}',
 		self::KEY_BOOKING_FOLDER => 'Buchungsbelege',
+		self::KEY_SENDER_EMAIL => 'noreply@makerspace-reinach.ch',
+		self::KEY_SENDER_NAME => 'Makerspace Reinach',
 	];
 
 	public function __construct(
@@ -126,6 +130,22 @@ class SettingsService {
 		$this->appConfig->setValueString('spesenerfassung', self::KEY_BOOKING_FOLDER, $folder);
 	}
 
+	public function getSenderEmail(): string {
+		return $this->getString(self::KEY_SENDER_EMAIL);
+	}
+
+	public function setSenderEmail(string $email): void {
+		$this->appConfig->setValueString('spesenerfassung', self::KEY_SENDER_EMAIL, $email);
+	}
+
+	public function getSenderName(): string {
+		return $this->getString(self::KEY_SENDER_NAME);
+	}
+
+	public function setSenderName(string $name): void {
+		$this->appConfig->setValueString('spesenerfassung', self::KEY_SENDER_NAME, $name);
+	}
+
 	public function getAll(): array {
 		return [
 			'presidentUid' => $this->getPresidentUid(),
@@ -135,6 +155,8 @@ class SettingsService {
 			'defaultPayoutMethod' => $this->getDefaultPayoutMethod(),
 			'exportAccounts' => $this->getExportAccounts(),
 			'bookingFolder' => $this->getBookingFolder(),
+			'senderEmail' => $this->getSenderEmail(),
+			'senderName' => $this->getSenderName(),
 		];
 	}
 
@@ -159,6 +181,12 @@ class SettingsService {
 		}
 		if (isset($data['bookingFolder'])) {
 			$this->setBookingFolder(trim($data['bookingFolder']));
+		}
+		if (isset($data['senderEmail'])) {
+			$this->setSenderEmail(trim($data['senderEmail']));
+		}
+		if (isset($data['senderName'])) {
+			$this->setSenderName(trim($data['senderName']));
 		}
 		return $this->getAll();
 	}

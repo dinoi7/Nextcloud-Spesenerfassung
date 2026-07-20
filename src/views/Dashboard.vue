@@ -39,6 +39,13 @@
         </div>
       </div>
 
+      <div v-if="rejected.length" class="spes-section">
+        <h2 class="spes-section-title">{{ t('statusRejected') }} ({{ rejected.length }})</h2>
+        <div class="spes-card-list">
+          <ExpenseCard v-for="expense in rejected" :key="expense.id" :expense="expense" :show-actions="true" />
+        </div>
+      </div>
+
       <div v-if="drafts.length" class="spes-section">
         <h2 class="spes-section-title">{{ t('statusDraft') }} ({{ drafts.length }})</h2>
         <div class="spes-card-list">
@@ -57,13 +64,6 @@
         <h2 class="spes-section-title">{{ t('statusApproved') }} ({{ approved.length }})</h2>
         <div class="spes-card-list">
           <ExpenseCard v-for="expense in approved" :key="expense.id" :expense="expense" />
-        </div>
-      </div>
-
-      <div v-if="rejected.length" class="spes-section">
-        <h2 class="spes-section-title">{{ t('statusRejected') }} ({{ rejected.length }})</h2>
-        <div class="spes-card-list">
-          <ExpenseCard v-for="expense in rejected" :key="expense.id" :expense="expense" :show-actions="true" />
         </div>
       </div>
 

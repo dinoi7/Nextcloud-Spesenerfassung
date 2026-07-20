@@ -110,8 +110,10 @@ class ExpenseController extends Controller {
 		$treasurerUid = $this->settingsService->getTreasurerUid();
 		if ($treasurerUid !== '' && $this->getUserId() === $treasurerUid && $expense->getPayoutMethod() === 'bank') {
 			$iban = $this->userSettingsService->getIban($expense->getUserId());
+			$plz = $this->userSettingsService->getPlz($expense->getUserId());
 			if ($iban !== '') {
 				$data['iban'] = $iban;
+				$data['plz'] = $plz;
 				$data['submitterName'] = $data['displayName'];
 			}
 		}
@@ -137,6 +139,10 @@ class ExpenseController extends Controller {
 			$iban = $this->userSettingsService->getIban($userId);
 			if ($iban === '') {
 				return new DataResponse(['error' => 'IBAN ist erforderlich für Bank-Auszahlung. Bitte im Profil hinterlegen.'], Http::STATUS_BAD_REQUEST);
+			}
+			$plz = $this->userSettingsService->getPlz($userId);
+			if ($plz === '') {
+				return new DataResponse(['error' => 'PLZ ist erforderlich für Bank-Auszahlung. Bitte im Profil hinterlegen.'], Http::STATUS_BAD_REQUEST);
 			}
 		}
 

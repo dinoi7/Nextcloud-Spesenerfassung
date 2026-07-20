@@ -204,6 +204,7 @@ class ApprovalController extends Controller {
 			if ($e->getPayoutMethod() === 'bank') {
 				$row['submitterName'] = $row['displayName'];
 				$row['iban'] = $this->userSettingsService->getIban($e->getUserId());
+				$row['plz'] = $this->userSettingsService->getPlz($e->getUserId());
 			}
 			return $row;
 		}, $expenses);

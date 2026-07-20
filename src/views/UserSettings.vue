@@ -19,6 +19,21 @@
         <span v-if="ibanError" class="spes-field-error">{{ ibanError }}</span>
       </div>
 
+      <div class="spes-form-group">
+        <label class="spes-label" for="plz">{{ t('plzLabel') }}</label>
+        <input
+          id="plz"
+          v-model="plz"
+          class="spes-input"
+          :class="{ 'spes-input--error': plzError }"
+          placeholder="0000"
+          maxlength="4"
+          inputmode="numeric"
+          @input="onPlzInput"
+        />
+        <span v-if="plzError" class="spes-field-error">{{ plzError }}</span>
+      </div>
+
       <div class="spes-form-actions">
         <button class="spes-btn spes-btn-primary" @click="save">{{ t('save') }}</button>
       </div>
@@ -35,6 +50,8 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 const { t } = useI18n()
 const ibanDisplay = ref('')
 const ibanError = ref('')
+const plz = ref('')
+const plzError = ref('')
 const loading = ref(true)
 
 const IBAN_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -86,11 +103,19 @@ function onIbanInput() {
   ibanError.value = validateCHIban(ibanDisplay.value)
 }
 
+function onPlzInput() {
+  plz.value = plz.value.replace(/\D/g, '')
+  plzError.value = plz.value && !/^\d{4}$/.test(plz.value) ? t('plzInvalid') : null
+}
+
 onMounted(async () => {
   try {
     const data = await api.getUserSettings()
     if (data.iban) {
       ibanDisplay.value = formatIban(data.iban)
+    }
+    if (data.plz) {
+      plz.value = data.plz
     }
   } catch {}
   loading.value = false
@@ -103,8 +128,13 @@ async function save() {
     ibanError.value = err
     return
   }
+  const plzVal = plz.value.trim()
+  if (plzVal && !/^\d{4}$/.test(plzVal)) {
+    plzError.value = t('plzInvalid')
+    return
+  }
   try {
-    await api.updateUserSettings({ iban: stripped })
+    await api.updateUserSettings({ iban: stripped, plz: plzVal })
     showSuccess(t('settingsSaved'))
   } catch (e) {
     showError(e.message)

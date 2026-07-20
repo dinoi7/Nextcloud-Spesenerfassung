@@ -159,12 +159,10 @@ class SettingsController extends Controller {
 			return new DataResponse(['error' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
 		}
 		$data = $this->request->getParams();
-		if (array_key_exists('iban', $data)) {
-			try {
-				$this->userSettingsService->setIban($userId, trim($data['iban']));
-			} catch (\InvalidArgumentException $e) {
-				return new DataResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
-			}
+		try {
+			$this->userSettingsService->updateSettings($userId, $data);
+		} catch (\InvalidArgumentException $e) {
+			return new DataResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
 		}
 		return new DataResponse($this->userSettingsService->getAll($userId));
 	}

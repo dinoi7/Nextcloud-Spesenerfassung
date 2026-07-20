@@ -7,6 +7,7 @@ use OCP\IConfig;
 
 class UserSettingsService {
 	private const KEY_IBAN = 'iban';
+	private const KEY_PLZ = 'plz';
 
 	public function __construct(
 		private IConfig $config,
@@ -45,9 +46,31 @@ class UserSettingsService {
 		return bcmod($numeric, '97') === '1';
 	}
 
+	public function getPlz(string $userId): string {
+		return $this->config->getUserValue($userId, 'spesenerfassung', self::KEY_PLZ, '');
+	}
+
+	public function setPlz(string $userId, string $plz): void {
+		$plz = trim($plz);
+		if ($plz !== '' && !preg_match('/^\d{4}$/', $plz)) {
+			throw new \InvalidArgumentException('Invalid PLZ format');
+		}
+		$this->config->setUserValue($userId, 'spesenerfassung', self::KEY_PLZ, $plz);
+	}
+
 	public function getAll(string $userId): array {
 		return [
 			'iban' => $this->getIban($userId),
+			'plz' => $this->getPlz($userId),
 		];
+	}
+
+	public function updateSettings(string $userId, array $data): void {
+		if (array_key_exists('iban', $data)) {
+			$this->setIban($userId, trim($data['iban']));
+		}
+		if (array_key_exists('plz', $data)) {
+			$this->setPlz($userId, trim($data['plz']));
+		}
 	}
 }

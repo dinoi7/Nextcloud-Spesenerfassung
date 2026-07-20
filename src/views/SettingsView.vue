@@ -34,6 +34,16 @@
       </div>
 
       <div class="spes-form-group">
+        <label class="spes-label">{{ t('senderEmail') }}</label>
+        <input v-model="form.senderEmail" class="spes-input" type="email" placeholder="noreply@makerspace-reinach.ch" />
+      </div>
+
+      <div class="spes-form-group">
+        <label class="spes-label">{{ t('senderName') }}</label>
+        <input v-model="form.senderName" class="spes-input" placeholder="Makerspace Reinach" />
+      </div>
+
+      <div class="spes-form-group">
         <label class="spes-label">{{ t('bookingFolder') }}</label>
         <input v-model="form.bookingFolder" class="spes-input" placeholder="Buchungsbelege" />
         <p class="spes-hint">{{ t('bookingFolderHint') }}</p>
@@ -91,6 +101,8 @@ const form = ref({
   defaultPayoutMethod: 'bank',
   exportAccounts: {},
   bookingFolder: 'Buchungsbelege',
+  senderEmail: '',
+  senderName: '',
 })
 
 const rows = ref([])
