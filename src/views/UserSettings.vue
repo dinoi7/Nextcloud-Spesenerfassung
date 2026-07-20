@@ -30,6 +30,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { useI18n } from '../i18n'
 import { api } from '../api'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 
 const { t } = useI18n()
 const ibanDisplay = ref('')
@@ -104,9 +105,9 @@ async function save() {
   }
   try {
     await api.updateUserSettings({ iban: stripped })
-    alert(t('settingsSaved'))
+    showSuccess(t('settingsSaved'))
   } catch (e) {
-    alert(e.message)
+    showError(e.message)
   }
 }
 </script>

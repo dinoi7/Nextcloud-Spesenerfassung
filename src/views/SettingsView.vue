@@ -75,6 +75,7 @@ import { ref, onMounted } from 'vue'
 import { useSettingsStore } from '../store/settings'
 import { useI18n } from '../i18n'
 import { api } from '../api'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 
 const settingsStore = useSettingsStore()
 const { t } = useI18n()
@@ -129,9 +130,9 @@ async function save() {
   try {
     await settingsStore.saveSettings(form.value)
     buildRows()
-    alert(t('settingsSaved'))
+    showSuccess(t('settingsSaved'))
   } catch (e) {
-    alert(e.message)
+    showError(e.message)
   }
 }
 

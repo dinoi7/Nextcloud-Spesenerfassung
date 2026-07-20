@@ -135,6 +135,7 @@ import { useExpenseStore } from '../store/expenses'
 import { useSettingsStore } from '../store/settings'
 import { useI18n } from '../i18n'
 import { api } from '../api'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import StatusBadge from '../components/StatusBadge.vue'
 import HistoryTimeline from '../components/HistoryTimeline.vue'
 import SwissQrCode from '../components/SwissQrCode.vue'
@@ -286,7 +287,7 @@ async function handleApprove() {
   try {
     const exp = await api.approve(id.value)
     expense.value = exp
-  } catch (e) { alert(e.message) }
+  } catch (e) { showError(e.message) }
 }
 
 async function handleReject() {
@@ -296,42 +297,42 @@ async function handleReject() {
     const exp = await api.reject(id.value, reason)
     expense.value = exp
     router.push('/')
-  } catch (e) { alert(e.message) }
+  } catch (e) { showError(e.message) }
 }
 
 async function handlePay() {
   try {
     const exp = await api.pay(id.value)
     expense.value = exp
-    if (exp.bookingReceipt?.message) alert(exp.bookingReceipt.message)
-  } catch (e) { alert(e.message) }
+    if (exp.bookingReceipt?.message) showSuccess(exp.bookingReceipt.message)
+  } catch (e) { showError(e.message) }
 }
 
 async function handleAddToPaystack() {
   try {
     const exp = await api.addToPaystack(id.value)
     expense.value = exp
-  } catch (e) { alert(e.message) }
+  } catch (e) { showError(e.message) }
 }
 
 async function handleAddToBookkeeping() {
   try {
     const exp = await api.addToBookkeeping(id.value)
     expense.value = exp
-  } catch (e) { alert(e.message) }
+  } catch (e) { showError(e.message) }
 }
 
 async function handleDone() {
   try {
     const exp = await api.done(id.value)
     expense.value = exp
-  } catch (e) { alert(e.message) }
+  } catch (e) { showError(e.message) }
 }
 
 async function handleExportSingle() {
   try {
     await api.exportPaystackSingle(id.value)
-  } catch (e) { alert(e.message) }
+  } catch (e) { showError(e.message) }
 }
 
 async function handleDelete() {
@@ -354,7 +355,7 @@ async function onCategoryChange() {
     })
   } catch (e) {
     categoryValue.value = oldCat
-    alert(e.message)
+    showError(e.message)
   }
 }
 </script>

@@ -46,6 +46,7 @@
 import { useExpenseStore } from '../store/expenses'
 import { useI18n } from '../i18n'
 import { api } from '../api'
+import { showError } from '@nextcloud/dialogs'
 import StatusBadge from './StatusBadge.vue'
 
 const props = defineProps({
@@ -83,7 +84,7 @@ async function handleDone() {
     await api.done(props.expense.id)
     window.location.reload()
   } catch (e) {
-    alert(e.message)
+    showError(e.message)
   }
 }
 </script>

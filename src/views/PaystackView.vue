@@ -56,6 +56,7 @@
 import { ref, onMounted } from 'vue'
 import { useI18n } from '../i18n'
 import { api } from '../api'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import StatusBadge from '../components/StatusBadge.vue'
 import SwissQrCode from '../components/SwissQrCode.vue'
 
@@ -99,8 +100,8 @@ async function payExpense(id) {
   try {
     const exp = await api.pay(id)
     await loadPaystack()
-    if (exp.bookingReceipt?.message) alert(exp.bookingReceipt.message)
-  } catch (e) { alert(e.message) }
+    if (exp.bookingReceipt?.message) showSuccess(exp.bookingReceipt.message)
+  } catch (e) { showError(e.message) }
 }
 
 async function handlePayAll() {
@@ -108,8 +109,8 @@ async function handlePayAll() {
   try {
     const result = await api.payAll()
     await loadPaystack()
-    if (result.bookingReceipt?.message) alert(result.bookingReceipt.message)
-  } catch (e) { alert(e.message) }
+    if (result.bookingReceipt?.message) showSuccess(result.bookingReceipt.message)
+  } catch (e) { showError(e.message) }
 }
 
 async function rejectExpense(id) {
@@ -118,7 +119,7 @@ async function rejectExpense(id) {
   try {
     await api.reject(id, reason)
     await loadPaystack()
-  } catch (e) { alert(e.message) }
+  } catch (e) { showError(e.message) }
 }
 
 onMounted(() => {

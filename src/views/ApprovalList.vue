@@ -49,6 +49,7 @@ import { useExpenseStore } from '../store/expenses'
 import { useSettingsStore } from '../store/settings'
 import { useI18n } from '../i18n'
 import { api } from '../api'
+import { showError } from '@nextcloud/dialogs'
 import StatusBadge from '../components/StatusBadge.vue'
 
 const router = useRouter()
@@ -112,7 +113,7 @@ async function approveExpense(id) {
   try {
     await api.approve(id)
     await loadPending()
-  } catch (e) { alert(e.message) }
+  } catch (e) { showError(e.message) }
 }
 
 async function rejectExpense(id) {
@@ -121,14 +122,14 @@ async function rejectExpense(id) {
   try {
     await api.reject(id, reason)
     await loadPending()
-  } catch (e) { alert(e.message) }
+  } catch (e) { showError(e.message) }
 }
 
 async function addToBookkeepingExpense(id) {
   try {
     await api.addToBookkeeping(id)
     await loadPending()
-  } catch (e) { alert(e.message) }
+  } catch (e) { showError(e.message) }
 }
 
 onMounted(async () => {
