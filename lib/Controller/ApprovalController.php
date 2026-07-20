@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace OCA\Spesenerfassung\Controller;
 
+use OCA\Spesenerfassung\Db\Expense;
 use OCA\Spesenerfassung\Service\ExpenseService;
 use OCA\Spesenerfassung\Service\ReceiptService;
 use OCA\Spesenerfassung\Service\SettingsService;
@@ -19,30 +20,18 @@ use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 
 class ApprovalController extends Controller {
-	private ExpenseService $expenseService;
-	private IUserSession $userSession;
-	private IUserManager $userManager;
-	private ReceiptService $receiptService;
-	private UserSettingsService $userSettingsService;
-	private BookingReceiptService $bookingReceiptService;
-
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		ExpenseService $expenseService,
-		IUserSession $userSession,
-		IUserManager $userManager,
-		ReceiptService $receiptService,
-		UserSettingsService $userSettingsService,
-		BookingReceiptService $bookingReceiptService,
+		private ExpenseService $expenseService,
+		private IUserSession $userSession,
+		private IUserManager $userManager,
+		private ReceiptService $receiptService,
+		private UserSettingsService $userSettingsService,
+		private BookingReceiptService $bookingReceiptService,
+		private SettingsService $settingsService,
 	) {
 		parent::__construct($appName, $request);
-		$this->expenseService = $expenseService;
-		$this->userSession = $userSession;
-		$this->userManager = $userManager;
-		$this->receiptService = $receiptService;
-		$this->userSettingsService = $userSettingsService;
-		$this->bookingReceiptService = $bookingReceiptService;
 	}
 
 	private function getUserId(): string {
@@ -55,8 +44,8 @@ class ApprovalController extends Controller {
 
 	private function checkRole(string $requiredRole): bool {
 		$userId = $this->getUserId();
-		$presidentUid = SettingsService::getPresidentUid();
-		$treasurerUid = SettingsService::getTreasurerUid();
+		$presidentUid = $this->settingsService->getPresidentUid();
+		$treasurerUid = $this->settingsService->getTreasurerUid();
 
 		return match ($requiredRole) {
 			'president' => $userId === $presidentUid,
@@ -152,8 +141,8 @@ class ApprovalController extends Controller {
 	#[NoCSRFRequired]
 	public function pending(): DataResponse {
 		$userId = $this->getUserId();
-		$presidentUid = SettingsService::getPresidentUid();
-		$treasurerUid = SettingsService::getTreasurerUid();
+		$presidentUid = $this->settingsService->getPresidentUid();
+		$treasurerUid = $this->settingsService->getTreasurerUid();
 
 		$pending = [];
 
@@ -206,7 +195,7 @@ class ApprovalController extends Controller {
 			$u = $this->userManager->get($uid);
 			$names[$uid] = $u ? $u->getDisplayName() : $uid;
 		}
-		$accounts = SettingsService::getExportAccounts();
+		$accounts = $this->settingsService->getExportAccounts();
 		$result = array_map(function ($e) use ($names, $accounts) {
 			$row = $e->toArray();
 			$row['displayName'] = $names[$e->getUserId()] ?? $e->getUserId();
@@ -228,20 +217,11 @@ class ApprovalController extends Controller {
 			return new DataResponse(['error' => 'Only treasurer can export'], Http::STATUS_FORBIDDEN);
 		}
 		$expenses = $this->expenseService->getPaystackExpenses();
-		$accounts = SettingsService::getExportAccounts();
+		$accounts = $this->settingsService->getExportAccounts();
 		$csv = "\xEF\xBB\xBF";
 		$csv .= "\"Datum\";\"Text\";\"Soll\";\"Betrag (CHF)\"\n";
 		foreach ($expenses as $e) {
-			$id = $e->getId();
-			$date = date('d.m.Y', strtotime($e->getExpenseDate()));
-			$name = $this->sani($this->resolveDisplayName($e->getUserId()));
-			$title = $this->sani($e->getTitle() ?? '');
-			$desc = $this->sani($e->getDescription() ?? '');
-			$text = 'Spesen: ' . $id . ', ' . $name . ', ' . $title . ', ' . $desc;
-			$cat = $e->getCategory();
-			$soll = $this->sani($accounts[$cat] ?? '');
-			$amount = '-' . number_format((float) $e->getAmount(), 2, '.', '');
-			$csv .= "\"$date\";\"$text\";\"$soll\";\"$amount\"\n";
+			$csv .= $this->buildCsvRow($e, $accounts);
 		}
 
 		return new DataDownloadResponse($csv, 'zahlstapel.csv', 'text/csv; charset=utf-8');
@@ -254,21 +234,13 @@ class ApprovalController extends Controller {
 			return new DataResponse(['error' => 'Only treasurer can export'], Http::STATUS_FORBIDDEN);
 		}
 		$expense = $this->expenseService->findById($id);
-		if ($expense === null || $expense->getStatus() !== \OCA\Spesenerfassung\Db\Expense::STATUS_PAYSTACK) {
+		if ($expense === null || $expense->getStatus() !== Expense::STATUS_PAYSTACK) {
 			return new DataResponse(['error' => 'Expense not in paystack'], Http::STATUS_NOT_FOUND);
 		}
-		$accounts = SettingsService::getExportAccounts();
+		$accounts = $this->settingsService->getExportAccounts();
 		$csv = "\xEF\xBB\xBF";
 		$csv .= "\"Datum\";\"Text\";\"Soll\";\"Betrag (CHF)\"\n";
-		$date = date('d.m.Y', strtotime($expense->getExpenseDate()));
-		$name = $this->sani($this->resolveDisplayName($expense->getUserId()));
-		$title = $this->sani($expense->getTitle() ?? '');
-		$desc = $this->sani($expense->getDescription() ?? '');
-		$text = 'Spesen: ' . $expense->getId() . ', ' . $name . ', ' . $title . ', ' . $desc;
-		$cat = $expense->getCategory();
-		$soll = $this->sani($accounts[$cat] ?? '');
-		$amount = '-' . number_format((float) $expense->getAmount(), 2, '.', '');
-		$csv .= "\"$date\";\"$text\";\"$soll\";\"$amount\"\n";
+		$csv .= $this->buildCsvRow($expense, $accounts);
 		return new DataDownloadResponse($csv, 'zahlstapel-' . $id . '.csv', 'text/csv; charset=utf-8');
 	}
 
@@ -340,7 +312,7 @@ class ApprovalController extends Controller {
 			$u = $this->userManager->get($uid);
 			$names[$uid] = $u ? $u->getDisplayName() : $uid;
 		}
-		$accounts = SettingsService::getExportAccounts();
+		$accounts = $this->settingsService->getExportAccounts();
 		$result = array_map(function ($e) use ($names, $accounts) {
 			$row = $e->toArray();
 			$row['displayName'] = $names[$e->getUserId()] ?? $e->getUserId();
@@ -358,20 +330,11 @@ class ApprovalController extends Controller {
 			return new DataResponse(['error' => 'Only treasurer can export'], Http::STATUS_FORBIDDEN);
 		}
 		$expenses = $this->expenseService->getBookkeepingExpenses();
-		$accounts = SettingsService::getExportAccounts();
+		$accounts = $this->settingsService->getExportAccounts();
 		$csv = "\xEF\xBB\xBF";
 		$csv .= "\"Datum\";\"Text\";\"Soll\";\"Betrag (CHF)\"\n";
 		foreach ($expenses as $e) {
-			$id = $e->getId();
-			$date = date('d.m.Y', strtotime($e->getExpenseDate()));
-			$name = $this->sani($this->resolveDisplayName($e->getUserId()));
-			$title = $this->sani($e->getTitle() ?? '');
-			$desc = $this->sani($e->getDescription() ?? '');
-			$text = 'Spesen: ' . $id . ', ' . $name . ', ' . $title . ', ' . $desc;
-			$cat = $e->getCategory();
-			$soll = $this->sani($accounts[$cat] ?? '');
-			$amount = '-' . number_format((float) $e->getAmount(), 2, '.', '');
-			$csv .= "\"$date\";\"$text\";\"$soll\";\"$amount\"\n";
+			$csv .= $this->buildCsvRow($e, $accounts);
 		}
 		return new DataDownloadResponse($csv, 'buchhaltung.csv', 'text/csv; charset=utf-8');
 	}
@@ -383,21 +346,13 @@ class ApprovalController extends Controller {
 			return new DataResponse(['error' => 'Only treasurer can export'], Http::STATUS_FORBIDDEN);
 		}
 		$expense = $this->expenseService->findById($id);
-		if ($expense === null || $expense->getStatus() !== \OCA\Spesenerfassung\Db\Expense::STATUS_BOOKKEEPING) {
+		if ($expense === null || $expense->getStatus() !== Expense::STATUS_BOOKKEEPING) {
 			return new DataResponse(['error' => 'Expense not in bookkeeping'], Http::STATUS_NOT_FOUND);
 		}
-		$accounts = SettingsService::getExportAccounts();
+		$accounts = $this->settingsService->getExportAccounts();
 		$csv = "\xEF\xBB\xBF";
 		$csv .= "\"Datum\";\"Text\";\"Soll\";\"Betrag (CHF)\"\n";
-		$date = date('d.m.Y', strtotime($expense->getExpenseDate()));
-		$name = $this->sani($this->resolveDisplayName($expense->getUserId()));
-		$title = $this->sani($expense->getTitle() ?? '');
-		$desc = $this->sani($expense->getDescription() ?? '');
-		$text = 'Spesen: ' . $expense->getId() . ', ' . $name . ', ' . $title . ', ' . $desc;
-		$cat = $expense->getCategory();
-		$soll = $this->sani($accounts[$cat] ?? '');
-		$amount = '-' . number_format((float) $expense->getAmount(), 2, '.', '');
-		$csv .= "\"$date\";\"$text\";\"$soll\";\"$amount\"\n";
+		$csv .= $this->buildCsvRow($expense, $accounts);
 		return new DataDownloadResponse($csv, 'buchhaltung-' . $id . '.csv', 'text/csv; charset=utf-8');
 	}
 
@@ -417,6 +372,19 @@ class ApprovalController extends Controller {
 
 	private function getUserIban(string $userId): string {
 		return $this->userSettingsService->getIban($userId);
+	}
+
+	private function buildCsvRow(Expense $expense, array $accounts): string {
+		$id = $expense->getId();
+		$date = date('d.m.Y', strtotime($expense->getExpenseDate()));
+		$name = $this->sani($this->resolveDisplayName($expense->getUserId()));
+		$title = $this->sani($expense->getTitle() ?? '');
+		$desc = $this->sani($expense->getDescription() ?? '');
+		$text = 'Spesen: ' . $id . ', ' . $name . ', ' . $title . ', ' . $desc;
+		$cat = $expense->getCategory();
+		$soll = $this->sani($accounts[$cat] ?? '');
+		$amount = '-' . number_format((float) $expense->getAmount(), 2, '.', '');
+		return "\"$date\";\"$text\";\"$soll\";\"$amount\"\n";
 	}
 
 	#[NoAdminRequired]

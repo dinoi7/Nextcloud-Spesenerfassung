@@ -12,24 +12,14 @@ use DateTime;
 use OCP\AppFramework\Db\DoesNotExistException;
 
 class ExpenseService {
-	private ExpenseMapper $expenseMapper;
-	private ApprovalMapper $approvalMapper;
-	private WorkflowService $workflowService;
-	private MailService $mailService;
-	private ReceiptService $receiptService;
-
 	public function __construct(
-		ExpenseMapper $expenseMapper,
-		ApprovalMapper $approvalMapper,
-		WorkflowService $workflowService,
-		MailService $mailService,
-		ReceiptService $receiptService,
+		private ExpenseMapper $expenseMapper,
+		private ApprovalMapper $approvalMapper,
+		private WorkflowService $workflowService,
+		private MailService $mailService,
+		private ReceiptService $receiptService,
+		private SettingsService $settingsService,
 	) {
-		$this->expenseMapper = $expenseMapper;
-		$this->approvalMapper = $approvalMapper;
-		$this->workflowService = $workflowService;
-		$this->mailService = $mailService;
-		$this->receiptService = $receiptService;
 	}
 
 	private function validate(array $data): void {
@@ -43,6 +33,12 @@ class ExpenseService {
 			$d = \DateTime::createFromFormat('Y-m-d', $data['expenseDate']);
 			if ($d === false || $d->format('Y-m-d') !== $data['expenseDate']) {
 				throw new \InvalidArgumentException('Invalid date format, expected Y-m-d');
+			}
+		}
+		if (isset($data['category'])) {
+			$allowed = $this->settingsService->getCategories();
+			if (!in_array($data['category'], $allowed, true)) {
+				throw new \InvalidArgumentException('Invalid category');
 			}
 		}
 	}
@@ -242,12 +238,12 @@ class ExpenseService {
 
 	public function getPendingForPresident(): array {
 		$submitted = $this->expenseMapper->findByStatus(Expense::STATUS_SUBMITTED);
-		$threshold = SettingsService::getThreshold();
+		$threshold = $this->settingsService->getThreshold();
 		return array_filter($submitted, fn(Expense $e) => (float) $e->getAmount() > $threshold);
 	}
 
 	public function getPendingForTreasurer(): array {
-		$threshold = SettingsService::getThreshold();
+		$threshold = $this->settingsService->getThreshold();
 		$fromSubmitted = $this->expenseMapper->findByStatusAndMaxAmount(Expense::STATUS_SUBMITTED, number_format($threshold, 2, '.', ''));
 		$fromApproved = $this->expenseMapper->findByStatus(Expense::STATUS_APPROVED);
 		return array_merge($fromSubmitted, $fromApproved);
@@ -296,9 +292,9 @@ class ExpenseService {
 	}
 
 	private function sendNotificationMail(Expense $expense, string $action): void {
-		$presidentUid = SettingsService::getPresidentUid();
-		$treasurerUid = SettingsService::getTreasurerUid();
-		$threshold = SettingsService::getThreshold();
+		$presidentUid = $this->settingsService->getPresidentUid();
+		$treasurerUid = $this->settingsService->getTreasurerUid();
+		$threshold = $this->settingsService->getThreshold();
 
 		$recipientUid = match ($action) {
 			Approval::ACTION_SUBMITTED => ((float) $expense->getAmount() > $threshold) ? $presidentUid : $treasurerUid,
@@ -316,7 +312,7 @@ class ExpenseService {
 	}
 
 	private function notifyNextStep(Expense $expense): void {
-		$threshold = SettingsService::getThreshold();
+		$threshold = $this->settingsService->getThreshold();
 		$this->sendNotificationMail($expense, Approval::ACTION_SUBMITTED);
 	}
 }

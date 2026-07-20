@@ -4,13 +4,10 @@ declare(strict_types=1);
 namespace OCA\Spesenerfassung\AppInfo;
 
 use OCA\Spesenerfassung\Dashboard\SpesenWidget;
-use OCA\Spesenerfassung\Service\SettingsService;
-use OCA\Spesenerfassung\Service\UserSettingsService;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
-use OCP\IAppConfig;
 
 class Application extends App implements IBootstrap {
 	public const APP_ID = 'spesenerfassung';
@@ -28,10 +25,5 @@ class Application extends App implements IBootstrap {
 	}
 
 	public function boot(IBootContext $context): void {
-		$container = $context->getAppContainer();
-		$appConfig = $container->get(IAppConfig::class);
-		SettingsService::setConfig($appConfig);
-
-		$container->get(UserSettingsService::class);
 	}
 }

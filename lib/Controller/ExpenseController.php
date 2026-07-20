@@ -21,30 +21,18 @@ use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
 class ExpenseController extends Controller {
-	private ExpenseService $expenseService;
-	private ReceiptService $receiptService;
-	private UserSettingsService $userSettingsService;
-	private IUserSession $userSession;
-	private IUserManager $userManager;
-	private LoggerInterface $logger;
-
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		ExpenseService $expenseService,
-		ReceiptService $receiptService,
-		UserSettingsService $userSettingsService,
-		IUserSession $userSession,
-		IUserManager $userManager,
-		LoggerInterface $logger,
+		private ExpenseService $expenseService,
+		private ReceiptService $receiptService,
+		private UserSettingsService $userSettingsService,
+		private IUserSession $userSession,
+		private IUserManager $userManager,
+		private LoggerInterface $logger,
+		private SettingsService $settingsService,
 	) {
 		parent::__construct($appName, $request);
-		$this->expenseService = $expenseService;
-		$this->receiptService = $receiptService;
-		$this->userSettingsService = $userSettingsService;
-		$this->userSession = $userSession;
-		$this->userManager = $userManager;
-		$this->logger = $logger;
 	}
 
 	private function getUserId(): string {
@@ -66,8 +54,8 @@ class ExpenseController extends Controller {
 
 	private function canAccessExpense(Expense $expense, string $userId): bool {
 		if ($expense->getUserId() === $userId) return true;
-		if ($userId === SettingsService::getPresidentUid()) return true;
-		if ($userId === SettingsService::getTreasurerUid()) return true;
+		if ($userId === $this->settingsService->getPresidentUid()) return true;
+		if ($userId === $this->settingsService->getTreasurerUid()) return true;
 		return false;
 	}
 
@@ -119,7 +107,7 @@ class ExpenseController extends Controller {
 			return $row;
 		}, $history);
 
-		$treasurerUid = SettingsService::getTreasurerUid();
+		$treasurerUid = $this->settingsService->getTreasurerUid();
 		if ($treasurerUid !== '' && $this->getUserId() === $treasurerUid && $expense->getPayoutMethod() === 'bank') {
 			$iban = $this->userSettingsService->getIban($expense->getUserId());
 			if ($iban !== '') {
@@ -256,7 +244,7 @@ class ExpenseController extends Controller {
 
 	#[NoAdminRequired]
 	public function updateCategory(int $id): DataResponse {
-		$treasurerUid = SettingsService::getTreasurerUid();
+		$treasurerUid = $this->settingsService->getTreasurerUid();
 		if ($treasurerUid === '' || $this->getUserId() !== $treasurerUid) {
 			return new DataResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
 		}

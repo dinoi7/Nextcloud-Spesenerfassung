@@ -14,21 +14,15 @@ use OCP\IRequest;
 use OCP\IUserSession;
 
 class PageController extends Controller {
-	private IUserSession $userSession;
-	private IGroupManager $groupManager;
-	private IConfig $config;
-
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		IUserSession $userSession,
-		IGroupManager $groupManager,
-		IConfig $config,
+		private IUserSession $userSession,
+		private IGroupManager $groupManager,
+		private IConfig $config,
+		private SettingsService $settingsService,
 	) {
 		parent::__construct($appName, $request);
-		$this->userSession = $userSession;
-		$this->groupManager = $groupManager;
-		$this->config = $config;
 	}
 
 	#[NoAdminRequired]
@@ -51,7 +45,7 @@ class PageController extends Controller {
 				'currentUser' => $uid,
 				'isAdmin' => $isAdmin,
 				'locale' => $locale,
-				'settings' => SettingsService::getAll(),
+				'settings' => $this->settingsService->getAll(),
 			]),
 		];
 		return new TemplateResponse('spesenerfassung', 'index', $data);

@@ -17,27 +17,17 @@ use OCP\IUserManager;
 use OCP\IUserSession;
 
 class SettingsController extends Controller {
-	private IUserSession $userSession;
-	private IUserManager $userManager;
-	private UserSettingsService $userSettingsService;
-	private IRootFolder $rootFolder;
-	private IGroupManager $groupManager;
-
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		IUserSession $userSession,
-		IUserManager $userManager,
-		UserSettingsService $userSettingsService,
-		IRootFolder $rootFolder,
-		IGroupManager $groupManager,
+		private IUserSession $userSession,
+		private IUserManager $userManager,
+		private UserSettingsService $userSettingsService,
+		private IRootFolder $rootFolder,
+		private IGroupManager $groupManager,
+		private SettingsService $settingsService,
 	) {
 		parent::__construct($appName, $request);
-		$this->userSession = $userSession;
-		$this->userManager = $userManager;
-		$this->userSettingsService = $userSettingsService;
-		$this->rootFolder = $rootFolder;
-		$this->groupManager = $groupManager;
 	}
 
 	private function requireAdmin(): ?string {
@@ -57,14 +47,14 @@ class SettingsController extends Controller {
 		$user = $this->userSession->getUser();
 		$uid = $user !== null ? $user->getUID() : '';
 		$isAdmin = $user !== null && $this->groupManager->isAdmin($uid);
-		$isPresident = $uid === SettingsService::getPresidentUid() && $uid !== '';
-		$isTreasurer = $uid === SettingsService::getTreasurerUid() && $uid !== '';
+		$isPresident = $uid === $this->settingsService->getPresidentUid() && $uid !== '';
+		$isTreasurer = $uid === $this->settingsService->getTreasurerUid() && $uid !== '';
 
 		if ($isAdmin || $isPresident || $isTreasurer) {
-			return new DataResponse(SettingsService::getAll());
+			return new DataResponse($this->settingsService->getAll());
 		}
 
-		$all = SettingsService::getAll();
+		$all = $this->settingsService->getAll();
 		return new DataResponse([
 			'categories' => $all['categories'],
 			'threshold' => $all['threshold'],
@@ -106,14 +96,14 @@ class SettingsController extends Controller {
 			}
 		}
 
-		$result = SettingsService::updateAll($data);
+		$result = $this->settingsService->updateAll($data);
 		return new DataResponse($result);
 	}
 
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
 	public function getCategories(): DataResponse {
-		return new DataResponse(SettingsService::getCategories());
+		return new DataResponse($this->settingsService->getCategories());
 	}
 
 	public function createCategory(): DataResponse {
@@ -125,7 +115,7 @@ class SettingsController extends Controller {
 		if ($name === '') {
 			return new DataResponse(['error' => 'Name required'], Http::STATUS_BAD_REQUEST);
 		}
-		return new DataResponse(SettingsService::addCategory($name));
+		return new DataResponse($this->settingsService->addCategory($name));
 	}
 
 	public function updateCategory(int $id): DataResponse {
@@ -137,14 +127,14 @@ class SettingsController extends Controller {
 		if ($name === '') {
 			return new DataResponse(['error' => 'Name required'], Http::STATUS_BAD_REQUEST);
 		}
-		return new DataResponse(SettingsService::updateCategory($id, $name));
+		return new DataResponse($this->settingsService->updateCategory($id, $name));
 	}
 
 	public function deleteCategory(int $id): DataResponse {
 		if ($this->requireAdmin() === null) {
 			return new DataResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
 		}
-		return new DataResponse(SettingsService::deleteCategory($id));
+		return new DataResponse($this->settingsService->deleteCategory($id));
 	}
 
 	private function getUserId(): string {
@@ -170,7 +160,11 @@ class SettingsController extends Controller {
 		}
 		$data = $this->request->getParams();
 		if (array_key_exists('iban', $data)) {
-			$this->userSettingsService->setIban($userId, trim($data['iban']));
+			try {
+				$this->userSettingsService->setIban($userId, trim($data['iban']));
+			} catch (\InvalidArgumentException $e) {
+				return new DataResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
+			}
 		}
 		return new DataResponse($this->userSettingsService->getAll($userId));
 	}

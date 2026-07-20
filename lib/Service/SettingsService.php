@@ -6,8 +6,6 @@ namespace OCA\Spesenerfassung\Service;
 use OCP\IAppConfig;
 
 class SettingsService {
-	private static ?IAppConfig $appConfig = null;
-
 	private const KEY_PRESIDENT_UID = 'president_uid';
 	private const KEY_TREASURER_UID = 'treasurer_uid';
 	private const KEY_THRESHOLD = 'threshold';
@@ -26,53 +24,46 @@ class SettingsService {
 		self::KEY_BOOKING_FOLDER => 'Buchungsbelege',
 	];
 
-	public static function setConfig(IAppConfig $config): void {
-		self::$appConfig = $config;
+	public function __construct(
+		private IAppConfig $appConfig
+	) {
 	}
 
-	private static function getConfig(): IAppConfig {
-		if (self::$appConfig === null) {
-			throw new \RuntimeException('IAppConfig not set. Call SettingsService::setConfig() first.');
-		}
-		return self::$appConfig;
-	}
-
-	private static function getString(string $key): string {
-		$value = self::getConfig()->getValueString('spesenerfassung', $key);
+	private function getString(string $key): string {
+		$value = $this->appConfig->getValueString('spesenerfassung', $key);
 		return $value !== '' ? $value : (self::DEFAULTS[$key] ?? '');
 	}
 
-	public static function getPresidentUid(): string {
-		$cfg = self::getString(self::KEY_PRESIDENT_UID);
-		return $cfg;
+	public function getPresidentUid(): string {
+		return $this->getString(self::KEY_PRESIDENT_UID);
 	}
 
-	public static function setPresidentUid(string $uid): void {
-		self::getConfig()->setValueString('spesenerfassung', self::KEY_PRESIDENT_UID, $uid);
+	public function setPresidentUid(string $uid): void {
+		$this->appConfig->setValueString('spesenerfassung', self::KEY_PRESIDENT_UID, $uid);
 	}
 
-	public static function getTreasurerUid(): string {
-		return self::getString(self::KEY_TREASURER_UID);
+	public function getTreasurerUid(): string {
+		return $this->getString(self::KEY_TREASURER_UID);
 	}
 
-	public static function setTreasurerUid(string $uid): void {
-		self::getConfig()->setValueString('spesenerfassung', self::KEY_TREASURER_UID, $uid);
+	public function setTreasurerUid(string $uid): void {
+		$this->appConfig->setValueString('spesenerfassung', self::KEY_TREASURER_UID, $uid);
 	}
 
-	public static function getThreshold(): float {
-		$value = self::getString(self::KEY_THRESHOLD);
+	public function getThreshold(): float {
+		$value = $this->getString(self::KEY_THRESHOLD);
 		return is_numeric($value) ? (float) $value : 250.0;
 	}
 
-	public static function setThreshold(float $threshold): void {
-		self::getConfig()->setValueString('spesenerfassung', self::KEY_THRESHOLD, (string) $threshold);
+	public function setThreshold(float $threshold): void {
+		$this->appConfig->setValueString('spesenerfassung', self::KEY_THRESHOLD, (string) $threshold);
 	}
 
 	/**
 	 * @return string[]
 	 */
-	public static function getCategories(): array {
-		$raw = self::getString(self::KEY_CATEGORIES);
+	public function getCategories(): array {
+		$raw = $this->getString(self::KEY_CATEGORIES);
 		$categories = json_decode($raw, true);
 		return is_array($categories) ? $categories : json_decode(self::DEFAULTS[self::KEY_CATEGORIES], true);
 	}
@@ -80,95 +71,95 @@ class SettingsService {
 	/**
 	 * @param string[] $categories
 	 */
-	public static function setCategories(array $categories): void {
-		self::getConfig()->setValueString('spesenerfassung', self::KEY_CATEGORIES, json_encode($categories));
+	public function setCategories(array $categories): void {
+		$this->appConfig->setValueString('spesenerfassung', self::KEY_CATEGORIES, json_encode($categories));
 	}
 
-	public static function addCategory(string $category): array {
-		$categories = self::getCategories();
+	public function addCategory(string $category): array {
+		$categories = $this->getCategories();
 		$categories[] = $category;
-		self::setCategories($categories);
+		$this->setCategories($categories);
 		return $categories;
 	}
 
-	public static function updateCategory(int $index, string $name): array {
-		$categories = self::getCategories();
+	public function updateCategory(int $index, string $name): array {
+		$categories = $this->getCategories();
 		if (isset($categories[$index])) {
 			$categories[$index] = $name;
-			self::setCategories($categories);
+			$this->setCategories($categories);
 		}
 		return $categories;
 	}
 
-	public static function deleteCategory(int $index): array {
-		$categories = self::getCategories();
+	public function deleteCategory(int $index): array {
+		$categories = $this->getCategories();
 		if (isset($categories[$index])) {
 			array_splice($categories, $index, 1);
-			self::setCategories($categories);
+			$this->setCategories($categories);
 		}
 		return $categories;
 	}
 
-	public static function getDefaultPayoutMethod(): string {
-		return self::getString(self::KEY_DEFAULT_PAYOUT_METHOD);
+	public function getDefaultPayoutMethod(): string {
+		return $this->getString(self::KEY_DEFAULT_PAYOUT_METHOD);
 	}
 
-	public static function setDefaultPayoutMethod(string $method): void {
-		self::getConfig()->setValueString('spesenerfassung', self::KEY_DEFAULT_PAYOUT_METHOD, $method);
+	public function setDefaultPayoutMethod(string $method): void {
+		$this->appConfig->setValueString('spesenerfassung', self::KEY_DEFAULT_PAYOUT_METHOD, $method);
 	}
 
-	public static function getExportAccounts(): array {
-		$raw = self::getString(self::KEY_EXPORT_ACCOUNTS);
+	public function getExportAccounts(): array {
+		$raw = $this->getString(self::KEY_EXPORT_ACCOUNTS);
 		$accounts = json_decode($raw, true);
 		return is_array($accounts) ? $accounts : [];
 	}
 
-	public static function setExportAccounts(array $accounts): void {
-		self::getConfig()->setValueString('spesenerfassung', self::KEY_EXPORT_ACCOUNTS, json_encode($accounts));
+	public function setExportAccounts(array $accounts): void {
+		$this->appConfig->setValueString('spesenerfassung', self::KEY_EXPORT_ACCOUNTS, json_encode($accounts));
 	}
 
-	public static function getBookingFolder(): string {
-		return self::getString(self::KEY_BOOKING_FOLDER);
+	public function getBookingFolder(): string {
+		return $this->getString(self::KEY_BOOKING_FOLDER);
 	}
 
-	public static function setBookingFolder(string $folder): void {
-		self::getConfig()->setValueString('spesenerfassung', self::KEY_BOOKING_FOLDER, $folder);
+	public function setBookingFolder(string $folder): void {
+		$this->appConfig->setValueString('spesenerfassung', self::KEY_BOOKING_FOLDER, $folder);
 	}
 
-	public static function getAll(): array {
+	public function getAll(): array {
 		return [
-			'presidentUid' => self::getPresidentUid(),
-			'treasurerUid' => self::getTreasurerUid(),
-			'threshold' => self::getThreshold(),
-			'categories' => self::getCategories(),
-			'defaultPayoutMethod' => self::getDefaultPayoutMethod(),
-			'exportAccounts' => self::getExportAccounts(),
-			'bookingFolder' => self::getBookingFolder(),
+			'presidentUid' => $this->getPresidentUid(),
+			'treasurerUid' => $this->getTreasurerUid(),
+			'threshold' => $this->getThreshold(),
+			'categories' => $this->getCategories(),
+			'defaultPayoutMethod' => $this->getDefaultPayoutMethod(),
+			'exportAccounts' => $this->getExportAccounts(),
+			'bookingFolder' => $this->getBookingFolder(),
 		];
 	}
 
-	public static function updateAll(array $data): array {
+	public function updateAll(array $data): array {
 		if (isset($data['presidentUid'])) {
-			self::setPresidentUid($data['presidentUid']);
+			$this->setPresidentUid($data['presidentUid']);
 		}
 		if (isset($data['treasurerUid'])) {
-			self::setTreasurerUid($data['treasurerUid']);
+			$this->setTreasurerUid($data['treasurerUid']);
 		}
 		if (isset($data['threshold'])) {
-			self::setThreshold((float) $data['threshold']);
+			$this->setThreshold((float) $data['threshold']);
 		}
 		if (isset($data['categories']) && is_array($data['categories'])) {
-			self::setCategories($data['categories']);
+			$this->setCategories($data['categories']);
 		}
 		if (isset($data['defaultPayoutMethod'])) {
-			self::setDefaultPayoutMethod($data['defaultPayoutMethod']);
+			$this->setDefaultPayoutMethod($data['defaultPayoutMethod']);
 		}
 		if (isset($data['exportAccounts']) && is_array($data['exportAccounts'])) {
-			self::setExportAccounts($data['exportAccounts']);
+			$this->setExportAccounts($data['exportAccounts']);
 		}
 		if (isset($data['bookingFolder'])) {
-			self::setBookingFolder(trim($data['bookingFolder']));
+			$this->setBookingFolder(trim($data['bookingFolder']));
 		}
-		return self::getAll();
+		return $this->getAll();
 	}
 }

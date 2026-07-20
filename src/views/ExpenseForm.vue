@@ -59,8 +59,8 @@
 
       <div class="spes-form-actions">
         <button type="button" class="spes-btn" @click="$router.back()">{{ t('cancel') }}</button>
-        <button type="submit" class="spes-btn spes-btn-primary" name="action" value="draft">{{ t('saveDraft') }}</button>
-        <button type="submit" class="spes-btn spes-btn-primary" name="action" value="submit">{{ t('submit') }}</button>
+        <button type="submit" class="spes-btn spes-btn-primary" @click="submitAction = 'draft'">{{ t('saveDraft') }}</button>
+        <button type="submit" class="spes-btn spes-btn-primary" @click="submitAction = 'submit'">{{ t('submit') }}</button>
       </div>
     </form>
   </div>
@@ -88,6 +88,8 @@ const currentExpenseId = ref(expenseId.value)
 const existingReceipts = ref([])
 
 const uploading = ref(false)
+
+const submitAction = ref('draft')
 
 const defaultDate = new Date().toISOString().slice(0, 10)
 
@@ -157,7 +159,7 @@ async function onDeleteReceipt(receiptId) {
 }
 
 async function handleSubmit(e) {
-  const action = e.submitter?.value || 'draft'
+  const action = submitAction.value
   const status = action === 'submit' ? 'submitted' : 'draft'
 
   if (status === 'submitted' && !confirm(t('submitConfirmation'))) {

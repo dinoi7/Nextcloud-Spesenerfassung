@@ -12,13 +12,6 @@ use Psr\Log\LoggerInterface;
 use setasign\Fpdi\Tcpdf\Fpdi;
 
 class BookingReceiptService {
-	private IUserManager $userManager;
-	private ReceiptService $receiptService;
-	private UserSettingsService $userSettingsService;
-	private IRootFolder $rootFolder;
-	private ApprovalMapper $approvalMapper;
-	private LoggerInterface $logger;
-
 	private const ACTION_LABELS = [
 		Approval::ACTION_SUBMITTED => 'Eingereicht',
 		Approval::ACTION_APPROVED => 'Genehmigt',
@@ -30,19 +23,14 @@ class BookingReceiptService {
 	];
 
 	public function __construct(
-		IUserManager $userManager,
-		ReceiptService $receiptService,
-		UserSettingsService $userSettingsService,
-		IRootFolder $rootFolder,
-		ApprovalMapper $approvalMapper,
-		LoggerInterface $logger,
+		private IUserManager $userManager,
+		private ReceiptService $receiptService,
+		private UserSettingsService $userSettingsService,
+		private IRootFolder $rootFolder,
+		private ApprovalMapper $approvalMapper,
+		private LoggerInterface $logger,
+		private SettingsService $settingsService,
 	) {
-		$this->userManager = $userManager;
-		$this->receiptService = $receiptService;
-		$this->userSettingsService = $userSettingsService;
-		$this->rootFolder = $rootFolder;
-		$this->approvalMapper = $approvalMapper;
-		$this->logger = $logger;
 	}
 
 	public function generate(Expense $expense, string $treasurerUserId): array {
@@ -197,63 +185,67 @@ class BookingReceiptService {
 
 				$mime = $receipt->getMimeType();
 				$tmpFile = tempnam(sys_get_temp_dir(), 'spes_bbr_');
-				file_put_contents($tmpFile, $content);
+				try {
+					file_put_contents($tmpFile, $content);
 
-				if ($mime === 'application/pdf') {
-					try {
-						$pageCount = $pdf->setSourceFile($tmpFile);
-						$pdf->AddPage();
-						$pdf->SetY(10);
-						$pdf->SetFont('helvetica', 'B', 9);
-						$pdf->Cell(0, 5, 'Anhang: ' . $receipt->getFileName() . ' (' . $pageCount . ' Seite' . ($pageCount > 1 ? 'n' : '') . ')', 0, 1, 'C');
-						$pdf->Ln(2);
-
-						for ($i = 1; $i <= $pageCount; $i++) {
-							$tplId = $pdf->importPage($i);
-							$size = $pdf->getTemplateSize($tplId);
-							if ($i > 1) {
-								$pdf->AddPage();
-							}
-							$pdf->useTemplate($tplId, null, null, $size['width'], $size['height'], true);
-						}
-					} catch (\Throwable $e) {
-						$this->log($expense->getId(), 'PDF embedding failed for ' . $receipt->getFileName() . ': ' . $e->getMessage());
-						$pdf->SetFont('helvetica', '', 9);
-						$pdf->Cell(0, 7, 'PDF konnte nicht eingebettet werden: ' . $receipt->getFileName(), 0, 1);
-					}
-				} elseif (in_array($mime, ['image/jpeg', 'image/jpg', 'image/pjpeg', 'image/png'], true)) {
-					try {
-						$info = getimagesize($tmpFile);
-						if ($info) {
+					if ($mime === 'application/pdf') {
+						try {
+							$pageCount = $pdf->setSourceFile($tmpFile);
 							$pdf->AddPage();
 							$pdf->SetY(10);
 							$pdf->SetFont('helvetica', 'B', 9);
-							$pdf->Cell(0, 5, 'Anhang: ' . $receipt->getFileName(), 0, 1, 'C');
+							$pdf->Cell(0, 5, 'Anhang: ' . $receipt->getFileName() . ' (' . $pageCount . ' Seite' . ($pageCount > 1 ? 'n' : '') . ')', 0, 1, 'C');
 							$pdf->Ln(2);
 
-							$imgW = $info[0];
-							$imgH = $info[1];
-							$pageW = $pdf->getPageWidth() - 30;
-							$pageH = $pdf->getPageHeight() - 30;
-							$scale = min($pageW / $imgW, $pageH / $imgH, 1);
-							$w = $imgW * $scale;
-							$h = $imgH * $scale;
-							$x = ($pdf->getPageWidth() - $w) / 2;
-							$pdf->Image($tmpFile, $x, $pdf->GetY(), $w, $h);
+							for ($i = 1; $i <= $pageCount; $i++) {
+								$tplId = $pdf->importPage($i);
+								$size = $pdf->getTemplateSize($tplId);
+								if ($i > 1) {
+									$pdf->AddPage();
+								}
+								$pdf->useTemplate($tplId, null, null, $size['width'], $size['height'], true);
+							}
+						} catch (\Throwable $e) {
+							$this->log($expense->getId(), 'PDF embedding failed for ' . $receipt->getFileName() . ': ' . $e->getMessage());
+							$pdf->SetFont('helvetica', '', 9);
+							$pdf->Cell(0, 7, 'PDF konnte nicht eingebettet werden: ' . $receipt->getFileName(), 0, 1);
 						}
-					} catch (\Throwable $e) {
-						$pdf->SetFont('helvetica', '', 9);
-						$pdf->Cell(0, 7, 'Bild konnte nicht eingebettet werden: ' . $receipt->getFileName(), 0, 1);
+					} elseif (in_array($mime, ['image/jpeg', 'image/jpg', 'image/pjpeg', 'image/png'], true)) {
+						try {
+							$info = getimagesize($tmpFile);
+							if ($info) {
+								$pdf->AddPage();
+								$pdf->SetY(10);
+								$pdf->SetFont('helvetica', 'B', 9);
+								$pdf->Cell(0, 5, 'Anhang: ' . $receipt->getFileName(), 0, 1, 'C');
+								$pdf->Ln(2);
+
+								$imgW = $info[0];
+								$imgH = $info[1];
+								$pageW = $pdf->getPageWidth() - 30;
+								$pageH = $pdf->getPageHeight() - 30;
+								$scale = min($pageW / $imgW, $pageH / $imgH, 1);
+								$w = $imgW * $scale;
+								$h = $imgH * $scale;
+								$x = ($pdf->getPageWidth() - $w) / 2;
+								$pdf->Image($tmpFile, $x, $pdf->GetY(), $w, $h);
+							}
+						} catch (\Throwable $e) {
+							$pdf->SetFont('helvetica', '', 9);
+							$pdf->Cell(0, 7, 'Bild konnte nicht eingebettet werden: ' . $receipt->getFileName(), 0, 1);
+						}
+					}
+				} finally {
+					if (file_exists($tmpFile)) {
+						unlink($tmpFile);
 					}
 				}
-
-				unlink($tmpFile);
 			}
 		}
 
 		$pdfContent = $pdf->Output('', 'S');
 		$fileName = 'Spesenbeleg_' . $expense->getId() . '.pdf';
-		$folderPath = str_replace('\\', '/', SettingsService::getBookingFolder());
+		$folderPath = str_replace('\\', '/', $this->settingsService->getBookingFolder());
 
 		try {
 			$userFolder = $this->rootFolder->getUserFolder($treasurerUserId);
