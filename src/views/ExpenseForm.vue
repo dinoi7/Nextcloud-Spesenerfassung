@@ -73,6 +73,7 @@ import { useExpenseStore } from '../store/expenses'
 import { useSettingsStore } from '../store/settings'
 import { useI18n } from '../i18n'
 import { api } from '../api'
+import { showError } from '@nextcloud/dialogs'
 import ReceiptUpload from '../components/ReceiptUpload.vue'
 
 const route = useRoute()
@@ -142,7 +143,7 @@ async function handleFile(file) {
     const receipt = await api.uploadReceipt(id, file)
     existingReceipts.value.push(receipt)
   } catch (e) {
-    alert(e.message)
+    showError(e.message)
   } finally {
     uploading.value = false
   }
@@ -154,7 +155,7 @@ async function onDeleteReceipt(receiptId) {
   try {
     await api.deleteReceipt(currentExpenseId.value, receiptId)
   } catch (e) {
-    alert(e.message)
+    showError(e.message)
   }
 }
 
@@ -180,7 +181,7 @@ async function handleSubmit(e) {
     }
     router.push('/')
   } catch (err) {
-    alert(err.message)
+    showError(err.message)
   }
 }
 </script>

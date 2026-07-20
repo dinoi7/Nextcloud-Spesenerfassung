@@ -8,6 +8,7 @@
     "build": "vite build"
   },
   "dependencies": {
+    "@nextcloud/dialogs": "^7.4.1",
     "pinia": "^2.1.7",
     "qrcode": "^1.5.4",
     "vue": "^3.4.0",
