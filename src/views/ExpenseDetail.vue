@@ -315,15 +315,15 @@ async function handlePay() {
 
 async function handleAddToPaystack() {
   try {
-    const exp = await api.addToPaystack(id.value)
-    expense.value = exp
+    await api.addToPaystack(id.value)
+    goBack()
   } catch (e) { showError(e.message) }
 }
 
 async function handleAddToBookkeeping() {
   try {
-    const exp = await api.addToBookkeeping(id.value)
-    expense.value = exp
+    await api.addToBookkeeping(id.value)
+    goBack()
   } catch (e) { showError(e.message) }
 }
 
