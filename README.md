@@ -44,7 +44,7 @@ Installed via Composer, declared in `composer.json`:
 
 ```bash
 cd /var/www/nextcloud/apps/
-git clone https://github.com/makerspace-reinach/spesenerfassung.git
+git clone https://github.com/dinoi7/Nextcloud-Spesenerfassung
 ```
 
 ### 2. Install PHP dependencies

@@ -49,7 +49,7 @@
           <span class="spes-detail-label">{{ t('debitAccounts') }}</span>
           <span class="spes-detail-value">{{ sollKonto }}</span>
         </div>
-        <div v-if="expense.payoutMethod" class="spes-detail-item">
+        <div v-if="expense.payoutMethod != null" class="spes-detail-item">
           <span class="spes-detail-label">{{ t('payoutMethod') }}</span>
           <span class="spes-detail-value">{{ expense.payoutMethod === 'bank' ? t('payoutBank') : t('payoutCash') }}</span>
         </div>
@@ -209,7 +209,7 @@ const canAddToBookkeeping = computed(() => {
 
 const canDone = computed(() => {
   if (!expense.value) return false
-  return expense.value.status === 'paid'
+  return expense.value.status === 'paid' && expense.value.userId === store.currentUser
 })
 
 const isPaystackDetail = computed(() => {
@@ -303,7 +303,13 @@ async function handlePay() {
   try {
     const exp = await api.pay(id.value)
     expense.value = exp
-    if (exp.bookingReceipt?.message) showSuccess(exp.bookingReceipt.message)
+    if (route.query.from === 'paystack') {
+      if (exp.bookingReceipt?.message) showSuccess(exp.bookingReceipt.message)
+      router.push('/paystack')
+    } else if (route.query.from === 'bookkeeping') {
+      if (exp.bookingReceipt?.message) showSuccess(exp.bookingReceipt.message)
+      router.push('/bookkeeping')
+    }
   } catch (e) { showError(e.message) }
 }
 
