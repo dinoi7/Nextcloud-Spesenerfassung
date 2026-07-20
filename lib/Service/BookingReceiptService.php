@@ -38,6 +38,7 @@ class BookingReceiptService {
 		$user = $this->userManager->get($expense->getUserId());
 		$submitterName = $user ? $user->getDisplayName() : $expense->getUserId();
 		$iban = $this->userSettingsService->getIban($expense->getUserId());
+		$plz = $this->userSettingsService->getPlz($expense->getUserId());
 
 		$pdf = new Fpdi();
 		$pdf->SetPrintHeader(false);
@@ -80,11 +81,17 @@ class BookingReceiptService {
 		$pdf->SetFont('helvetica', '', 10);
 		$pdf->Cell(0, $rowH, 'Ausbezahlt', 0, 1);
 
-		if ($iban) {
+		if ($expense->getPayoutMethod() === 'bank' && $iban) {
 			$pdf->SetFont('helvetica', 'B', 10);
 			$pdf->Cell($labelW, $rowH, 'IBAN:', 0, 0);
 			$pdf->SetFont('helvetica', '', 10);
 			$pdf->Cell(0, $rowH, $iban, 0, 1);
+			if ($plz) {
+				$pdf->SetFont('helvetica', 'B', 10);
+				$pdf->Cell($labelW, $rowH, 'PLZ:', 0, 0);
+				$pdf->SetFont('helvetica', '', 10);
+				$pdf->Cell(0, $rowH, $plz, 0, 1);
+			}
 		}
 
 		$pdf->SetFont('helvetica', 'B', 10);
@@ -119,7 +126,7 @@ class BookingReceiptService {
 		$pdf->SetFont('helvetica', '', 10);
 		$pdf->Cell(0, $rowH, $expense->getCategory(), 0, 1);
 
-		$payoutLabel = $expense->getPayoutMethod() === 'bank' ? 'Bank' : ($expense->getPayoutMethod() ? 'Bar' : '-');
+		$payoutLabel = $expense->getPayoutMethod() === 'bank' ? 'Bank' : 'Bar';
 		$pdf->SetFont('helvetica', 'B', 10);
 		$pdf->Cell($labelW, $rowH, 'Auszahlung:', 0, 0);
 		$pdf->SetFont('helvetica', '', 10);
