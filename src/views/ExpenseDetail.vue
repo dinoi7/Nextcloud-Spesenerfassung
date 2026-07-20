@@ -295,7 +295,7 @@ async function handleReject() {
   try {
     const exp = await api.reject(id.value, reason)
     expense.value = exp
-    router.push('/')
+    goBack()
   } catch (e) { showError(e.message) }
 }
 
