@@ -21,7 +21,7 @@ Expense tracking app with multi-step approval workflow for Nextcloud. Built for 
 
 | Requirement | Version |
 |---|---|
-| Nextcloud | 28 – 33 |
+| Nextcloud | 28 – 34 |
 | PHP | 8.2+ |
 | MySQL / MariaDB / PostgreSQL | 8+ / 10+ / 14+ |
 | Composer | 2 |

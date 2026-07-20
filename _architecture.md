@@ -4,7 +4,7 @@
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│                    Nextcloud 32                          │
+│                    Nextcloud 34                          │
 │  ┌────────────────────────────────────────────────────┐  │
 │  │           SpesenErfassung App                      │  │
 │  │                                                    │  │
@@ -217,8 +217,10 @@ DELETE /api/expenses/{id}                   → ExpenseController#destroy
 
 ### Belege
 ```
-POST   /api/expenses/{id}/receipts          → ExpenseController#uploadReceipt
-DELETE /api/expenses/{id}/receipts/{rid}    → ExpenseController#deleteReceipt
+POST   /api/expenses/{id}/receipts             → ExpenseController#uploadReceipt
+GET    /api/expenses/{id}/receipts/{rid}/download → ExpenseController#downloadReceipt
+GET    /api/expenses/{id}/receipts/{rid}/preview  → ExpenseController#previewReceipt
+DELETE /api/expenses/{id}/receipts/{rid}       → ExpenseController#deleteReceipt
 ```
 
 ### Workflow
@@ -246,10 +248,13 @@ GET    /api/evaluation/export               → ApprovalController#evaluationExp
 ```
 GET    /api/settings                        → SettingsController#get
 PUT    /api/settings                        → SettingsController#update
+GET    /api/settings/user                   → SettingsController#getUserSettings
+PUT    /api/settings/user                   → SettingsController#updateUserSettings
 GET    /api/categories                      → SettingsController#getCategories
 POST   /api/categories                      → SettingsController#createCategory
 PUT    /api/categories/{id}                 → SettingsController#updateCategory
 DELETE /api/categories/{id}                 → SettingsController#deleteCategory
+GET    /api/users                           → SettingsController#getUsers
 ```
 
 ### Page
@@ -295,10 +300,24 @@ GET    /                                    → PageController#index
 
 **Begründung:** Makerspace Reinach hat deutsch- und englischsprachige Mitglieder. Mails enthalten beide Sprachen (DE-Block + `---` + EN-Block), damit der Empfänger die präferierte Sprache lesen kann, ohne dass die App die Empfänger-Sprache kennen muss.
 
-### 10. Docblock-Annotationen statt PHP-8-Attribute für Controller (2026-07-18)
+### 10. Docblock-Annotationen vs. PHP-8-Attribute (2026-07-18 / revidiert 2026-07-19)
 
-**Begründung:** Nextcloud 33 verarbeitet `@NoAdminRequired`/`@NoCSRFRequired` ausschliesslich als Docblock-Annotationen. PHP-8-Attribute (`#[NoAdminRequired]`) werden nur dann erkannt, wenn der korrekte Import `OCP\AppFramework\Http\Attribute\NoCSRFRequired` vorhanden ist. Fehlt der Import (wie im ApprovalController), ignoriert PHP das Attribut stillschweigend — CSRF-Check schlägt fehl (412). Einheitliche Docblock-Annotationen im gesamten Projekt vermeiden diesen Fehler.
+**Historie:** Nextcloud 33 ignoriert `#[NoAdminRequired]`/`#[NoCSRFRequired]` ohne korrekten Import (`OCP\AppFramework\Http\Attribute\*`) — CSRF-412-Fehler an Auswertung war Folge. Workaround: Docblock-Annotationen (`@NoAdminRequired`/`@NoCSRFRequired`).
+
+**Kehrtwende für NC 34 (2026-07-19):** Mit dem Upgrade auf Nextcloud 34 wurden alle Controller auf PHP-8-Attribute (`#[NoAdminRequired]`, `#[NoCSRFRequired]`) umgestellt. NC 34 verarbeitet beide Formate; Attribute sind der moderne Standard und weniger fehleranfällig (kein stillschweigendes Ignorieren bei fehlendem Import).
 
 ### 11. PDF-Spesenbeleg mit TCPDF + FPDI (2026-07-18)
 
 **Begründung:** Beim Bezahlen einer Spese wird automatisch ein "Spesenbeleg"-PDF generiert und im kassier-User-Ordner abgelegt. TCPDF (6.11.3) erstellt das Grundgerüst (Layout, Tabellen, Text), FPDI (2.6.8) bettet PDF-Anhänge als weitere Seiten ein. Die Ablage erfolgt im kassier-Ordner (`IRootFolder->getUserFolder('kassier')`), nicht in IAppData, damit der Kassier direkten Zugriff über die Nextcloud-UI hat. Wichtige Fixes: `getTemplateSize()` für korrekte Anhang-Dimensionen, `SetPrintHeader(false)`/`SetPrintFooter(false)` gegen TCPDF-Standard-Rahmenlinien, `str_replace('\\', '/')` gegen Backslash im Ordnerpfad.
+
+### 12. Security: Ownership-Check via `canAccessExpense()` (2026-07-19)
+
+**Begründung:** Vor dem Security-Audit gab es keine Zugriffskontrolle auf einzelne Spesen — jeder authentifizierte User konnte jede Spese lesen, Belege herunterladen und Status-Übergänge anderer User auslösen. Der neue `canAccessExpense($expense, $userId)`-Helper in `ExpenseController.php` prüft: Eigentümer der Spese ODER Präsident ODER Kassier. Wird in `show()`, `downloadReceipt()` und `previewReceipt()` verwendet. Analog prüft `ExpenseService::transition()` den Eigentümer bei `submit`/`done`.
+
+### 13. CSRF Token-Quelle im Frontend (2026-07-20)
+
+**Begründung:** `src/api.js` las das CSRF-Token aus `document.querySelector('head meta[name="csrf-token"]')` — dieses `<meta>`-Tag existiert in Nextcloud nicht (es steht als `data-requesttoken` am `<head>`-Element). Folge: alle POST/PUT/DELETE-Requests scheiterten mit 412, sobald `#[NoCSRFRequired]` entfernt wurde. Fix: `document.head?.dataset?.requesttoken` — identisch mit Nextclouds eigener `core-common.js`.
+
+### 14. Email UID → Email-Adress-Auflösung (2026-07-19)
+
+**Begründung:** `MailService::notify()` setzte `setTo([$uid => $uid])` — die Nextcloud-UID wurde als Email-Adresse verwendet, was nicht der echten E-Mail des Users entspricht. Fix: `IUserManager::getEMailAddress($uid)` liefert die im Nextcloud-Profil hinterlegte E-Mail-Adresse. Zusätzlich `LoggerInterface` statt stillem `catch (\Throwable)` und Korrektur aller Mail-Texte von "Spese" zu "Spesen".
