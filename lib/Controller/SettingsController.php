@@ -57,7 +57,6 @@ class SettingsController extends Controller {
 		return new DataResponse(SettingsService::getAll());
 	}
 
-	#[NoCSRFRequired]
 	public function update(): DataResponse {
 		$adminUid = $this->requireAdmin();
 		if ($adminUid === null) {
@@ -102,7 +101,6 @@ class SettingsController extends Controller {
 		return new DataResponse(SettingsService::getCategories());
 	}
 
-	#[NoCSRFRequired]
 	public function createCategory(): DataResponse {
 		if ($this->requireAdmin() === null) {
 			return new DataResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
@@ -115,7 +113,6 @@ class SettingsController extends Controller {
 		return new DataResponse(SettingsService::addCategory($name));
 	}
 
-	#[NoCSRFRequired]
 	public function updateCategory(int $id): DataResponse {
 		if ($this->requireAdmin() === null) {
 			return new DataResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
@@ -128,7 +125,6 @@ class SettingsController extends Controller {
 		return new DataResponse(SettingsService::updateCategory($id, $name));
 	}
 
-	#[NoCSRFRequired]
 	public function deleteCategory(int $id): DataResponse {
 		if ($this->requireAdmin() === null) {
 			return new DataResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
@@ -152,7 +148,6 @@ class SettingsController extends Controller {
 	}
 
 	#[NoAdminRequired]
-	#[NoCSRFRequired]
 	public function updateUserSettings(): DataResponse {
 		$userId = $this->getUserId();
 		if ($userId === '') {

@@ -66,7 +66,6 @@ class ApprovalController extends Controller {
 	}
 
 	#[NoAdminRequired]
-	#[NoCSRFRequired]
 	public function submit(int $id): DataResponse {
 		$userId = $this->getUserId();
 		$expense = $this->expenseService->submit($id, $userId);
@@ -77,7 +76,6 @@ class ApprovalController extends Controller {
 	}
 
 	#[NoAdminRequired]
-	#[NoCSRFRequired]
 	public function approve(int $id): DataResponse {
 		if (!$this->checkRole('president')) {
 			return new DataResponse(['error' => 'Only president can approve'], Http::STATUS_FORBIDDEN);
@@ -90,7 +88,6 @@ class ApprovalController extends Controller {
 	}
 
 	#[NoAdminRequired]
-	#[NoCSRFRequired]
 	public function reject(int $id): DataResponse {
 		$userId = $this->getUserId();
 		$isPresident = $this->checkRole('president');
@@ -115,7 +112,6 @@ class ApprovalController extends Controller {
 	}
 
 	#[NoAdminRequired]
-	#[NoCSRFRequired]
 	public function pay(int $id): DataResponse {
 		if (!$this->checkRole('treasurer')) {
 			return new DataResponse(['error' => 'Only treasurer can pay'], Http::STATUS_FORBIDDEN);
@@ -143,7 +139,6 @@ class ApprovalController extends Controller {
 	}
 
 	#[NoAdminRequired]
-	#[NoCSRFRequired]
 	public function done(int $id): DataResponse {
 		$userId = $this->getUserId();
 		$expense = $this->expenseService->done($id, $userId);
@@ -187,7 +182,6 @@ class ApprovalController extends Controller {
 	}
 
 	#[NoAdminRequired]
-	#[NoCSRFRequired]
 	public function paystack(int $id): DataResponse {
 		if (!$this->checkRole('treasurer')) {
 			return new DataResponse(['error' => 'Only treasurer can set paystack'], Http::STATUS_FORBIDDEN);
@@ -279,7 +273,6 @@ class ApprovalController extends Controller {
 	}
 
 	#[NoAdminRequired]
-	#[NoCSRFRequired]
 	public function paystackPayAll(): DataResponse {
 		if (!$this->checkRole('treasurer')) {
 			return new DataResponse(['error' => 'Only treasurer can pay all'], Http::STATUS_FORBIDDEN);
@@ -323,7 +316,6 @@ class ApprovalController extends Controller {
 	}
 
 	#[NoAdminRequired]
-	#[NoCSRFRequired]
 	public function bookkeeping(int $id): DataResponse {
 		if (!$this->checkRole('treasurer')) {
 			return new DataResponse(['error' => 'Only treasurer can set bookkeeping'], Http::STATUS_FORBIDDEN);

@@ -64,16 +64,22 @@ class ExpenseService {
 		$expense->setPayoutMethod($data['payoutMethod'] ?? '');
 		$expense->setForeignCurrency($data['foreignCurrency'] ?? null);
 		$expense->setForeignAmount(isset($data['foreignAmount']) ? number_format((float) $data['foreignAmount'], 2, '.', '') : null);
-		$expense->setStatus($data['status'] ?? Expense::STATUS_DRAFT);
+		$expense->setStatus(Expense::STATUS_DRAFT);
 		$expense->setCreatedAt($now);
 		$expense->setUpdatedAt($now);
 
 		$expense = $this->expenseMapper->insert($expense);
 
-		if ($expense->getStatus() === Expense::STATUS_SUBMITTED) {
-			$this->logAction($expense->getId(), $userId, Approval::ACTION_SUBMITTED);
-			$this->mailService->notifySubmitterSubmitted($expense);
-			$this->notifyNextStep($expense);
+		if (($data['status'] ?? Expense::STATUS_DRAFT) === Expense::STATUS_SUBMITTED) {
+			if ($this->workflowService->canTransition(Expense::STATUS_DRAFT, Expense::STATUS_SUBMITTED, $userId)) {
+				$expense->setStatus(Expense::STATUS_SUBMITTED);
+				$now2 = (new DateTime())->format('Y-m-d H:i:s');
+				$expense->setUpdatedAt($now2);
+				$expense = $this->expenseMapper->update($expense);
+				$this->logAction($expense->getId(), $userId, Approval::ACTION_SUBMITTED);
+				$this->mailService->notifySubmitterSubmitted($expense);
+				$this->notifyNextStep($expense);
+			}
 		}
 
 		return $expense;
@@ -233,6 +239,12 @@ class ExpenseService {
 
 		if ($targetStatus === Expense::STATUS_REJECTED && empty($comment)) {
 			return null;
+		}
+
+		if ($targetStatus === Expense::STATUS_SUBMITTED || $targetStatus === Expense::STATUS_DONE) {
+			if ($expense->getUserId() !== $userId) {
+				return null;
+			}
 		}
 
 		$now = (new DateTime())->format('Y-m-d H:i:s');
