@@ -54,7 +54,22 @@ class SettingsController extends Controller {
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
 	public function get(): DataResponse {
-		return new DataResponse(SettingsService::getAll());
+		$user = $this->userSession->getUser();
+		$uid = $user !== null ? $user->getUID() : '';
+		$isAdmin = $user !== null && $this->groupManager->isAdmin($uid);
+		$isPresident = $uid === SettingsService::getPresidentUid() && $uid !== '';
+		$isTreasurer = $uid === SettingsService::getTreasurerUid() && $uid !== '';
+
+		if ($isAdmin || $isPresident || $isTreasurer) {
+			return new DataResponse(SettingsService::getAll());
+		}
+
+		$all = SettingsService::getAll();
+		return new DataResponse([
+			'categories' => $all['categories'],
+			'threshold' => $all['threshold'],
+			'defaultPayoutMethod' => $all['defaultPayoutMethod'],
+		]);
 	}
 
 	public function update(): DataResponse {
@@ -163,6 +178,10 @@ class SettingsController extends Controller {
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
 	public function getUsers(): DataResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null || !$this->groupManager->isAdmin($user->getUID())) {
+			return new DataResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
+		}
 		$users = $this->userManager->search('');
 		$result = array_map(fn($u) => [
 			'uid' => $u->getUID(),

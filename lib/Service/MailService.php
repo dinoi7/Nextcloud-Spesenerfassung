@@ -182,6 +182,11 @@ class MailService {
 		$amount = number_format((float) $expense->getAmount(), 2, '.', '\'');
 		$url = $this->urlGenerator->linkToRouteAbsolute('spesenerfassung.page.index');
 
+		$title = htmlspecialchars($expense->getTitle() ?? '', ENT_QUOTES, 'UTF-8');
+		$category = htmlspecialchars($expense->getCategory() ?? '', ENT_QUOTES, 'UTF-8');
+		$date = htmlspecialchars($expense->getExpenseDate() ?? '', ENT_QUOTES, 'UTF-8');
+		$userId = htmlspecialchars($expense->getUserId() ?? '', ENT_QUOTES, 'UTF-8');
+
 		$actionDe = match ($action) {
 			Approval::ACTION_SUBMITTED => 'Neue Spesen zur Genehmigung',
 			Approval::ACTION_APPROVED => 'Spesen genehmigt und zur Auszahlung bereit',
@@ -196,11 +201,11 @@ class MailService {
 <body>
 <h2>{$actionDe}</h2>
 <table>
-<tr><td><strong>Titel / Title:</strong></td><td>{$expense->getTitle()}</td></tr>
+<tr><td><strong>Titel / Title:</strong></td><td>{$title}</td></tr>
 <tr><td><strong>Betrag / Amount:</strong></td><td>CHF {$amount}</td></tr>
-<tr><td><strong>Kategorie / Category:</strong></td><td>{$expense->getCategory()}</td></tr>
-<tr><td><strong>Datum / Date:</strong></td><td>{$expense->getExpenseDate()}</td></tr>
-<tr><td><strong>Von / From:</strong></td><td>{$expense->getUserId()}</td></tr>
+<tr><td><strong>Kategorie / Category:</strong></td><td>{$category}</td></tr>
+<tr><td><strong>Datum / Date:</strong></td><td>{$date}</td></tr>
+<tr><td><strong>Von / From:</strong></td><td>{$userId}</td></tr>
 </table>
 <p><a href="{$url}">Applikation öffnen / Open application</a></p>
 </body>

@@ -10,6 +10,7 @@ use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\Files\IAppData;
 use OCP\Files\NotFoundException as FilesNotFoundException;
 use OCP\Files\NotPermittedException;
+use Psr\Log\LoggerInterface;
 
 class ReceiptService {
 	private const MAX_SIZE = 1048576;
@@ -19,10 +20,12 @@ class ReceiptService {
 
 	private ReceiptMapper $receiptMapper;
 	private IAppData $appData;
+	private LoggerInterface $logger;
 
-	public function __construct(ReceiptMapper $receiptMapper, IAppData $appData) {
+	public function __construct(ReceiptMapper $receiptMapper, IAppData $appData, LoggerInterface $logger) {
 		$this->receiptMapper = $receiptMapper;
 		$this->appData = $appData;
+		$this->logger = $logger;
 	}
 
 	public function validateFile(string $fileName, string $tempPath, int $size): ?string {
@@ -47,7 +50,7 @@ class ReceiptService {
 			return 'Invalid file type. Allowed: PDF, JPG, PNG.';
 		}
 
-		return null;
+		return $detected;
 	}
 
 	public function findByExpenseId(int $expenseId): array {
@@ -55,47 +58,38 @@ class ReceiptService {
 	}
 
 	public function upload(int $expenseId, string $originalName, string $tempPath, string $mimeType, int $size): ?Receipt {
-		$log = '/var/www/nextcloud-data/spes_upload.log';
-		file_put_contents($log, "upload: id=$expenseId file=$originalName temp=$tempPath mime=$mimeType size=$size\n", FILE_APPEND);
-
 		$existing = $this->receiptMapper->findByExpenseId($expenseId);
 		if (count($existing) >= self::MAX_FILES) {
-			file_put_contents($log, "FAIL: too many files\n", FILE_APPEND);
+			$this->logger->warning('Receipt upload failed: too many files for expense {id}', ['app' => 'spesenerfassung', 'id' => $expenseId]);
 			return null;
 		}
 
-		$error = $this->validateFile($originalName, $tempPath, $size);
-		if ($error !== null) {
-			file_put_contents($log, "FAIL: $error\n", FILE_APPEND);
+		$detectedMime = $this->validateFile($originalName, $tempPath, $size);
+		if ($detectedMime === null) {
+			$this->logger->warning('Receipt upload validation failed', ['app' => 'spesenerfassung']);
 			return null;
 		}
-		file_put_contents($log, "validateFile OK\n", FILE_APPEND);
 
 		$safeName = $this->sanitizeFileName($originalName);
 		$now = (new DateTime())->format('Y-m-d H:i:s');
 
 		$content = file_get_contents($tempPath);
 		if ($content === false) {
-			file_put_contents($log, "FAIL: file_get_contents failed\n", FILE_APPEND);
+			$this->logger->error('Receipt upload: file_get_contents failed for temp path', ['app' => 'spesenerfassung']);
 			return null;
 		}
 
 		try {
-			file_put_contents($log, "entering IAppData try\n", FILE_APPEND);
 			try {
 				$receiptsFolder = $this->appData->getFolder('receipts');
-				file_put_contents($log, "got receiptsFolder\n", FILE_APPEND);
 			} catch (FilesNotFoundException) {
 				$receiptsFolder = $this->appData->newFolder('receipts');
-				file_put_contents($log, "created receiptsFolder\n", FILE_APPEND);
 			}
 
 			try {
 				$expenseFolder = $receiptsFolder->getFolder((string) $expenseId);
-				file_put_contents($log, "got expenseFolder $expenseId\n", FILE_APPEND);
 			} catch (FilesNotFoundException) {
 				$expenseFolder = $receiptsFolder->newFolder((string) $expenseId);
-				file_put_contents($log, "created expenseFolder $expenseId\n", FILE_APPEND);
 			}
 
 			$counter = 1;
@@ -108,21 +102,19 @@ class ReceiptService {
 			}
 
 			$expenseFolder->newFile($finalName, $content);
-			file_put_contents($log, "file created: $finalName\n", FILE_APPEND);
 
 			$receipt = new Receipt();
 			$receipt->setExpenseId($expenseId);
 			$receipt->setFileName($finalName);
 			$receipt->setFilePath('receipts/' . $expenseId . '/' . $finalName);
-			$receipt->setMimeType($mimeType);
+			$receipt->setMimeType($detectedMime);
 			$receipt->setSize($size);
 			$receipt->setCreatedAt($now);
 
 			$result = $this->receiptMapper->insert($receipt);
-			file_put_contents($log, "SUCCESS: receipt id={$result->getId()}\n", FILE_APPEND);
 			return $result;
 		} catch (\Throwable $e) {
-			file_put_contents($log, "EXCEPTION: " . $e->getMessage() . "\n" . $e->getTraceAsString() . "\n", FILE_APPEND);
+			$this->logger->error('Receipt upload exception: {message}', ['app' => 'spesenerfassung', 'message' => $e->getMessage(), 'exception' => $e]);
 			return null;
 		}
 	}

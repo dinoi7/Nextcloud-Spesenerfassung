@@ -7,6 +7,7 @@ use OCA\Spesenerfassung\Db\Approval;
 use OCA\Spesenerfassung\Db\ApprovalMapper;
 use OCA\Spesenerfassung\Db\Expense;
 use OCA\Spesenerfassung\Db\ExpenseMapper;
+use OCA\Spesenerfassung\Service\ReceiptService;
 use DateTime;
 use OCP\AppFramework\Db\DoesNotExistException;
 
@@ -15,17 +16,35 @@ class ExpenseService {
 	private ApprovalMapper $approvalMapper;
 	private WorkflowService $workflowService;
 	private MailService $mailService;
+	private ReceiptService $receiptService;
 
 	public function __construct(
 		ExpenseMapper $expenseMapper,
 		ApprovalMapper $approvalMapper,
 		WorkflowService $workflowService,
 		MailService $mailService,
+		ReceiptService $receiptService,
 	) {
 		$this->expenseMapper = $expenseMapper;
 		$this->approvalMapper = $approvalMapper;
 		$this->workflowService = $workflowService;
 		$this->mailService = $mailService;
+		$this->receiptService = $receiptService;
+	}
+
+	private function validate(array $data): void {
+		if (isset($data['title']) && mb_strlen(trim($data['title'])) > 255) {
+			throw new \InvalidArgumentException('Title exceeds maximum length of 255 characters');
+		}
+		if (isset($data['amount']) && (float) $data['amount'] <= 0) {
+			throw new \InvalidArgumentException('Amount must be greater than zero');
+		}
+		if (isset($data['expenseDate'])) {
+			$d = \DateTime::createFromFormat('Y-m-d', $data['expenseDate']);
+			if ($d === false || $d->format('Y-m-d') !== $data['expenseDate']) {
+				throw new \InvalidArgumentException('Invalid date format, expected Y-m-d');
+			}
+		}
 	}
 
 	public function findById(int $id): ?Expense {
@@ -52,6 +71,7 @@ class ExpenseService {
 	}
 
 	public function create(string $userId, array $data): Expense {
+		$this->validate($data);
 		$now = (new DateTime())->format('Y-m-d H:i:s');
 
 		$expense = new Expense();
@@ -93,6 +113,8 @@ class ExpenseService {
 		if (!in_array($expense->getStatus(), [Expense::STATUS_DRAFT, Expense::STATUS_REJECTED])) {
 			return null;
 		}
+
+		$this->validate($data);
 
 		$now = (new DateTime())->format('Y-m-d H:i:s');
 
@@ -146,6 +168,10 @@ class ExpenseService {
 		}
 		if (!in_array($expense->getStatus(), [Expense::STATUS_DRAFT, Expense::STATUS_REJECTED])) {
 			return false;
+		}
+		$receipts = $this->receiptService->findByExpenseId($id);
+		foreach ($receipts as $receipt) {
+			$this->receiptService->delete($receipt->getId());
 		}
 		$this->expenseMapper->delete($expense);
 		return true;

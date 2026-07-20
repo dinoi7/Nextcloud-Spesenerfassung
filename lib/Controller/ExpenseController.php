@@ -132,7 +132,6 @@ class ExpenseController extends Controller {
 	}
 
 	#[NoAdminRequired]
-	#[NoCSRFRequired]
 	public function ping(): DataResponse {
 		return new DataResponse(['ok' => true, 'time' => time()]);
 	}
@@ -155,8 +154,11 @@ class ExpenseController extends Controller {
 
 		try {
 			$expense = $this->expenseService->create($userId, $data);
+		} catch (\InvalidArgumentException $e) {
+			return new DataResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
 		} catch (\Throwable $e) {
-			return new DataResponse(['error' => $e->getMessage()], Http::STATUS_INTERNAL_SERVER_ERROR);
+			$this->logger->error('Failed to create expense: {message}', ['app' => 'spesenerfassung', 'message' => $e->getMessage(), 'exception' => $e]);
+			return new DataResponse(['error' => 'Failed to create expense'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
 		if ($expense === null) {
 			return new DataResponse(['error' => 'Failed to create expense'], Http::STATUS_INTERNAL_SERVER_ERROR);
@@ -177,7 +179,11 @@ class ExpenseController extends Controller {
 			}
 		}
 
-		$expense = $this->expenseService->update($id, $userId, $data);
+		try {
+			$expense = $this->expenseService->update($id, $userId, $data);
+		} catch (\InvalidArgumentException $e) {
+			return new DataResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
+		}
 		if ($expense === null) {
 			return new DataResponse(['error' => 'Not found or not editable'], Http::STATUS_FORBIDDEN);
 		}
@@ -235,6 +241,9 @@ class ExpenseController extends Controller {
 		if ($expense === null || $expense->getUserId() !== $userId) {
 			return new DataResponse(['error' => 'Not found'], Http::STATUS_FORBIDDEN);
 		}
+		if (!in_array($expense->getStatus(), [Expense::STATUS_DRAFT, Expense::STATUS_REJECTED])) {
+			return new DataResponse(['error' => 'Receipts can only be deleted from draft or rejected expenses'], Http::STATUS_FORBIDDEN);
+		}
 
 		$receipt = $this->receiptService->findById($receiptId);
 		if ($receipt === null || $receipt->getExpenseId() !== $id) {
@@ -284,7 +293,9 @@ class ExpenseController extends Controller {
 			return new DataResponse(['error' => 'File not found'], Http::STATUS_NOT_FOUND);
 		}
 
-		return new DataDownloadResponse($content, $receipt->getFileName(), $receipt->getMimeType());
+		$response = new DataDownloadResponse($content, $receipt->getFileName(), $receipt->getMimeType());
+		$response->addHeader('X-Content-Type-Options', 'nosniff');
+		return $response;
 	}
 
 	#[NoAdminRequired]
@@ -305,6 +316,9 @@ class ExpenseController extends Controller {
 			return new DataResponse(['error' => 'File not found'], Http::STATUS_NOT_FOUND);
 		}
 
-		return new DataDisplayResponse($content, 200, ['Content-Type' => $receipt->getMimeType()]);
+		return new DataDisplayResponse($content, 200, [
+			'Content-Type' => $receipt->getMimeType(),
+			'X-Content-Type-Options' => 'nosniff',
+		]);
 	}
 }

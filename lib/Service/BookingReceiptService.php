@@ -8,6 +8,7 @@ use OCA\Spesenerfassung\Db\ApprovalMapper;
 use OCA\Spesenerfassung\Db\Expense;
 use OCP\Files\IRootFolder;
 use OCP\IUserManager;
+use Psr\Log\LoggerInterface;
 use setasign\Fpdi\Tcpdf\Fpdi;
 
 class BookingReceiptService {
@@ -16,8 +17,7 @@ class BookingReceiptService {
 	private UserSettingsService $userSettingsService;
 	private IRootFolder $rootFolder;
 	private ApprovalMapper $approvalMapper;
-
-	private const LOG_FILE = '/var/www/nextcloud-data/spes_booking.log';
+	private LoggerInterface $logger;
 
 	private const ACTION_LABELS = [
 		Approval::ACTION_SUBMITTED => 'Eingereicht',
@@ -35,12 +35,14 @@ class BookingReceiptService {
 		UserSettingsService $userSettingsService,
 		IRootFolder $rootFolder,
 		ApprovalMapper $approvalMapper,
+		LoggerInterface $logger,
 	) {
 		$this->userManager = $userManager;
 		$this->receiptService = $receiptService;
 		$this->userSettingsService = $userSettingsService;
 		$this->rootFolder = $rootFolder;
 		$this->approvalMapper = $approvalMapper;
+		$this->logger = $logger;
 	}
 
 	public function generate(Expense $expense, string $treasurerUserId): array {
@@ -285,6 +287,6 @@ class BookingReceiptService {
 	}
 
 	private function log(int $expenseId, string $message): void {
-		file_put_contents(self::LOG_FILE, date('c') . ' [' . $expenseId . '] ' . $message . "\n", FILE_APPEND);
+		$this->logger->info('[{id}] {message}', ['app' => 'spesenerfassung', 'id' => $expenseId, 'message' => $message]);
 	}
 }

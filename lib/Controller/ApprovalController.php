@@ -402,7 +402,12 @@ class ApprovalController extends Controller {
 	}
 
 	private function sani(string $field): string {
-		return str_replace(['"', ';'], '_', $field);
+		$field = str_replace(["\r", "\n"], ' ', $field);
+		$field = str_replace(['"', ';'], '_', $field);
+		if ($field !== '' && preg_match('/^[=+\-@\t]/', $field)) {
+			$field = "'" . $field;
+		}
+		return $field;
 	}
 
 	private function resolveDisplayName(string $userId): string {
