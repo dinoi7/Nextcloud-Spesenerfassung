@@ -67,6 +67,13 @@
         </div>
       </div>
 
+      <div v-if="inPayout.length" class="spes-section">
+        <h2 class="spes-section-title">{{ t('statusInPayout') }} ({{ inPayout.length }})</h2>
+        <div class="spes-card-list">
+          <ExpenseCard v-for="expense in inPayout" :key="expense.id" :expense="expense" />
+        </div>
+      </div>
+
       <div v-if="paid.length" class="spes-section">
         <h2 class="spes-section-title">{{ t('statusPaid') }} ({{ paid.length }})</h2>
         <div class="spes-card-list">
@@ -152,6 +159,9 @@ const drafts = computed(() => filteredExpenses.value.filter(e => e.status === 'd
 const submitted = computed(() => filteredExpenses.value.filter(e => e.status === 'submitted'))
 const approved = computed(() => filteredExpenses.value.filter(e => e.status === 'approved'))
 const rejected = computed(() => filteredExpenses.value.filter(e => e.status === 'rejected'))
+const bookkeeping = computed(() => filteredExpenses.value.filter(e => e.status === 'bookkeeping'))
+const paystackExpenses = computed(() => filteredExpenses.value.filter(e => e.status === 'paystack'))
+const inPayout = computed(() => [...bookkeeping.value, ...paystackExpenses.value])
 const paid = computed(() => filteredExpenses.value.filter(e => e.status === 'paid'))
 const done = computed(() => filteredExpenses.value.filter(e => e.status === 'done'))
 
