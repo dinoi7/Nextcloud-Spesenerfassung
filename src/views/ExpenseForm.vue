@@ -98,8 +98,6 @@ const submitAction = ref('draft')
 
 const userMissingBankData = ref(false)
 
-const showBankWarning = computed(() => form.value.payoutMethod === 'bank' && userMissingBankData.value)
-
 const defaultDate = new Date().toISOString().slice(0, 10)
 
 const form = ref({
@@ -112,6 +110,8 @@ const form = ref({
   foreignCurrency: '',
   foreignAmount: null,
 })
+
+const showBankWarning = computed(() => form.value.payoutMethod === 'bank' && userMissingBankData.value)
 
 const categories = computed(() => settingsStore.settings.categories || [])
 
