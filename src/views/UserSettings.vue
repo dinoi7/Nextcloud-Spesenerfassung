@@ -34,6 +34,18 @@
         <span v-if="plzError" class="spes-field-error">{{ plzError }}</span>
       </div>
 
+      <div class="spes-form-group">
+        <label class="spes-label" for="city">{{ t('cityLabel') }}</label>
+        <input
+          id="city"
+          v-model="city"
+          class="spes-input"
+          placeholder="z.B. Reinach"
+          @input="onCityInput"
+        />
+        <span v-if="cityError" class="spes-field-error">{{ cityError }}</span>
+      </div>
+
       <div class="spes-form-actions">
         <button class="spes-btn spes-btn-primary" @click="save">{{ t('save') }}</button>
       </div>
@@ -52,6 +64,8 @@ const ibanDisplay = ref('')
 const ibanError = ref('')
 const plz = ref('')
 const plzError = ref('')
+const city = ref('')
+const cityError = ref('')
 const loading = ref(true)
 
 const IBAN_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -108,6 +122,10 @@ function onPlzInput() {
   plzError.value = plz.value && !/^\d{4}$/.test(plz.value) ? t('plzInvalid') : null
 }
 
+function onCityInput() {
+  cityError.value = null
+}
+
 onMounted(async () => {
   try {
     const data = await api.getUserSettings()
@@ -116,6 +134,9 @@ onMounted(async () => {
     }
     if (data.plz) {
       plz.value = data.plz
+    }
+    if (data.city) {
+      city.value = data.city
     }
   } catch {}
   loading.value = false
@@ -134,7 +155,7 @@ async function save() {
     return
   }
   try {
-    await api.updateUserSettings({ iban: stripped, plz: plzVal })
+    await api.updateUserSettings({ iban: stripped, plz: plzVal, city: city.value.trim() })
     showSuccess(t('settingsSaved'))
   } catch (e) {
     showError(e.message)

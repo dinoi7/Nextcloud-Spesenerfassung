@@ -111,9 +111,11 @@ class ExpenseController extends Controller {
 		if ($treasurerUid !== '' && $this->getUserId() === $treasurerUid && $expense->getPayoutMethod() === 'bank') {
 			$iban = $this->userSettingsService->getIban($expense->getUserId());
 			$plz = $this->userSettingsService->getPlz($expense->getUserId());
+			$city = $this->userSettingsService->getCity($expense->getUserId());
 			if ($iban !== '') {
 				$data['iban'] = $iban;
 				$data['plz'] = $plz;
+				$data['city'] = $city;
 				$data['submitterName'] = $data['displayName'];
 			}
 		}
@@ -144,6 +146,10 @@ class ExpenseController extends Controller {
 			if ($plz === '') {
 				return new DataResponse(['error' => 'PLZ ist erforderlich für Bank-Auszahlung. Bitte im Profil hinterlegen.'], Http::STATUS_BAD_REQUEST);
 			}
+			$city = $this->userSettingsService->getCity($userId);
+			if ($city === '') {
+				return new DataResponse(['error' => 'Stadt/Ort ist erforderlich für Bank-Auszahlung. Bitte im Profil hinterlegen.'], Http::STATUS_BAD_REQUEST);
+			}
 		}
 
 		try {
@@ -170,6 +176,14 @@ class ExpenseController extends Controller {
 			$iban = $this->userSettingsService->getIban($userId);
 			if ($iban === '') {
 				return new DataResponse(['error' => 'IBAN ist erforderlich für Bank-Auszahlung. Bitte im Profil hinterlegen.'], Http::STATUS_BAD_REQUEST);
+			}
+			$plz = $this->userSettingsService->getPlz($userId);
+			if ($plz === '') {
+				return new DataResponse(['error' => 'PLZ ist erforderlich für Bank-Auszahlung. Bitte im Profil hinterlegen.'], Http::STATUS_BAD_REQUEST);
+			}
+			$city = $this->userSettingsService->getCity($userId);
+			if ($city === '') {
+				return new DataResponse(['error' => 'Stadt/Ort ist erforderlich für Bank-Auszahlung. Bitte im Profil hinterlegen.'], Http::STATUS_BAD_REQUEST);
 			}
 		}
 

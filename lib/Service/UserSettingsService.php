@@ -8,6 +8,7 @@ use OCP\IConfig;
 class UserSettingsService {
 	private const KEY_IBAN = 'iban';
 	private const KEY_PLZ = 'plz';
+	private const KEY_CITY = 'city';
 
 	public function __construct(
 		private IConfig $config,
@@ -58,10 +59,20 @@ class UserSettingsService {
 		$this->config->setUserValue($userId, 'spesenerfassung', self::KEY_PLZ, $plz);
 	}
 
+	public function getCity(string $userId): string {
+		return $this->config->getUserValue($userId, 'spesenerfassung', self::KEY_CITY, '');
+	}
+
+	public function setCity(string $userId, string $city): void {
+		$city = trim($city);
+		$this->config->setUserValue($userId, 'spesenerfassung', self::KEY_CITY, $city);
+	}
+
 	public function getAll(string $userId): array {
 		return [
 			'iban' => $this->getIban($userId),
 			'plz' => $this->getPlz($userId),
+			'city' => $this->getCity($userId),
 		];
 	}
 
@@ -71,6 +82,9 @@ class UserSettingsService {
 		}
 		if (array_key_exists('plz', $data)) {
 			$this->setPlz($userId, trim($data['plz']));
+		}
+		if (array_key_exists('city', $data)) {
+			$this->setCity($userId, trim($data['city']));
 		}
 	}
 }

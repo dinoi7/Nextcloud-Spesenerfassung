@@ -105,12 +105,14 @@
             <span class="spes-payment-iban">{{ expense.iban }}</span>
             <span class="spes-payment-label">PLZ</span>
             <span class="spes-payment-value">{{ expense.plz }}</span>
+            <span class="spes-payment-label">{{ t('cityLabel') }}</span>
+            <span class="spes-payment-value">{{ expense.city }}</span>
             <span class="spes-payment-label">{{ t('recipient') }}</span>
             <span class="spes-payment-value">{{ expense.submitterName }}</span>
             <span class="spes-payment-label">{{ t('amount') }}</span>
             <span class="spes-payment-value">CHF {{ formatAmount(expense.amount) }}</span>
           </div>
-          <SwissQrCode :iban="expense.iban" :name="expense.submitterName" :amount="expense.amount" :plz="expense.plz" :reference="'SpesenNr. ' + expense.id + ': ' + expense.title" />
+          <SwissQrCode :iban="expense.iban" :name="expense.submitterName" :amount="expense.amount" :plz="expense.plz" :city="expense.city" :reference="'SpesenNr. ' + expense.id + ': ' + expense.title" />
         </div>
       </div>
 

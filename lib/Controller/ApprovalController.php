@@ -205,6 +205,7 @@ class ApprovalController extends Controller {
 				$row['submitterName'] = $row['displayName'];
 				$row['iban'] = $this->userSettingsService->getIban($e->getUserId());
 				$row['plz'] = $this->userSettingsService->getPlz($e->getUserId());
+				$row['city'] = $this->userSettingsService->getCity($e->getUserId());
 			}
 			return $row;
 		}, $expenses);

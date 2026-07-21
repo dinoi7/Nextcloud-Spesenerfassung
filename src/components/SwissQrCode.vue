@@ -16,6 +16,7 @@ const props = defineProps({
   amount: { type: [Number, String], required: true },
   reference: { type: String, default: '' },
   plz: { type: String, default: '' },
+  city: { type: String, default: '' },
 })
 
 const { t } = useI18n()
@@ -26,19 +27,18 @@ function buildSwissQrPayload() {
   const amt = parseFloat(props.amount || 0).toFixed(2)
   const ref = props.reference || ''
   const name = props.name || ''
-  const plzOrt = props.plz ? props.plz + ' Ort' : '0000 Ort'
 
   return [
     'SPC',
     '0200',
     '1',
     iban,
-    'K',
+    'S',
     name,
-    'Adresse nicht erfasst',
-    plzOrt,
     '',
     '',
+    props.plz || '',
+    props.city || '',
     'CH',
     '',
     '',
@@ -49,12 +49,12 @@ function buildSwissQrPayload() {
     '',
     amt,
     'CHF',
-    'K',
+    'S',
     'SpesenErfassung',
     '',
-    plzOrt,
     '',
-    '',
+    props.plz || '',
+    props.city || '',
     'CH',
     'NON',
     '',
@@ -77,5 +77,5 @@ async function generate() {
 }
 
 onMounted(generate)
-watch(() => [props.iban, props.name, props.amount, props.reference, props.plz], generate)
+watch(() => [props.iban, props.name, props.amount, props.reference, props.plz, props.city], generate)
 </script>

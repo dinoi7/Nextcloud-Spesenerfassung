@@ -39,6 +39,7 @@ class BookingReceiptService {
 		$submitterName = $user ? $user->getDisplayName() : $expense->getUserId();
 		$iban = $this->userSettingsService->getIban($expense->getUserId());
 		$plz = $this->userSettingsService->getPlz($expense->getUserId());
+		$city = $this->userSettingsService->getCity($expense->getUserId());
 
 		$pdf = new Fpdi();
 		$pdf->SetPrintHeader(false);
@@ -91,6 +92,12 @@ class BookingReceiptService {
 				$pdf->Cell($labelW, $rowH, 'PLZ:', 0, 0);
 				$pdf->SetFont('helvetica', '', 10);
 				$pdf->Cell(0, $rowH, $plz, 0, 1);
+			}
+			if ($city) {
+				$pdf->SetFont('helvetica', 'B', 10);
+				$pdf->Cell($labelW, $rowH, 'Ort:', 0, 0);
+				$pdf->SetFont('helvetica', '', 10);
+				$pdf->Cell(0, $rowH, $city, 0, 1);
 			}
 		}
 

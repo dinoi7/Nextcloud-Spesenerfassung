@@ -120,7 +120,7 @@ onMounted(async () => {
 
   try {
     const data = await api.getUserSettings()
-    userMissingBankData.value = !(data && data.iban && data.plz)
+    userMissingBankData.value = !(data && data.iban && data.plz && data.city)
   } catch {
     userMissingBankData.value = true
   }
