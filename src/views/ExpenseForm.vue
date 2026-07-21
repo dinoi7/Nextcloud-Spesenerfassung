@@ -29,6 +29,10 @@
           <option value="bank">{{ t('payoutBank') }}</option>
           <option value="">{{ t('payoutCash') }}</option>
         </select>
+        <div v-if="showBankWarning" class="spes-bank-warning">
+          <span>{{ t('bankWarning') }}</span>
+          <router-link to="/profile" class="spes-bank-warning-link">{{ t('gotoProfile') }}</router-link>
+        </div>
       </div>
 
       <div class="spes-form-row">
@@ -67,7 +71,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useExpenseStore } from '../store/expenses'
 import { useSettingsStore } from '../store/settings'
@@ -92,6 +96,10 @@ const uploading = ref(false)
 
 const submitAction = ref('draft')
 
+const userMissingBankData = ref(false)
+
+const showBankWarning = computed(() => form.value.payoutMethod === 'bank' && userMissingBankData.value)
+
 const defaultDate = new Date().toISOString().slice(0, 10)
 
 const form = ref({
@@ -109,6 +117,11 @@ const categories = computed(() => settingsStore.settings.categories || [])
 
 onMounted(async () => {
   await settingsStore.loadSettings()
+
+  try {
+    const data = await api.getUserSettings()
+    userMissingBankData.value = !(data.iban && data.plz)
+  } catch {}
 
   if (isEdit.value) {
     const expense = await store.getExpense(expenseId.value)

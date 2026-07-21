@@ -1024,3 +1024,24 @@
 @keyframes spes-spin {
   to { transform: rotate(360deg); }
 }
+
+.spes-bank-warning {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: var(--spes-radius);
+  padding: 10px 14px;
+  margin-top: 4px;
+  font-size: 13px;
+  flex-wrap: wrap;
+  color: #856404;
+}
+
+.spes-bank-warning-link {
+  color: var(--color-primary, #0066cc);
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: underline;
+}
