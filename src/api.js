@@ -2,7 +2,8 @@ const BASE = '/index.php/apps/spesenerfassung/api'
 
 function getCsrfToken() {
   const meta = document.querySelector('meta[name="csrf-token"]')
-  return meta ? meta.getAttribute('content') : null
+  if (meta) return meta.getAttribute('content')
+  return document.head?.dataset?.requesttoken || null
 }
 
 function getHeaders() {

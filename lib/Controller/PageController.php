@@ -49,6 +49,8 @@ class PageController extends Controller {
 				'isTreasurer' => $uid !== '' && $uid === $allSettings['treasurerUid'],
 				'locale' => $locale,
 				'settings' => [
+					'presidentUid' => $allSettings['presidentUid'],
+					'treasurerUid' => $allSettings['treasurerUid'],
 					'categories' => $allSettings['categories'],
 					'threshold' => $allSettings['threshold'],
 					'defaultPayoutMethod' => $allSettings['defaultPayoutMethod'],
