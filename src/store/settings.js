@@ -16,14 +16,14 @@ function getInitialSettings() {
 export const useSettingsStore = defineStore('settings', () => {
   const defaultSettings = getInitialSettings()
   const settings = ref({
-    presidentUid: defaultSettings.presidentUid || '',
-    treasurerUid: defaultSettings.treasurerUid || '',
+    presidentUid: '',
+    treasurerUid: '',
     threshold: defaultSettings.threshold || 250,
     categories: defaultSettings.categories || ['Material', 'Verpflegung', 'Reise', 'Büro', 'Sonstiges'],
 		defaultPayoutMethod: defaultSettings.defaultPayoutMethod || 'bank',
-		exportAccounts: defaultSettings.exportAccounts || {},
-		senderEmail: defaultSettings.senderEmail || '',
-		senderName: defaultSettings.senderName || '',
+		exportAccounts: {},
+		senderEmail: '',
+		senderName: '',
 	})
   const loading = ref(false)
   const error = ref(null)

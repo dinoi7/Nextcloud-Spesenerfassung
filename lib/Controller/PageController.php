@@ -40,12 +40,19 @@ class PageController extends Controller {
 			$locale = 'en';
 		}
 
+		$allSettings = $this->settingsService->getAll();
 		$data = [
 			'initialData' => json_encode([
 				'currentUser' => $uid,
 				'isAdmin' => $isAdmin,
+				'isPresident' => $uid !== '' && $uid === $allSettings['presidentUid'],
+				'isTreasurer' => $uid !== '' && $uid === $allSettings['treasurerUid'],
 				'locale' => $locale,
-				'settings' => $this->settingsService->getAll(),
+				'settings' => [
+					'categories' => $allSettings['categories'],
+					'threshold' => $allSettings['threshold'],
+					'defaultPayoutMethod' => $allSettings['defaultPayoutMethod'],
+				],
 			]),
 		];
 		return new TemplateResponse('spesenerfassung', 'index', $data);

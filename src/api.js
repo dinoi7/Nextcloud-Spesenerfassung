@@ -1,12 +1,17 @@
 const BASE = '/index.php/apps/spesenerfassung/api'
 
+function getCsrfToken() {
+  const meta = document.querySelector('meta[name="csrf-token"]')
+  return meta ? meta.getAttribute('content') : null
+}
+
 function getHeaders() {
   const headers = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
     'X-Requested-With': 'XMLHttpRequest',
   }
-  const token = document.head?.dataset?.requesttoken
+  const token = getCsrfToken()
   if (token) {
     headers['requesttoken'] = token
   }
@@ -69,7 +74,7 @@ export const api = {
 	exportPaystack: async () => {
 		const base = '/index.php/apps/spesenerfassung/api'
 		const headers = {}
-		const token = document.head?.dataset?.requesttoken
+		const token = getCsrfToken()
 		if (token) headers['requesttoken'] = token
 		const res = await fetch(base + '/approvals/paystack/export', { headers, credentials: 'same-origin' })
 		if (!res.ok) throw new Error('Export failed')
@@ -84,7 +89,7 @@ export const api = {
 	exportPaystackSingle: async (id) => {
 		const base = '/index.php/apps/spesenerfassung/api'
 		const headers = {}
-		const token = document.head?.dataset?.requesttoken
+		const token = getCsrfToken()
 		if (token) headers['requesttoken'] = token
 		const res = await fetch(base + '/approvals/paystack/export/' + id, { headers, credentials: 'same-origin' })
 		if (!res.ok) throw new Error('Export failed')
@@ -101,7 +106,7 @@ export const api = {
 	exportBookkeeping: async () => {
 		const base = '/index.php/apps/spesenerfassung/api'
 		const headers = {}
-		const token = document.head?.dataset?.requesttoken
+		const token = getCsrfToken()
 		if (token) headers['requesttoken'] = token
 		const res = await fetch(base + '/approvals/bookkeeping/export', { headers, credentials: 'same-origin' })
 		if (!res.ok) throw new Error('Export failed')
@@ -116,7 +121,7 @@ export const api = {
 	exportBookkeepingSingle: async (id) => {
 		const base = '/index.php/apps/spesenerfassung/api'
 		const headers = {}
-		const token = document.head?.dataset?.requesttoken
+		const token = getCsrfToken()
 		if (token) headers['requesttoken'] = token
 		const res = await fetch(base + '/approvals/bookkeeping/export/' + id, { headers, credentials: 'same-origin' })
 		if (!res.ok) throw new Error('Export failed')
@@ -132,7 +137,7 @@ export const api = {
 	exportEvaluation: async () => {
 		const base = '/index.php/apps/spesenerfassung/api'
 		const headers = {}
-		const token = document.head?.dataset?.requesttoken
+		const token = getCsrfToken()
 		if (token) headers['requesttoken'] = token
 		const res = await fetch(base + '/evaluation/export', { headers, credentials: 'same-origin' })
 		if (!res.ok) throw new Error('Export failed')

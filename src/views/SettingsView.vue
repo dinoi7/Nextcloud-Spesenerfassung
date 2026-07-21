@@ -83,11 +83,13 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useSettingsStore } from '../store/settings'
+import { useExpenseStore } from '../store/expenses'
 import { useI18n } from '../i18n'
 import { api } from '../api'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 
 const settingsStore = useSettingsStore()
+const expenseStore = useExpenseStore()
 const { t } = useI18n()
 const loading = ref(true)
 const users = ref([])
@@ -141,6 +143,7 @@ async function save() {
   syncForm()
   try {
     await settingsStore.saveSettings(form.value)
+    expenseStore.updateRoles(settingsStore.settings)
     buildRows()
     showSuccess(t('settingsSaved'))
   } catch (e) {

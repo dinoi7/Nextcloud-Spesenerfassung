@@ -20,8 +20,8 @@ export const useExpenseStore = defineStore('expenses', () => {
 
   const currentUser = ref(initial.currentUser || '')
   const userIsAdmin = ref(initial.isAdmin || false)
-  const userIsPresident = ref(currentUser.value === (initial.settings?.presidentUid || ''))
-  const userIsTreasurer = ref(currentUser.value === (initial.settings?.treasurerUid || ''))
+  const userIsPresident = ref(initial.isPresident || false)
+  const userIsTreasurer = ref(initial.isTreasurer || false)
 
   function updateRoles(settings) {
     userIsPresident.value = currentUser.value === settings.presidentUid

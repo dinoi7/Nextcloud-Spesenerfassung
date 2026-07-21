@@ -175,6 +175,7 @@ class SettingsController extends Controller {
 			return new DataResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
 		}
 		$users = $this->userManager->search('');
+		$users = array_slice($users, 0, 100);
 		$result = array_map(fn($u) => [
 			'uid' => $u->getUID(),
 			'displayName' => $u->getDisplayName(),

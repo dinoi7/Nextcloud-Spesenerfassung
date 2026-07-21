@@ -261,7 +261,11 @@ class ExpenseController extends Controller {
 			return new DataResponse(['error' => 'Category required'], Http::STATUS_BAD_REQUEST);
 		}
 
-		$expense = $this->expenseService->updateCategory($id, $category, $this->getUserId());
+		try {
+			$expense = $this->expenseService->updateCategory($id, $category, $this->getUserId());
+		} catch (\InvalidArgumentException $e) {
+			return new DataResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
+		}
 		if ($expense === null) {
 			return new DataResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
 		}
@@ -313,6 +317,7 @@ class ExpenseController extends Controller {
 		return new DataDisplayResponse($content, 200, [
 			'Content-Type' => $receipt->getMimeType(),
 			'X-Content-Type-Options' => 'nosniff',
+			'Content-Security-Policy' => "default-src 'none'; sandbox",
 		]);
 	}
 }

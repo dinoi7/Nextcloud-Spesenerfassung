@@ -68,6 +68,22 @@ class ExpenseService {
 
 	public function create(string $userId, array $data): Expense {
 		$this->validate($data);
+
+		$existing = $this->expenseMapper->findByUser($userId);
+		$title = $data['title'] ?? '';
+		$amount = number_format((float) ($data['amount'] ?? 0), 2, '.', '');
+		$expenseDate = $data['expenseDate'] ?? '';
+
+		foreach ($existing as $e) {
+			if ($e->getTitle() === $title
+				&& $e->getAmount() === $amount
+				&& $e->getExpenseDate() === $expenseDate
+				&& (time() - strtotime($e->getCreatedAt())) < 30
+			) {
+				throw new \InvalidArgumentException('A similar expense was already created within the last 30 seconds');
+			}
+		}
+
 		$now = (new DateTime())->format('Y-m-d H:i:s');
 
 		$expense = new Expense();
@@ -225,6 +241,11 @@ class ExpenseService {
 		$expense = $this->findById($id);
 		if ($expense === null) {
 			return null;
+		}
+
+		$allowed = $this->settingsService->getCategories();
+		if (!in_array($category, $allowed, true)) {
+			throw new \InvalidArgumentException('Invalid category');
 		}
 
 		$oldCategory = $expense->getCategory();

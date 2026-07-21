@@ -279,9 +279,8 @@ class BookingReceiptService {
 			$this->log($expense->getId(), $msg);
 			return ['success' => true, 'message' => $msg];
 		} catch (\Throwable $e) {
-			$msg = 'Fehler beim Speichern des Buchungsbelegs: ' . $e->getMessage();
-			$this->log($expense->getId(), $msg . "\n" . $e->getTraceAsString());
-			return ['success' => false, 'message' => $msg];
+			$this->log($expense->getId(), 'Fehler beim Speichern des Buchungsbelegs: ' . $e->getMessage());
+			return ['success' => false, 'message' => 'Fehler beim Speichern des Buchungsbelegs.'];
 		}
 	}
 
