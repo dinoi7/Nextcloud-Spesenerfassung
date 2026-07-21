@@ -85,6 +85,7 @@
             <tbody>
               <tr v-for="expense in sortedExpenses" :key="expense.id">
                 <td class="spes-eval-number">{{ expense.id }}</td>
+                <td><StatusBadge :status="expense.status" /></td>
                 <td class="spes-history-date">{{ formatDate(expense.expenseDate) }}</td>
                 <td>{{ expense.displayName || expense.userId }}</td>
                 <td>{{ expense.title }}</td>
@@ -271,8 +272,8 @@ function sortClass(key) {
   return sortDir.value === 'asc' ? 'sort-asc' : 'sort-desc'
 }
 
-function formatAmount(amount) {
-  return parseFloat(amount || 0).toFixed(2)
+function formatAmount(amount, precision = 2) {
+  return parseFloat(amount || 0).toFixed(precision)
 }
 
 function formatDate(dateStr) {

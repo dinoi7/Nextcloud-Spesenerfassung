@@ -57,8 +57,8 @@ const props = defineProps({
 const store = useExpenseStore()
 const { t } = useI18n()
 
-function formatAmount(amount) {
-  return parseFloat(amount || 0).toFixed(2)
+function formatAmount(amount, precision = 2) {
+  return parseFloat(amount || 0).toFixed(precision)
 }
 
 function formatDate(dateStr) {

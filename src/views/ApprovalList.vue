@@ -79,8 +79,8 @@ function canAddToBookkeeping(expense) {
     || (expense.status === 'submitted' && parseFloat(expense.amount) <= settingsStore.settings.threshold)
 }
 
-function formatAmount(amount) {
-  return parseFloat(amount || 0).toFixed(2)
+function formatAmount(amount, precision = 2) {
+  return parseFloat(amount || 0).toFixed(precision)
 }
 
 function formatDate(dateStr) {
