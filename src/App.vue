@@ -54,15 +54,18 @@
 <script setup>
 import { computed, onMounted } from 'vue'
 import { useExpenseStore } from './store/expenses'
+import { useSettingsStore } from './store/settings'
 import { useI18n } from './i18n'
 
 const { t } = useI18n()
 const expenseStore = useExpenseStore()
+const settingsStore = useSettingsStore()
 
 const isAdmin = computed(() => expenseStore.userIsAdmin)
 const isReviewer = computed(() => expenseStore.userIsPresident || expenseStore.userIsTreasurer)
 
-onMounted(() => {
+onMounted(async () => {
+  await settingsStore.loadRoles()
   if (expenseStore.userIsPresident || expenseStore.userIsTreasurer) {
     expenseStore.loadApprovalCount()
   }

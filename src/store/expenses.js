@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from '../api'
+import { useSettingsStore } from './settings'
 
 function getInitialData() {
   try {
@@ -20,12 +21,17 @@ export const useExpenseStore = defineStore('expenses', () => {
 
   const currentUser = ref(initial.currentUser || '')
   const userIsAdmin = ref(initial.isAdmin || false)
-  const userIsPresident = ref(initial.isPresident ?? (currentUser.value === (initial.settings?.presidentUid || '') && currentUser.value !== ''))
-  const userIsTreasurer = ref(initial.isTreasurer ?? (currentUser.value === (initial.settings?.treasurerUid || '') && currentUser.value !== ''))
 
-  function updateRoles(settings) {
-    userIsPresident.value = currentUser.value === settings.presidentUid
-    userIsTreasurer.value = currentUser.value === settings.treasurerUid
+  const settingsStore = useSettingsStore()
+  const userIsPresident = computed(() => settingsStore.roles.isPresident)
+  const userIsTreasurer = computed(() => settingsStore.roles.isTreasurer)
+
+  function updateRoles() {
+    const s = settingsStore.settings
+    settingsStore.roles = {
+      isPresident: currentUser.value === s.presidentUid && currentUser.value !== '',
+      isTreasurer: currentUser.value === s.treasurerUid && currentUser.value !== '',
+    }
   }
 
   async function loadExpenses() {

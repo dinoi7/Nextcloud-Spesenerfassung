@@ -143,7 +143,7 @@ async function save() {
   syncForm()
   try {
     await settingsStore.saveSettings(form.value)
-    expenseStore.updateRoles(settingsStore.settings)
+    expenseStore.updateRoles()
     buildRows()
     showSuccess(t('settingsSaved'))
   } catch (e) {

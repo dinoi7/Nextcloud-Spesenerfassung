@@ -151,6 +151,7 @@ export const api = {
 		URL.revokeObjectURL(url)
 	},
   getSettings: () => request('GET', '/settings'),
+  getRoles: () => request('GET', '/user/roles'),
   updateSettings: (data) => request('PUT', '/settings', data),
   getUserSettings: () => request('GET', '/settings/user'),
   updateUserSettings: (data) => request('PUT', '/settings/user', data),

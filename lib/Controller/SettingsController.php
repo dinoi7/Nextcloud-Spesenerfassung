@@ -144,6 +144,18 @@ class SettingsController extends Controller {
 
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
+	public function getRoles(): DataResponse {
+		$uid = $this->getUserId();
+		$presidentUid = $this->settingsService->getPresidentUid();
+		$treasurerUid = $this->settingsService->getTreasurerUid();
+		return new DataResponse([
+			'isPresident' => $uid !== '' && $uid === $presidentUid,
+			'isTreasurer' => $uid !== '' && $uid === $treasurerUid,
+		]);
+	}
+
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function getUserSettings(): DataResponse {
 		$userId = $this->getUserId();
 		if ($userId === '') {

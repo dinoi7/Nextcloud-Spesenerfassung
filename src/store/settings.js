@@ -28,6 +28,15 @@ export const useSettingsStore = defineStore('settings', () => {
   const loading = ref(false)
   const error = ref(null)
 
+  const roles = ref({ isPresident: false, isTreasurer: false })
+
+  async function loadRoles() {
+    try {
+      const result = await api.getRoles()
+      roles.value = result
+    } catch {}
+  }
+
   async function loadSettings() {
     loading.value = true
     error.value = null
@@ -49,5 +58,5 @@ export const useSettingsStore = defineStore('settings', () => {
     return result
   }
 
-  return { settings, loading, error, loadSettings, saveSettings }
+  return { settings, roles, loading, error, loadSettings, loadRoles, saveSettings }
 })

@@ -45,12 +45,8 @@ class PageController extends Controller {
 			'initialData' => json_encode([
 				'currentUser' => $uid,
 				'isAdmin' => $isAdmin,
-				'isPresident' => $uid !== '' && $uid === $allSettings['presidentUid'],
-				'isTreasurer' => $uid !== '' && $uid === $allSettings['treasurerUid'],
 				'locale' => $locale,
 				'settings' => [
-					'presidentUid' => $allSettings['presidentUid'],
-					'treasurerUid' => $allSettings['treasurerUid'],
 					'categories' => $allSettings['categories'],
 					'threshold' => $allSettings['threshold'],
 					'defaultPayoutMethod' => $allSettings['defaultPayoutMethod'],
