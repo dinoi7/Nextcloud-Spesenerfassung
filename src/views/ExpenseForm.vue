@@ -120,8 +120,10 @@ onMounted(async () => {
 
   try {
     const data = await api.getUserSettings()
-    userMissingBankData.value = !(data.iban && data.plz)
-  } catch {}
+    userMissingBankData.value = !(data && data.iban && data.plz)
+  } catch {
+    userMissingBankData.value = true
+  }
 
   if (isEdit.value) {
     const expense = await store.getExpense(expenseId.value)
