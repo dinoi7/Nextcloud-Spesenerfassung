@@ -8,12 +8,14 @@ use OCA\Spesenerfassung\Db\Expense;
 use OCP\Mail\IMailer;
 use OCP\IURLGenerator;
 use OCP\IUserManager;
+use OCP\IConfig;
 use Psr\Log\LoggerInterface;
 
 class MailService {
 	private IMailer $mailer;
 	private IURLGenerator $urlGenerator;
 	private IUserManager $userManager;
+	private IConfig $config;
 	private LoggerInterface $logger;
 	private SettingsService $settingsService;
 
@@ -21,12 +23,14 @@ class MailService {
 		IMailer $mailer,
 		IURLGenerator $urlGenerator,
 		IUserManager $userManager,
+		IConfig $config,
 		LoggerInterface $logger,
 		SettingsService $settingsService,
 	) {
 		$this->mailer = $mailer;
 		$this->urlGenerator = $urlGenerator;
 		$this->userManager = $userManager;
+		$this->config = $config;
 		$this->logger = $logger;
 		$this->settingsService = $settingsService;
 	}
@@ -51,9 +55,15 @@ class MailService {
 			return;
 		}
 
+		$submitterUser = $this->userManager->get($expense->getUserId());
+		$submitterName = $submitterUser ? $submitterUser->getDisplayName() : $expense->getUserId();
+		$recipientLocale = $this->config->getUserValue($recipientUid, 'core', 'lang', 'en');
+
 		$subject = $this->getSubject($expense, $action);
-		$bodyText = $this->getBodyText($expense, $action);
-		$bodyHtml = $this->getBodyHtml($expense, $action);
+		$formattedDate = $this->formatDate($expense->getExpenseDate(), $recipientLocale);
+		$url = $this->getLink($action, $expense->getId());
+		$bodyText = $this->getBodyText($expense, $action, $submitterName, $formattedDate, $url);
+		$bodyHtml = $this->getBodyHtml($expense, $action, $submitterName, $formattedDate, $url);
 
 		try {
 			$message = $this->mailer->createMessage();
@@ -79,12 +89,16 @@ class MailService {
 			return;
 		}
 
+		$submitterLocale = $this->config->getUserValue($submitterUid, 'core', 'lang', 'en');
+
 		try {
 			$message = $this->mailer->createMessage();
 			$message->setTo([$submitterEmail => $submitterUid]);
 			$message->setFrom([$this->settingsService->getSenderEmail() => $this->settingsService->getSenderName()]);
 
 			$amount = number_format((float) $expense->getAmount(), 2, '.', '\'');
+			$formattedDate = $this->formatDate($expense->getExpenseDate(), $submitterLocale);
+			$url = $this->urlGenerator->linkToRouteAbsolute('spesenerfassung.page.index') . '#/';
 			$subject = 'Spesen eingereicht: ' . $expense->getTitle();
 			$message->setSubject($subject);
 
@@ -92,15 +106,17 @@ class MailService {
 				. "Titel: {$expense->getTitle()}\n"
 				. "Betrag: CHF {$amount}\n"
 				. "Kategorie: {$expense->getCategory()}\n"
-				. "Datum: {$expense->getExpenseDate()}\n\n"
+				. "Datum: {$formattedDate}\n\n"
 				. "Du erhältst eine Benachrichtigung, sobald der Status aktualisiert wird.\n\n"
+				. "{$url}\n"
 				. "\n---\n\n"
 				. "Your expense has been successfully submitted.\n\n"
 				. "Title: {$expense->getTitle()}\n"
 				. "Amount: CHF {$amount}\n"
 				. "Category: {$expense->getCategory()}\n"
-				. "Date: {$expense->getExpenseDate()}\n\n"
-				. "You will be notified when the status is updated.\n";
+				. "Date: {$formattedDate}\n\n"
+				. "You will be notified when the status is updated.\n\n"
+				. "{$url}\n";
 
 			$message->setPlainBody($bodyText);
 			$failed = $this->mailer->send($message);
@@ -110,6 +126,29 @@ class MailService {
 		} catch (\Throwable $e) {
 			$this->logger->error("Spesennerfassung: Error sending submission confirmation to $submitterEmail (uid: $submitterUid): " . $e->getMessage(), ['app' => 'spesenerfassung', 'exception' => $e]);
 		}
+	}
+
+	private function formatDate(?string $dateStr, string $locale): string {
+		if ($dateStr === null || $dateStr === '' || $dateStr === '0000-00-00') {
+			return '';
+		}
+		$dt = \DateTime::createFromFormat('Y-m-d', $dateStr);
+		if ($dt === false) {
+			return $dateStr;
+		}
+		$fmt = new \IntlDateFormatter($locale, \IntlDateFormatter::SHORT, \IntlDateFormatter::NONE);
+		return $fmt->format($dt);
+	}
+
+	private function getLink(string $action, int $expenseId = 0): string {
+		$baseUrl = $this->urlGenerator->linkToRouteAbsolute('spesenerfassung.page.index');
+		$hash = match ($action) {
+			Approval::ACTION_SUBMITTED => '#/approvals',
+			Approval::ACTION_APPROVED => '#/bookkeeping',
+			Approval::ACTION_REJECTED => '#/expenses/' . $expenseId,
+			default => '#/',
+		};
+		return $baseUrl . $hash;
 	}
 
 	private function getSubject(Expense $expense, string $action): string {
@@ -124,17 +163,16 @@ class MailService {
 		};
 	}
 
-	private function getBodyText(Expense $expense, string $action): string {
+	private function getBodyText(Expense $expense, string $action, string $submitterName, string $formattedDate, string $url): string {
 		$amount = number_format((float) $expense->getAmount(), 2, '.', '\'');
-		$url = $this->urlGenerator->linkToRouteAbsolute('spesenerfassung.page.index');
 
 		$de = match ($action) {
 			Approval::ACTION_SUBMITTED => "Eine neue Spesen zur Genehmigung wurde eingereicht:\n\n"
 				. "Titel: {$expense->getTitle()}\n"
 				. "Betrag: CHF {$amount}\n"
 				. "Kategorie: {$expense->getCategory()}\n"
-				. "Datum: {$expense->getExpenseDate()}\n"
-				. "Von: {$expense->getUserId()}\n\n"
+				. "Datum: {$formattedDate}\n"
+				. "Von: {$submitterName}\n\n"
 				. "Link: {$url}",
 			Approval::ACTION_APPROVED => "Eine Spesen wurde genehmigt und ist zur Auszahlung bereit:\n\n"
 				. "Titel: {$expense->getTitle()}\n"
@@ -158,8 +196,8 @@ class MailService {
 				. "Title: {$expense->getTitle()}\n"
 				. "Amount: CHF {$amount}\n"
 				. "Category: {$expense->getCategory()}\n"
-				. "Date: {$expense->getExpenseDate()}\n"
-				. "By: {$expense->getUserId()}\n\n"
+				. "Date: {$formattedDate}\n"
+				. "By: {$submitterName}\n\n"
 				. "Link: {$url}",
 			Approval::ACTION_APPROVED => "\n\n---\n\nAn expense has been approved and is ready for payment:\n\n"
 				. "Title: {$expense->getTitle()}\n"
@@ -181,14 +219,13 @@ class MailService {
 		return $de . $en;
 	}
 
-	private function getBodyHtml(Expense $expense, string $action): string {
+	private function getBodyHtml(Expense $expense, string $action, string $submitterName, string $formattedDate, string $url): string {
 		$amount = number_format((float) $expense->getAmount(), 2, '.', '\'');
-		$url = $this->urlGenerator->linkToRouteAbsolute('spesenerfassung.page.index');
 
 		$title = htmlspecialchars($expense->getTitle() ?? '', ENT_QUOTES, 'UTF-8');
 		$category = htmlspecialchars($expense->getCategory() ?? '', ENT_QUOTES, 'UTF-8');
-		$date = htmlspecialchars($expense->getExpenseDate() ?? '', ENT_QUOTES, 'UTF-8');
-		$userId = htmlspecialchars($expense->getUserId() ?? '', ENT_QUOTES, 'UTF-8');
+		$name = htmlspecialchars($submitterName, ENT_QUOTES, 'UTF-8');
+		$date = htmlspecialchars($formattedDate, ENT_QUOTES, 'UTF-8');
 
 		$actionDe = match ($action) {
 			Approval::ACTION_SUBMITTED => 'Neue Spesen zur Genehmigung',
@@ -208,7 +245,7 @@ class MailService {
 <tr><td><strong>Betrag / Amount:</strong></td><td>CHF {$amount}</td></tr>
 <tr><td><strong>Kategorie / Category:</strong></td><td>{$category}</td></tr>
 <tr><td><strong>Datum / Date:</strong></td><td>{$date}</td></tr>
-<tr><td><strong>Von / From:</strong></td><td>{$userId}</td></tr>
+<tr><td><strong>Von / From:</strong></td><td>{$name}</td></tr>
 </table>
 <p><a href="{$url}">Applikation öffnen / Open application</a></p>
 </body>
