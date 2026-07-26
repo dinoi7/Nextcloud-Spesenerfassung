@@ -4,7 +4,7 @@
       <h1>{{ isEdit ? t('editExpense') : t('newExpense') }}</h1>
     </div>
 
-    <form class="spes-form" @submit.prevent="handleSubmit">
+    <form class="spes-form" @submit.prevent="handleSubmit" @dragover.prevent @drop="onFormDrop">
       <div class="spes-form-group">
         <label class="spes-label" for="title">{{ t('title') }} *</label>
         <input id="title" v-model="form.title" class="spes-input" required maxlength="255" />
@@ -20,7 +20,8 @@
 
       <div class="spes-form-group">
         <label class="spes-label" for="description">{{ t('descriptionOptional') }}</label>
-        <textarea id="description" v-model="form.description" class="spes-input spes-textarea" rows="3"></textarea>
+        <textarea id="description" v-model="form.description" class="spes-input spes-textarea" rows="3" maxlength="160"></textarea>
+        <span class="spes-field-hint">{{ form.description.length || 0 }}/160</span>
       </div>
 
       <div class="spes-form-group">
@@ -38,11 +39,11 @@
       <div class="spes-form-row">
         <div class="spes-form-group">
           <label class="spes-label" for="amount">{{ t('amount') }} *</label>
-          <input id="amount" v-model.number="form.amount" class="spes-input" type="number" step="0.01" min="0.01" required />
+          <input id="amount" :value="amountDisplay" @input="onAmountInput" @focus="onAmountFocus" @blur="onAmountBlur" class="spes-input" type="text" inputmode="decimal" autocomplete="off" required />
         </div>
         <div class="spes-form-group">
           <label class="spes-label" for="foreignAmount">{{ t('foreignAmount') }}</label>
-          <input id="foreignAmount" v-model.number="form.foreignAmount" class="spes-input" type="number" step="0.01" min="0" />
+          <input id="foreignAmount" :value="foreignAmountDisplay" @input="onForeignAmountInput" @focus="onForeignAmountFocus" @blur="onForeignAmountBlur" class="spes-input" type="text" inputmode="decimal" autocomplete="off" />
         </div>
       </div>
 
@@ -58,7 +59,13 @@
       </div>
 
       <div class="spes-form-group">
+        <label class="spes-label">{{ t('receipts') }} *</label>
         <ReceiptUpload :expense-id="currentExpenseId" :receipts="existingReceipts" :uploading="uploading" @file="handleFile" @delete="onDeleteReceipt" />
+        <span v-if="receiptError" class="spes-field-error">{{ t('receiptRequired') }}</span>
+      </div>
+
+      <div class="spes-form-footnote">
+        <span>{{ t('mandatoryFields') }}</span>
       </div>
 
       <div class="spes-form-actions">
@@ -71,13 +78,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useExpenseStore } from '../store/expenses'
 import { useSettingsStore } from '../store/settings'
 import { useI18n } from '../i18n'
 import { api } from '../api'
 import { showError } from '@nextcloud/dialogs'
+import { formatAmount } from '../utils'
 import ReceiptUpload from '../components/ReceiptUpload.vue'
 
 const route = useRoute()
@@ -96,7 +104,15 @@ const uploading = ref(false)
 
 const submitAction = ref('draft')
 
+const receiptError = ref(false)
+
+const amountDisplay = ref('')
+const foreignAmountDisplay = ref('')
+
 const userMissingBankData = ref(false)
+
+const formTouched = ref(false)
+const formReady = ref(false)
 
 const defaultDate = new Date().toISOString().slice(0, 10)
 
@@ -139,8 +155,30 @@ onMounted(async () => {
         foreignAmount: expense.foreignAmount !== null ? expense.foreignAmount : null,
       }
       existingReceipts.value = expense.receipts || []
+      amountDisplay.value = formatCurrency(expense.amount)
+      foreignAmountDisplay.value = formatCurrency(expense.foreignAmount)
     }
   }
+  formReady.value = true
+})
+
+watch(form, () => {
+  if (formReady.value) formTouched.value = true
+}, { deep: true })
+
+function onBeforeUnload(e) {
+  if (formTouched.value) {
+    e.preventDefault()
+    e.returnValue = ''
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('beforeunload', onBeforeUnload)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('beforeunload', onBeforeUnload)
 })
 
 async function ensureSaved() {
@@ -174,9 +212,61 @@ async function onDeleteReceipt(receiptId) {
   }
 }
 
+function formatCurrency(val) {
+  if (val === null || val === '' || val === undefined) return ''
+  return formatAmount(val)
+}
+
+function parseCurrency(raw) {
+  const cleaned = String(raw).replace(/'/g, '').trim()
+  const num = parseFloat(cleaned)
+  return isNaN(num) ? null : num
+}
+
+function onAmountInput(e) {
+  amountDisplay.value = e.target.value
+  form.value.amount = parseCurrency(e.target.value)
+}
+
+function onAmountFocus() {
+  if (form.value.amount != null) {
+    amountDisplay.value = String(form.value.amount)
+  }
+}
+
+function onAmountBlur() {
+  amountDisplay.value = formatCurrency(form.value.amount)
+}
+
+function onForeignAmountInput(e) {
+  foreignAmountDisplay.value = e.target.value
+  form.value.foreignAmount = parseCurrency(e.target.value)
+}
+
+function onForeignAmountFocus() {
+  if (form.value.foreignAmount != null) {
+    foreignAmountDisplay.value = String(form.value.foreignAmount)
+  }
+}
+
+function onForeignAmountBlur() {
+  foreignAmountDisplay.value = formatCurrency(form.value.foreignAmount)
+}
+
+function onFormDrop(e) {
+  const file = e.dataTransfer?.files?.[0]
+  if (file) handleFile(file)
+}
+
 async function handleSubmit(e) {
   const action = submitAction.value
   const status = action === 'submit' ? 'submitted' : 'draft'
+
+  if (status === 'submitted' && existingReceipts.value.length === 0) {
+    receiptError.value = true
+    return
+  }
+  receiptError.value = false
 
   if (status === 'submitted' && !confirm(t('submitConfirmation'))) {
     return

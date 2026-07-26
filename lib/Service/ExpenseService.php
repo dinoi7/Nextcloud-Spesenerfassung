@@ -26,6 +26,9 @@ class ExpenseService {
 		if (isset($data['title']) && mb_strlen(trim($data['title'])) > 255) {
 			throw new \InvalidArgumentException('Title exceeds maximum length of 255 characters');
 		}
+		if (isset($data['description']) && mb_strlen($data['description']) > 160) {
+			throw new \InvalidArgumentException('Description exceeds maximum length of 160 characters');
+		}
 		if (isset($data['amount']) && (float) $data['amount'] <= 0) {
 			throw new \InvalidArgumentException('Amount must be greater than zero');
 		}
@@ -297,6 +300,10 @@ class ExpenseService {
 		$expense = $this->expenseMapper->update($expense);
 		$this->logAction($expense->getId(), $userId, $action, $comment);
 		$this->sendNotificationMail($expense, $action);
+
+		if ($targetStatus === Expense::STATUS_SUBMITTED) {
+			$this->mailService->notifySubmitterSubmitted($expense);
+		}
 
 		return $expense;
 	}

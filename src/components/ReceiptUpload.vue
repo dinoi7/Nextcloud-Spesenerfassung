@@ -61,6 +61,7 @@ async function handleFileSelect(e) {
 }
 
 async function handleDrop(e) {
+  e.stopPropagation()
   const file = e.dataTransfer?.files?.[0]
   if (file) {
     localUploading.value = true

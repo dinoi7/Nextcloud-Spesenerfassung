@@ -27,6 +27,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useI18n } from '../i18n'
+import { formatDateTime } from '../utils'
 
 const props = defineProps({
   history: { type: Array, default: () => [] },
@@ -51,8 +52,6 @@ function actionLabel(action) {
 }
 
 function formatDate(dateStr) {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  return d.toLocaleString('de-CH')
+  return formatDateTime(dateStr)
 }
 </script>

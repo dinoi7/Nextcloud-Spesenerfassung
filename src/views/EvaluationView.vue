@@ -141,6 +141,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from '../i18n'
 import { api } from '../api'
+import { formatAmount, formatDate } from '../utils'
 import StatusBadge from '../components/StatusBadge.vue'
 
 const { t } = useI18n()
@@ -255,7 +256,7 @@ const sortedExpenses = computed(() => {
 
 const totalSum = computed(() => {
   const sum = filteredExpenses.value.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0)
-  return sum.toFixed(2)
+  return formatAmount(sum)
 })
 
 function toggleSort(key) {
@@ -270,16 +271,6 @@ function toggleSort(key) {
 function sortClass(key) {
   if (sortKey.value !== key) return ''
   return sortDir.value === 'asc' ? 'sort-asc' : 'sort-desc'
-}
-
-function formatAmount(amount, precision = 2) {
-  return parseFloat(amount || 0).toFixed(precision)
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  return d.toLocaleDateString('de-CH')
 }
 
 function isImage(mime) {

@@ -187,6 +187,13 @@ class ExpenseController extends Controller {
 			}
 		}
 
+		if (($data['status'] ?? '') === Expense::STATUS_SUBMITTED) {
+			$receipts = $this->receiptService->findByExpenseId($id);
+			if (empty($receipts)) {
+				return new DataResponse(['error' => 'Mindestens ein Beleg ist erforderlich.'], Http::STATUS_BAD_REQUEST);
+			}
+		}
+
 		try {
 			$expense = $this->expenseService->update($id, $userId, $data);
 		} catch (\InvalidArgumentException $e) {

@@ -23,7 +23,7 @@ const locale = ref(getLocale())
 
 const messages = {
   de: {
-    dashboard: 'Erfassung',
+    dashboard: 'Übersicht',
     approvals: 'Genehmigungen',
     settings: 'Einstellungen',
     newExpense: 'Neue Spesen',
@@ -33,7 +33,7 @@ const messages = {
     descriptionOptional: 'Beschreibung (optional)',
     amount: 'Betrag (CHF)',
     category: 'Kategorie',
-    expenseDate: 'Datum',
+    expenseDate: 'Belegdatum',
     status: 'Status',
     saveDraft: 'Als Entwurf speichern',
     submit: 'Einreichen',
@@ -146,9 +146,12 @@ const messages = {
 		plzInvalid: 'PLZ muss 4 Ziffern sein.',
 		senderEmail: 'Absender-E-Mail',
 		senderName: 'Absender-Name',
+		mandatoryFields: '* = Mussfeld',
+		receiptRequired: 'Mindestens ein Beleg ist erforderlich.',
+		descriptionMaxLength: 'Beschreibung auf 160 Zeichen beschränkt.',
 	},
   en: {
-    dashboard: 'Record',
+    dashboard: 'Overview',
     approvals: 'Approvals',
     settings: 'Settings',
     newExpense: 'New Expense',
@@ -158,7 +161,7 @@ const messages = {
     descriptionOptional: 'Description (optional)',
     amount: 'Amount (CHF)',
     category: 'Category',
-    expenseDate: 'Date',
+    expenseDate: 'Receipt Date',
     status: 'Status',
     saveDraft: 'Save as Draft',
     submit: 'Submit',
@@ -269,6 +272,9 @@ const messages = {
 		plzInvalid: 'Postal code must be 4 digits.',
 		senderEmail: 'Sender Email',
 		senderName: 'Sender Name',
+		mandatoryFields: '* = Mandatory field',
+		receiptRequired: 'At least one receipt is required.',
+		descriptionMaxLength: 'Description limited to 160 characters.',
 	},
 }
 

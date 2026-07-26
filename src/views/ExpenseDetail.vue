@@ -138,6 +138,7 @@ import { useSettingsStore } from '../store/settings'
 import { useI18n } from '../i18n'
 import { api } from '../api'
 import { showError, showSuccess } from '@nextcloud/dialogs'
+import { formatAmount, formatDate } from '../utils'
 import StatusBadge from '../components/StatusBadge.vue'
 import HistoryTimeline from '../components/HistoryTimeline.vue'
 import SwissQrCode from '../components/SwissQrCode.vue'
@@ -252,16 +253,6 @@ onMounted(async () => {
     loading.value = false
   }
 })
-
-function formatAmount(amount, precision = 2) {
-  return parseFloat(amount || 0).toFixed(precision)
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  return d.toLocaleDateString('de-CH')
-}
 
 function isImage(mimeType) {
   return mimeType && mimeType.startsWith('image/')

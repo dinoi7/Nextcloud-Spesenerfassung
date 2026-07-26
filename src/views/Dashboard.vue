@@ -96,6 +96,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useExpenseStore } from '../store/expenses'
 import { useSettingsStore } from '../store/settings'
 import { useI18n } from '../i18n'
+import { formatAmount } from '../utils'
 import ExpenseCard from '../components/ExpenseCard.vue'
 
 const store = useExpenseStore()
@@ -147,10 +148,10 @@ const filteredExpenses = computed(() => {
 
 const totalAmount = computed(() => {
   const sum = filteredExpenses.value.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0)
-  return sum.toFixed(2)
+  return formatAmount(sum)
 })
 
-const sumAmount = (list) => list.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0).toFixed(2)
+const sumAmount = (list) => formatAmount(list.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0))
 const submittedAmount = computed(() => sumAmount(submitted.value))
 const paidAmount = computed(() => sumAmount(paid.value))
 const doneAmount = computed(() => sumAmount(done.value))

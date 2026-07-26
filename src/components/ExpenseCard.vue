@@ -47,6 +47,7 @@ import { useExpenseStore } from '../store/expenses'
 import { useI18n } from '../i18n'
 import { api } from '../api'
 import { showError } from '@nextcloud/dialogs'
+import { formatAmount, formatDate } from '../utils'
 import StatusBadge from './StatusBadge.vue'
 
 const props = defineProps({
@@ -56,16 +57,6 @@ const props = defineProps({
 
 const store = useExpenseStore()
 const { t } = useI18n()
-
-function formatAmount(amount, precision = 2) {
-  return parseFloat(amount || 0).toFixed(precision)
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  return d.toLocaleDateString('de-CH')
-}
 
 async function handleSubmit() {
   if (confirm(t('submitConfirmation'))) {
