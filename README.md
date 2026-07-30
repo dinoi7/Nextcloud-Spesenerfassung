@@ -134,6 +134,7 @@ spesenerfassung/
 │   ├── components/          Reusable UI components
 │   ├── store/               Pinia stores
 │   ├── i18n/                German/English translations
+│   ├── utils.js             Formatting utilities (CH currency, date, datetime)
 │   ├── router.js            Hash-based routing
 │   └── api.js               fetch()-based API client
 ├── templates/               PHP page templates

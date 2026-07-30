@@ -25,7 +25,8 @@
 - Vue 3 Composition API (`<script setup>`).
 - Pinia Stores (Composition API Style) unter `src/store/`.
 - Vue Router mit Hash-History unter `src/router.js`.
-- `fetch()`-basierter API-Client in `src/api.js` — CSRF-Token aus `<meta name="csrf-token">`.
+- `fetch()`-basierter API-Client in `src/api.js` — CSRF-Token aus `document.head?.dataset?.requesttoken`.
+- Formatierungs-Utilities in `src/utils.js` (`formatAmount`, `formatDate`, `formatDateTime`).
 - Keine externen UI-Libraries (kein `@nextcloud/vue`), reines Custom-CSS.
 - CSS-Variablen von Nextcloud (`--color-main-background`, `--color-primary`, etc.) respektieren.
 

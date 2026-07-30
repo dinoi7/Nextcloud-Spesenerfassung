@@ -71,6 +71,7 @@ spesenerfassung/
 │   ├── App.vue                         # Root Component (Header + Router-View)
 │   ├── api.js                          # fetch()-basierter API-Client
 │   ├── router.js                       # Hash-Router
+│   ├── utils.js                        # Formatierungs-Utils: formatAmount, formatDate, formatDateTime
 │   ├── store/
 │   │   ├── expenses.js                 # Pinia: Spesen-State + Rollen-Erkennung
 │   │   └── settings.js                 # Pinia: Admin-Einstellungen

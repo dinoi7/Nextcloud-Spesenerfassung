@@ -47,6 +47,16 @@
 | 2026-07-18 | PDF-Spesenbeleg via TCPDF + FPDI | `BookingReceiptService` generiert PDF in kassier-Ordner: Logo im Header, "Spesenbeleg"-Titel, Verlauf-Tabelle, Anhang-Embedding (FPDI `getTemplateSize`-Fix), keine TCPDF-Header/Footer-Linien |
 | 2026-07-18 | Spesenbeleg in kassier-User-Ordner | Ablage via `IRootFolder->getUserFolder('kassier')` statt IAppData — nur kassier hat Zugriff |
 | 2026-07-18 | Backslash-Fix in Buchungsordner-Pfad | `str_replace('\\', '/', $folderPath)` in BookingReceiptService + SettingsController |
+| 2026-07-26 | CH-Währungsformat `1'234.56` | CH-Konvention: Apostroph als Tausendertrennzeichen in CHF-Beträgen. `formatAmount()` in `src/utils.js`, importiert in allen Komponenten. |
+| 2026-07-26 | Datumsformat `DD.MM.YYYY` ohne Leerzeichen | Ersetzt `toLocaleDateString('de-CH')` (lieferte teils `25. 07. 2026`). `formatDate()` in `src/utils.js`. |
+| 2026-07-26 | `src/utils.js` zentrale Formatierung | `formatAmount`, `formatDate`, `formatDateTime`. Vermeidet Duplikation (vorher 8 Komponenten mit eigener `formatDate`/`formatAmount`). |
+| 2026-07-26 | Navigation "Erfassung" → "Übersicht" | Klarere Bezeichnung der Dashboard-Seite. |
+| 2026-07-26 | Feld "Datum" → "Belegdatum" | Genauere Feldbezeichnung im Formular. |
+| 2026-07-26 | Beschreibung auf 160 Zeichen limitiert | `maxlength="160"` + Live-Counter im Frontend, `mb_strlen > 160` in `ExpenseService::validate()`. |
+| 2026-07-26 | Beleg als Pflichtfeld (Frontend + Backend) | Beim Einreichen: Prüfung auf `existingReceipts.length > 0`. Backend-Check in `ExpenseController::update()`. Fussnote `* = Mussfeld` am Formular. |
+| 2026-07-26 | Live-Betrag-Formatierung beim Erfassen | `<input type="text" inputmode="decimal">` mit `@input`/`@blur`/`@focus`. CH-Format bei Blur, Rohwert bei Focus. |
+| 2026-07-26 | Globaler Drop-Schutz auf Erfassungsseite | `@dragover.prevent @drop` auf `<form>` verhindert Browser-Navigation bei Drop ausserhalb der Upload-Box. `beforeunload`-Listener bei Formular-Änderungen. |
+| 2026-07-26 | E-Mail-Fix: `notifySubmitterSubmitted` in `transition()` | `ExpenseService::submit()` (Dashboard "Einreichen") rief nur `sendNotificationMail()` → keine Bestätigungs-Mail an Einreicher. Fix in `transition()` ergänzt. |
 
 ## Nächste Schritte
 
