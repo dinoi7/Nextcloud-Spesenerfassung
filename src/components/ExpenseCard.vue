@@ -60,7 +60,12 @@ const { t } = useI18n()
 
 async function handleSubmit() {
   if (confirm(t('submitConfirmation'))) {
-    await store.submitExpense(props.expense.id)
+    try {
+      await store.submitExpense(props.expense.id)
+      await store.reloadCounts()
+    } catch (e) {
+      showError(e.message)
+    }
   }
 }
 
@@ -73,7 +78,8 @@ async function handleDelete() {
 async function handleDone() {
   try {
     await api.done(props.expense.id)
-    window.location.reload()
+    await store.loadExpenses()
+    await store.reloadCounts()
   } catch (e) {
     showError(e.message)
   }

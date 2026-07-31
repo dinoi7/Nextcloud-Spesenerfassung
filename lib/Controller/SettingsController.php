@@ -78,8 +78,12 @@ class SettingsController extends Controller {
 			if (str_contains($folder, '..')) {
 				return new DataResponse(['error' => 'Der Ordnerpfad enthält ungültige Zeichen.'], Http::STATUS_BAD_REQUEST);
 			}
+			$treasurerUid = $data['treasurerUid'] ?? $this->settingsService->getTreasurerUid();
+			if ($treasurerUid === '') {
+				return new DataResponse(['error' => 'Kassier (UID) ist nicht konfiguriert.'], Http::STATUS_BAD_REQUEST);
+			}
 			try {
-				$userFolder = $this->rootFolder->getUserFolder($adminUid);
+				$userFolder = $this->rootFolder->getUserFolder($treasurerUid);
 				$parts = explode('/', trim($folder, '/'));
 				$current = $userFolder;
 				foreach ($parts as $part) {
@@ -87,7 +91,7 @@ class SettingsController extends Controller {
 						continue;
 					}
 					if (!$current->nodeExists($part)) {
-						return new DataResponse(['error' => 'Der Ordner "' . $folder . '" existiert nicht.'], Http::STATUS_BAD_REQUEST);
+						return new DataResponse(['error' => 'Der Ordner "' . $folder . '" existiert nicht im Ordner des Kassiers.'], Http::STATUS_BAD_REQUEST);
 					}
 					$current = $current->get($part);
 				}

@@ -54,6 +54,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useExpenseStore } from '../store/expenses'
 import { useI18n } from '../i18n'
 import { api } from '../api'
 import { showError, showSuccess } from '@nextcloud/dialogs'
@@ -62,6 +63,7 @@ import StatusBadge from '../components/StatusBadge.vue'
 import SwissQrCode from '../components/SwissQrCode.vue'
 
 const { t } = useI18n()
+const store = useExpenseStore()
 
 const expenses = ref([])
 const loading = ref(true)
@@ -91,6 +93,7 @@ async function payExpense(id) {
   try {
     const exp = await api.pay(id)
     await loadPaystack()
+    await store.reloadCounts()
     if (exp.bookingReceipt?.message) showSuccess(exp.bookingReceipt.message)
   } catch (e) { showError(e.message) }
 }
@@ -100,6 +103,7 @@ async function handlePayAll() {
   try {
     const result = await api.payAll()
     await loadPaystack()
+    await store.reloadCounts()
     if (result.bookingReceipt?.message) showSuccess(result.bookingReceipt.message)
   } catch (e) { showError(e.message) }
 }
@@ -110,6 +114,7 @@ async function rejectExpense(id) {
   try {
     await api.reject(id, reason)
     await loadPaystack()
+    await store.reloadCounts()
   } catch (e) { showError(e.message) }
 }
 

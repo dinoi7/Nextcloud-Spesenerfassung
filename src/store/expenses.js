@@ -124,6 +124,16 @@ export const useExpenseStore = defineStore('expenses', () => {
     }
   }
 
+  async function reloadCounts() {
+    if (userIsPresident.value || userIsTreasurer.value) {
+      await loadApprovalCount()
+    }
+    if (userIsTreasurer.value) {
+      await loadBookkeepingCount()
+      await loadPaystackCount()
+    }
+  }
+
   return {
     expenses, loading, error, currentUser,
     userIsPresident, userIsTreasurer, userIsAdmin,
@@ -131,6 +141,6 @@ export const useExpenseStore = defineStore('expenses', () => {
     loadExpenses, createExpense, updateExpense, deleteExpense,
     submitExpense, getExpense,
     filteredExpenses, draftExpenses, submittedExpenses, doneExpenses,
-    actionCount, approvalCount, bookkeepingCount, paystackCount, loadApprovalCount, loadBookkeepingCount, loadPaystackCount,
+    actionCount, approvalCount, bookkeepingCount, paystackCount, loadApprovalCount, loadBookkeepingCount, loadPaystackCount, reloadCounts,
   }
 })

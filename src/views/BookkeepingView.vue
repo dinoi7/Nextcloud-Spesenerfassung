@@ -48,6 +48,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useExpenseStore } from '../store/expenses'
 import { useI18n } from '../i18n'
 import { api } from '../api'
 import { showError, showSuccess } from '@nextcloud/dialogs'
@@ -55,6 +56,7 @@ import { formatAmount, formatDate } from '../utils'
 import StatusBadge from '../components/StatusBadge.vue'
 
 const { t } = useI18n()
+const store = useExpenseStore()
 
 const expenses = ref([])
 const loading = ref(true)
@@ -84,6 +86,7 @@ async function toPaystack(id) {
   try {
     await api.addToPaystack(id)
     await loadBookkeeping()
+    await store.reloadCounts()
   } catch (e) { showError(e.message) }
 }
 
@@ -91,6 +94,7 @@ async function payExpense(id) {
   try {
     const exp = await api.pay(id)
     await loadBookkeeping()
+    await store.reloadCounts()
     if (exp.bookingReceipt?.message) showSuccess(exp.bookingReceipt.message)
   } catch (e) { showError(e.message) }
 }
@@ -101,6 +105,7 @@ async function rejectExpense(id) {
   try {
     await api.reject(id, reason)
     await loadBookkeeping()
+    await store.reloadCounts()
   } catch (e) { showError(e.message) }
 }
 

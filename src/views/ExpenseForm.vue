@@ -50,7 +50,7 @@
       <div class="spes-form-row">
         <div class="spes-form-group">
           <label class="spes-label" for="expenseDate">{{ t('expenseDate') }} *</label>
-          <input id="expenseDate" v-model="form.expenseDate" class="spes-input" type="date" required />
+          <input id="expenseDate" v-model="form.expenseDate" class="spes-input" type="date" :max="defaultDate" required />
         </div>
         <div class="spes-form-group">
           <label class="spes-label" for="foreignCurrency">{{ t('foreignCurrency') }}</label>
@@ -283,6 +283,9 @@ async function handleSubmit(e) {
     } else {
       const created = await store.createExpense(data)
       currentExpenseId.value = created.id
+    }
+    if (status === 'submitted') {
+      await store.reloadCounts()
     }
     router.push('/')
   } catch (err) {

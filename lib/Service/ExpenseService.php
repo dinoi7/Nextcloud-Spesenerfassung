@@ -34,8 +34,8 @@ class ExpenseService {
 		}
 		if (isset($data['expenseDate'])) {
 			$d = \DateTime::createFromFormat('Y-m-d', $data['expenseDate']);
-			if ($d === false || $d->format('Y-m-d') !== $data['expenseDate']) {
-				throw new \InvalidArgumentException('Invalid date format, expected Y-m-d');
+			if ($d === false || $d->format('Y-m-d') !== $data['expenseDate'] || $d > new \DateTime('today')) {
+				throw new \InvalidArgumentException('Belegdatum darf nicht in der Zukunft sein. / Expense date must not be in the future.');
 			}
 		}
 		if (isset($data['category'])) {
@@ -290,6 +290,13 @@ class ExpenseService {
 		if ($targetStatus === Expense::STATUS_SUBMITTED || $targetStatus === Expense::STATUS_DONE) {
 			if ($expense->getUserId() !== $userId) {
 				return null;
+			}
+		}
+
+		if ($targetStatus === Expense::STATUS_SUBMITTED) {
+			$receipts = $this->receiptService->findByExpenseId($id);
+			if (empty($receipts)) {
+				throw new \InvalidArgumentException('Mindestens ein Beleg ist erforderlich.');
 			}
 		}
 

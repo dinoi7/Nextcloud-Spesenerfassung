@@ -104,6 +104,7 @@ async function approveExpense(id) {
   try {
     await api.approve(id)
     await loadPending()
+    await store.reloadCounts()
   } catch (e) { showError(e.message) }
 }
 
@@ -113,6 +114,7 @@ async function rejectExpense(id) {
   try {
     await api.reject(id, reason)
     await loadPending()
+    await store.reloadCounts()
   } catch (e) { showError(e.message) }
 }
 
@@ -120,6 +122,7 @@ async function addToBookkeepingExpense(id) {
   try {
     await api.addToBookkeeping(id)
     await loadPending()
+    await store.reloadCounts()
   } catch (e) { showError(e.message) }
 }
 

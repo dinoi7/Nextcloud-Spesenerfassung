@@ -279,6 +279,7 @@ async function handleApprove() {
   try {
     const exp = await api.approve(id.value)
     expense.value = exp
+    await store.reloadCounts()
   } catch (e) { showError(e.message) }
 }
 
@@ -288,6 +289,7 @@ async function handleReject() {
   try {
     const exp = await api.reject(id.value, reason)
     expense.value = exp
+    await store.reloadCounts()
     goBack()
   } catch (e) { showError(e.message) }
 }
@@ -296,6 +298,7 @@ async function handlePay() {
   try {
     const exp = await api.pay(id.value)
     expense.value = exp
+    await store.reloadCounts()
     if (route.query.from === 'paystack') {
       if (exp.bookingReceipt?.message) showSuccess(exp.bookingReceipt.message)
       router.push('/paystack')
@@ -309,6 +312,7 @@ async function handlePay() {
 async function handleAddToPaystack() {
   try {
     await api.addToPaystack(id.value)
+    await store.reloadCounts()
     goBack()
   } catch (e) { showError(e.message) }
 }
@@ -316,6 +320,7 @@ async function handleAddToPaystack() {
 async function handleAddToBookkeeping() {
   try {
     await api.addToBookkeeping(id.value)
+    await store.reloadCounts()
     goBack()
   } catch (e) { showError(e.message) }
 }
@@ -324,6 +329,7 @@ async function handleDone() {
   try {
     const exp = await api.done(id.value)
     expense.value = exp
+    await store.reloadCounts()
   } catch (e) { showError(e.message) }
 }
 
