@@ -57,7 +57,11 @@ class ApprovalController extends Controller {
 	#[NoAdminRequired]
 	public function submit(int $id): DataResponse {
 		$userId = $this->getUserId();
-		$expense = $this->expenseService->submit($id, $userId);
+		try {
+			$expense = $this->expenseService->submit($id, $userId);
+		} catch (\InvalidArgumentException $e) {
+			return new DataResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
+		}
 		if ($expense === null) {
 			return new DataResponse(['error' => 'Cannot submit'], Http::STATUS_FORBIDDEN);
 		}

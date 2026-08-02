@@ -10,6 +10,7 @@ use OCA\Spesenerfassung\Db\ExpenseMapper;
 use OCA\Spesenerfassung\Service\ReceiptService;
 use DateTime;
 use OCP\AppFramework\Db\DoesNotExistException;
+use OCP\IConfig;
 
 class ExpenseService {
 	public function __construct(
@@ -19,10 +20,11 @@ class ExpenseService {
 		private MailService $mailService,
 		private ReceiptService $receiptService,
 		private SettingsService $settingsService,
+		private IConfig $config,
 	) {
 	}
 
-	private function validate(array $data): void {
+	private function validate(array $data, string $userId): void {
 		if (isset($data['title']) && mb_strlen(trim($data['title'])) > 255) {
 			throw new \InvalidArgumentException('Title exceeds maximum length of 255 characters');
 		}
@@ -33,9 +35,13 @@ class ExpenseService {
 			throw new \InvalidArgumentException('Amount must be greater than zero');
 		}
 		if (isset($data['expenseDate'])) {
-			$d = \DateTime::createFromFormat('Y-m-d', $data['expenseDate']);
+			$d = \DateTime::createFromFormat('!Y-m-d', $data['expenseDate']);
 			if ($d === false || $d->format('Y-m-d') !== $data['expenseDate'] || $d > new \DateTime('today')) {
-				throw new \InvalidArgumentException('Belegdatum darf nicht in der Zukunft sein. / Expense date must not be in the future.');
+				$locale = $this->config->getUserValue($userId, 'core', 'lang', 'en');
+				$msg = str_starts_with($locale, 'de')
+					? 'Belegdatum darf nicht in der Zukunft sein.'
+					: 'Expense date must not be in the future.';
+				throw new \InvalidArgumentException($msg);
 			}
 		}
 		if (isset($data['category'])) {
@@ -70,7 +76,7 @@ class ExpenseService {
 	}
 
 	public function create(string $userId, array $data): Expense {
-		$this->validate($data);
+		$this->validate($data, $userId);
 
 		$existing = $this->expenseMapper->findByUser($userId);
 		$title = $data['title'] ?? '';
@@ -106,6 +112,10 @@ class ExpenseService {
 		$expense = $this->expenseMapper->insert($expense);
 
 		if (($data['status'] ?? Expense::STATUS_DRAFT) === Expense::STATUS_SUBMITTED) {
+			$receipts = $this->receiptService->findByExpenseId($expense->getId());
+			if (empty($receipts)) {
+				throw new \InvalidArgumentException('Mindestens ein Beleg ist erforderlich.');
+			}
 			if ($this->workflowService->canTransition(Expense::STATUS_DRAFT, Expense::STATUS_SUBMITTED, $userId)) {
 				$expense->setStatus(Expense::STATUS_SUBMITTED);
 				$now2 = (new DateTime())->format('Y-m-d H:i:s');
@@ -129,7 +139,7 @@ class ExpenseService {
 			return null;
 		}
 
-		$this->validate($data);
+		$this->validate($data, $userId);
 
 		$now = (new DateTime())->format('Y-m-d H:i:s');
 
@@ -160,6 +170,10 @@ class ExpenseService {
 		if (isset($data['status'])) {
 			$newStatus = $data['status'];
 			if ($newStatus === Expense::STATUS_SUBMITTED) {
+				$receipts = $this->receiptService->findByExpenseId($id);
+				if (empty($receipts)) {
+					throw new \InvalidArgumentException('Mindestens ein Beleg ist erforderlich.');
+				}
 				if (!$this->workflowService->canTransition($expense->getStatus(), Expense::STATUS_SUBMITTED, $userId)) {
 					return null;
 				}

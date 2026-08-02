@@ -50,7 +50,8 @@
       <div class="spes-form-row">
         <div class="spes-form-group">
           <label class="spes-label" for="expenseDate">{{ t('expenseDate') }} *</label>
-          <input id="expenseDate" v-model="form.expenseDate" class="spes-input" type="date" :max="defaultDate" required />
+          <input id="expenseDate" v-model="form.expenseDate" class="spes-input" type="date" required />
+          <span v-if="dateError" class="spes-field-error">{{ t('expenseDateFuture') }}</span>
         </div>
         <div class="spes-form-group">
           <label class="spes-label" for="foreignCurrency">{{ t('foreignCurrency') }}</label>
@@ -105,6 +106,7 @@ const uploading = ref(false)
 const submitAction = ref('draft')
 
 const receiptError = ref(false)
+const dateError = ref(false)
 
 const amountDisplay = ref('')
 const foreignAmountDisplay = ref('')
@@ -267,6 +269,12 @@ async function handleSubmit(e) {
     return
   }
   receiptError.value = false
+
+  if (form.value.expenseDate > defaultDate) {
+    dateError.value = true
+    return
+  }
+  dateError.value = false
 
   if (status === 'submitted' && !confirm(t('submitConfirmation'))) {
     return

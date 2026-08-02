@@ -57,6 +57,8 @@
 | 2026-07-26 | Live-Betrag-Formatierung beim Erfassen | `<input type="text" inputmode="decimal">` mit `@input`/`@blur`/`@focus`. CH-Format bei Blur, Rohwert bei Focus. |
 | 2026-07-26 | Globaler Drop-Schutz auf Erfassungsseite | `@dragover.prevent @drop` auf `<form>` verhindert Browser-Navigation bei Drop ausserhalb der Upload-Box. `beforeunload`-Listener bei Formular-Änderungen. |
 | 2026-07-26 | E-Mail-Fix: `notifySubmitterSubmitted` in `transition()` | `ExpenseService::submit()` (Dashboard "Einreichen") rief nur `sendNotificationMail()` → keine Bestätigungs-Mail an Einreicher. Fix in `transition()` ergänzt. |
+| 2026-08-01 | Datum-Validierung: `!Y-m-d` + sprachabhängige Meldung | `createFromFormat('Y-m-d')` behält aktuelle Uhrzeit → heute > Mitternacht = Fehler. Fix: `!Y-m-d`-Präfix setzt Zeit auf 00:00. Fehlermeldung via `IConfig::getUserValue(uid, 'core', 'lang')` — nur DE oder EN, nicht beides. |
+| 2026-08-01 | Frontend Datum-Validierung ohne Browser-Meldung | `:max="defaultDate"` auf `<input type="date">` entfernt (Browser-Meldung nicht i18n-kontrollierbar). Eigene Prüfung in `handleSubmit()` mit `expenseDateFuture`-Key aus i18n. |
 
 ## Nächste Schritte
 

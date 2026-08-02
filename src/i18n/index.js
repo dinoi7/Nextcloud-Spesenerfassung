@@ -44,7 +44,7 @@ const messages = {
     approve: 'Genehmigen',
     reject: 'Zurückweisen',
     pay: 'Ausbezahlt',
-    done: 'Erledigt',
+    done: 'Betrag erhalten',
     reason: 'Begründung',
     reasonRequired: 'Begründung ist erforderlich bei Zurückweisung',
     uploadReceipt: 'Beleg hochladen',
@@ -149,6 +149,7 @@ const messages = {
 		mandatoryFields: '* = Mussfeld',
 		receiptRequired: 'Mindestens ein Beleg ist erforderlich.',
 		descriptionMaxLength: 'Beschreibung auf 160 Zeichen beschränkt.',
+		expenseDateFuture: 'Belegdatum darf nicht in der Zukunft sein.',
 	},
   en: {
     dashboard: 'Overview',
@@ -172,7 +173,7 @@ const messages = {
     approve: 'Approve',
     reject: 'Reject',
     pay: 'Mark as Paid',
-    done: 'Mark as Done',
+    done: 'Amount Received',
     reason: 'Reason',
     reasonRequired: 'Reason is required for rejection',
     uploadReceipt: 'Upload Receipt',
@@ -275,6 +276,7 @@ const messages = {
 		mandatoryFields: '* = Mandatory field',
 		receiptRequired: 'At least one receipt is required.',
 		descriptionMaxLength: 'Description limited to 160 characters.',
+		expenseDateFuture: 'Expense date must not be in the future.',
 	},
 }
 
