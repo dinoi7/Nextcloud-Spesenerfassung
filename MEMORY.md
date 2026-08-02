@@ -59,6 +59,8 @@
 | 2026-07-26 | E-Mail-Fix: `notifySubmitterSubmitted` in `transition()` | `ExpenseService::submit()` (Dashboard "Einreichen") rief nur `sendNotificationMail()` → keine Bestätigungs-Mail an Einreicher. Fix in `transition()` ergänzt. |
 | 2026-08-01 | Datum-Validierung: `!Y-m-d` + sprachabhängige Meldung | `createFromFormat('Y-m-d')` behält aktuelle Uhrzeit → heute > Mitternacht = Fehler. Fix: `!Y-m-d`-Präfix setzt Zeit auf 00:00. Fehlermeldung via `IConfig::getUserValue(uid, 'core', 'lang')` — nur DE oder EN, nicht beides. |
 | 2026-08-01 | Frontend Datum-Validierung ohne Browser-Meldung | `:max="defaultDate"` auf `<input type="date">` entfernt (Browser-Meldung nicht i18n-kontrollierbar). Eigene Prüfung in `handleSubmit()` mit `expenseDateFuture`-Key aus i18n. |
+| 2026-08-01 | Belegpflicht-500er-Fix + Receipt-Checks | `ApprovalController::submit()` fehlte try/catch für `InvalidArgumentException` → 500 bei fehlenden Belegen. Fix: try/catch + `ExpenseService::create()`/`update()` erhalten ebenfalls Receipt-Check vor inline-Submit. |
+| 2026-08-01 | F14: Threshold-Bypass in SUBMITTED → BOOKKEEPING | Kassier konnte über-Schwelle-Spesen direkt von SUBMITTED → BOOKKEEPING schieben ohne Präsident-Genehmigung. Fix: Guard in `transition()` prüft `amount > threshold` → blockt mit sprachabhängiger Meldung. |
 
 ## Nächste Schritte
 

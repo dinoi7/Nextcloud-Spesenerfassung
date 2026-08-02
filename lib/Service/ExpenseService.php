@@ -314,6 +314,17 @@ class ExpenseService {
 			}
 		}
 
+		if ($targetStatus === Expense::STATUS_BOOKKEEPING && $expense->getStatus() === Expense::STATUS_SUBMITTED) {
+			$threshold = $this->settingsService->getThreshold();
+			if ((float) $expense->getAmount() > $threshold) {
+				$locale = $this->config->getUserValue($userId, 'core', 'lang', 'en');
+				$msg = str_starts_with($locale, 'de')
+					? 'Spesen über der Genehmigungsgrenze müssen zuerst vom Präsidenten genehmigt werden.'
+					: 'Expenses above the threshold must be approved by the president first.';
+				throw new \InvalidArgumentException($msg);
+			}
+		}
+
 		$now = (new DateTime())->format('Y-m-d H:i:s');
 		$expense->setStatus($targetStatus);
 		$expense->setUpdatedAt($now);
