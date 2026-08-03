@@ -25,11 +25,17 @@ class ExpenseService {
 	}
 
 	private function validate(array $data, string $userId): void {
-		if (isset($data['title']) && mb_strlen(trim($data['title'])) > 255) {
-			throw new \InvalidArgumentException('Title exceeds maximum length of 255 characters');
+		if (isset($data['title'])) {
+			$data['title'] = $this->sanitizeInputText($data['title']);
+			if (mb_strlen(trim($data['title'])) > 255) {
+				throw new \InvalidArgumentException('Title exceeds maximum length of 255 characters');
+			}
 		}
-		if (isset($data['description']) && mb_strlen($data['description']) > 160) {
-			throw new \InvalidArgumentException('Description exceeds maximum length of 160 characters');
+		if (isset($data['description'])) {
+			$data['description'] = $this->sanitizeInputText($data['description']);
+			if (mb_strlen($data['description']) > 160) {
+				throw new \InvalidArgumentException('Description exceeds maximum length of 160 characters');
+			}
 		}
 		if (isset($data['amount']) && (float) $data['amount'] <= 0) {
 			throw new \InvalidArgumentException('Amount must be greater than zero');
@@ -97,7 +103,7 @@ class ExpenseService {
 
 		$expense = new Expense();
 		$expense->setUserId($userId);
-		$expense->setTitle($data['title']);
+		$expense->setTitle($data['title'] ?? '');
 		$expense->setDescription($data['description'] ?? null);
 		$expense->setAmount(number_format((float) $data['amount'], 2, '.', ''));
 		$expense->setCategory($data['category']);
@@ -146,7 +152,7 @@ class ExpenseService {
 		if (isset($data['title'])) {
 			$expense->setTitle($data['title']);
 		}
-		if (array_key_exists('description', $data)) {
+		if (isset($data['description'])) {
 			$expense->setDescription($data['description']);
 		}
 		if (isset($data['amount'])) {
@@ -349,6 +355,13 @@ class ExpenseService {
 		$approval->setComment($comment);
 		$approval->setCreatedAt($now);
 		$this->approvalMapper->insert($approval);
+	}
+
+	private function sanitizeInputText(string $text): string {
+		$text = trim($text);
+		$text = preg_replace('/[<>"\'\/]/', '', $text);
+		$text = preg_replace('/\s+/', ' ', $text);
+		return trim($text);
 	}
 
 	private function sendNotificationMail(Expense $expense, string $action): void {

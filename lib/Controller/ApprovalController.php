@@ -97,6 +97,8 @@ class ApprovalController extends Controller {
 			return new DataResponse(['error' => 'Reason is required for rejection'], Http::STATUS_BAD_REQUEST);
 		}
 
+		$reason = $this->sanitizeText($reason);
+
 		$expense = $this->expenseService->reject($id, $userId, $reason);
 		if ($expense === null) {
 			return new DataResponse(['error' => 'Cannot reject'], Http::STATUS_FORBIDDEN);
@@ -369,6 +371,14 @@ class ApprovalController extends Controller {
 			$field = "'" . $field;
 		}
 		return $field;
+	}
+
+	private function sanitizeText(string $text): string {
+		$text = trim($text);
+		$text = preg_replace('/[<>"\'\/]/', '', $text);
+		$text = preg_replace('/\s+/', ' ', $text);
+		$text = mb_substr($text, 0, 500);
+		return trim($text);
 	}
 
 	private function resolveDisplayName(string $userId): string {
