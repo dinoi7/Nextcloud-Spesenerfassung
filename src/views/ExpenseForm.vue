@@ -87,6 +87,7 @@ import { useI18n } from '../i18n'
 import { api } from '../api'
 import { showError } from '@nextcloud/dialogs'
 import { formatAmount } from '../utils'
+import { resizeImageIfNeeded } from '../imageResize'
 import ReceiptUpload from '../components/ReceiptUpload.vue'
 
 const route = useRoute()
@@ -195,7 +196,8 @@ async function handleFile(file) {
   uploading.value = true
   try {
     const id = await ensureSaved()
-    const receipt = await api.uploadReceipt(id, file)
+    const processed = await resizeImageIfNeeded(file)
+    const receipt = await api.uploadReceipt(id, processed)
     existingReceipts.value.push(receipt)
   } catch (e) {
     showError(e.message)

@@ -6,6 +6,7 @@ Expense tracking app with multi-step approval workflow for Nextcloud. Built for 
 
 - Submit expenses (title, description, amount in CHF, category, date, foreign currency support)
 - Upload receipts (PDF, JPG, PNG, drag & drop, camera capture on mobile, max 1 MB each, max 5 per expense)
+- Large images (JPG/PNG) are automatically resized to a maximum edge of 1600 px before upload; only the reduced image is stored
 - Two-step approval: Präsident (above threshold) + Kassier (at/below threshold and post-Präsident)
 - Payment stack (Zahlstapel) with QR-IBAN info and bulk "pay all"
 - Bookkeeping export (Buchhaltung) with Soll-Konto mapping per category and CSV export

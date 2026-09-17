@@ -59,7 +59,7 @@ spesenerfassung/
 │   ├── Service/
 │   │   ├── ExpenseService.php          # Business-Logik + Status-Transitions
 │   │   ├── WorkflowService.php         # State Machine (TRANSITIONS Matrix)
-│   │   ├── ReceiptService.php          # Datei-Upload via IAppData
+│   │   ├── ReceiptService.php          # Datei-Upload via IAppData + Bild-Resize (GD)
 │   │   ├── SettingsService.php         # AppConfig-Getter/Setter
 │   │   ├── MailService.php             # DE/EN Mail-Versand via IMailer
 │   │   └── BookingReceiptService.php   # PDF-Spesenbeleg (TCPDF+FPDI) in kassier-Ordner
@@ -72,6 +72,7 @@ spesenerfassung/
 │   ├── api.js                          # fetch()-basierter API-Client
 │   ├── router.js                       # Hash-Router
 │   ├── utils.js                        # Formatierungs-Utils: formatAmount, formatDate, formatDateTime
+│   ├── imageResize.js                  # Canvas-Resize grosser Bild-Belege vor Upload
 │   ├── store/
 │   │   ├── expenses.js                 # Pinia: Spesen-State + Rollen-Erkennung
 │   │   └── settings.js                 # Pinia: Admin-Einstellungen
@@ -328,3 +329,7 @@ GET    /                                    → PageController#index
 ### 14. Email UID → Email-Adress-Auflösung (2026-07-19)
 
 **Begründung:** `MailService::notify()` setzte `setTo([$uid => $uid])` — die Nextcloud-UID wurde als Email-Adresse verwendet, was nicht der echten E-Mail des Users entspricht. Fix: `IUserManager::getEMailAddress($uid)` liefert die im Nextcloud-Profil hinterlegte E-Mail-Adresse. Zusätzlich `LoggerInterface` statt stillem `catch (\Throwable)` und Korrektur aller Mail-Texte von "Spese" zu "Spesen".
+
+### 15. Bild-Belege beim Upload verkleinern (2026-09-17)
+
+**Begründung:** Handyfotos von Belegen sind oft mehrere Megapixel gross und überschreiten die 1-MB-Grenze bzw. `upload_max_filesize`. Deshalb wird bereits im Browser via `src/imageResize.js` (Canvas) auf längste Kante 1600 px resized (JPEG Q80, PNG bleibt PNG); hochgeladen und gespeichert wird nur das reduzierte Bild. Als clientunabhängiges Sicherheitsnetz prüft `ReceiptService::resizeImage()` dasselbe serverseitig via GD (`getimagesizefromstring`, `imagescale`). Ist GD nicht verfügbar oder schlägt das Resize fehl, bleibt das Original erhalten und die bestehende 1-MB-Prüfung greift. PDFs werden nicht verändert.

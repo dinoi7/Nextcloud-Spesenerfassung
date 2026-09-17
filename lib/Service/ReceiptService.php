@@ -15,6 +15,8 @@ use Psr\Log\LoggerInterface;
 class ReceiptService {
 	private const MAX_SIZE = 1048576;
 	private const MAX_FILES = 5;
+	private const MAX_IMAGE_EDGE = 1600;
+	private const JPEG_QUALITY = 80;
 
 	private const ALLOWED_EXTENSIONS = ['pdf', 'jpg', 'jpeg', 'png'];
 
@@ -28,29 +30,81 @@ class ReceiptService {
 		$this->logger = $logger;
 	}
 
-	public function validateFile(string $fileName, string $tempPath, int $size): ?string {
-		if ($size > self::MAX_SIZE) {
-			return 'File too large. Maximum size is 1MB.';
-		}
-		if ($size === 0) {
-			return 'File is empty.';
-		}
+	private function detectMime(string $fileName, string $tempPath): ?string {
 		if ($tempPath === '' || !file_exists($tempPath) || !is_readable($tempPath)) {
-			return 'File not accessible.';
+			return null;
 		}
 
 		$ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
 		if (!in_array($ext, self::ALLOWED_EXTENSIONS, true)) {
-			return 'Invalid file type. Allowed: PDF, JPG, PNG.';
+			return null;
 		}
 
 		$detected = (new \finfo(FILEINFO_MIME_TYPE))->file($tempPath);
 		$allowedMimes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/pjpeg'];
 		if (!in_array($detected, $allowedMimes, true)) {
-			return 'Invalid file type. Allowed: PDF, JPG, PNG.';
+			return null;
 		}
 
 		return $detected;
+	}
+
+	private function resizeImage(string $content, string $mimeType): string {
+		if (!function_exists('imagecreatefromstring') || !function_exists('getimagesizefromstring')) {
+			return $content;
+		}
+
+		$info = @getimagesizefromstring($content);
+		if ($info === false) {
+			return $content;
+		}
+		$width = (int) $info[0];
+		$height = (int) $info[1];
+		if ($width <= 0 || $height <= 0) {
+			return $content;
+		}
+
+		$longest = max($width, $height);
+		if ($longest <= self::MAX_IMAGE_EDGE && strlen($content) <= self::MAX_SIZE) {
+			return $content;
+		}
+
+		try {
+			$image = @imagecreatefromstring($content);
+			if ($image === false) {
+				return $content;
+			}
+
+			$scale = min(1.0, self::MAX_IMAGE_EDGE / $longest);
+			$newWidth = max(1, (int) round($width * $scale));
+			$newHeight = max(1, (int) round($height * $scale));
+			$resized = @imagescale($image, $newWidth, $newHeight, IMG_BICUBIC);
+			imagedestroy($image);
+			if ($resized === false) {
+				return $content;
+			}
+
+			ob_start();
+			if ($mimeType === 'image/png') {
+				imagealphablending($resized, false);
+				imagesavealpha($resized, true);
+				imagepng($resized);
+			} else {
+				imagejpeg($resized, null, self::JPEG_QUALITY);
+			}
+			$output = ob_get_clean();
+			imagedestroy($resized);
+
+			if (!is_string($output) || $output === '') {
+				return $content;
+			}
+			return $output;
+		} catch (\Throwable) {
+			if (ob_get_level() > 0) {
+				ob_end_clean();
+			}
+			return $content;
+		}
 	}
 
 	public function findByExpenseId(int $expenseId): array {
@@ -64,9 +118,13 @@ class ReceiptService {
 			return null;
 		}
 
-		$detectedMime = $this->validateFile($originalName, $tempPath, $size);
+		$detectedMime = $this->detectMime($originalName, $tempPath);
 		if ($detectedMime === null) {
 			$this->logger->warning('Receipt upload validation failed', ['app' => 'spesenerfassung']);
+			return null;
+		}
+		if ($size === 0) {
+			$this->logger->warning('Receipt upload failed: empty file', ['app' => 'spesenerfassung']);
 			return null;
 		}
 
@@ -76,6 +134,16 @@ class ReceiptService {
 		$content = file_get_contents($tempPath);
 		if ($content === false) {
 			$this->logger->error('Receipt upload: file_get_contents failed for temp path', ['app' => 'spesenerfassung']);
+			return null;
+		}
+
+		if (in_array($detectedMime, ['image/jpeg', 'image/jpg', 'image/pjpeg', 'image/png'], true)) {
+			$content = $this->resizeImage($content, $detectedMime);
+		}
+		$size = strlen($content);
+
+		if ($size > self::MAX_SIZE) {
+			$this->logger->warning('Receipt upload failed: file too large after processing', ['app' => 'spesenerfassung', 'size' => $size]);
 			return null;
 		}
 
