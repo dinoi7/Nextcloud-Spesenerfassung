@@ -61,7 +61,8 @@
 | 2026-08-01 | Frontend Datum-Validierung ohne Browser-Meldung | `:max="defaultDate"` auf `<input type="date">` entfernt (Browser-Meldung nicht i18n-kontrollierbar). Eigene Prüfung in `handleSubmit()` mit `expenseDateFuture`-Key aus i18n. |
 | 2026-08-01 | Belegpflicht-500er-Fix + Receipt-Checks | `ApprovalController::submit()` fehlte try/catch für `InvalidArgumentException` → 500 bei fehlenden Belegen. Fix: try/catch + `ExpenseService::create()`/`update()` erhalten ebenfalls Receipt-Check vor inline-Submit. |
 | 2026-08-01 | F14: Threshold-Bypass in SUBMITTED → BOOKKEEPING | Kassier konnte über-Schwelle-Spesen direkt von SUBMITTED → BOOKKEEPING schieben ohne Präsident-Genehmigung. Fix: Guard in `transition()` prüft `amount > threshold` → blockt mit sprachabhängiger Meldung. |
-| 2026-08-03 | Security Audit — XSS-Härtung | Rejection Reasons sanitisiert (`ApprovalController::sanitizeText()`); Title/Description sanitisiert (`ExpenseService::sanitizeInputText()`); Strippen von HTML-Tags (<,>,',/,) und Limitierung auf 500/255/160 Zeichen. Commit `b9350c7`.
+| 2026-08-03 | Security Audit — XSS-Härtung | Rejection Reasons sanitisiert (`ApprovalController::sanitizeText()`); Title/Description sanitisiert (`ExpenseService::sanitizeInputText()`); Strippen von HTML-Tags (<,>,',/,) und Limitierung auf 500/255/160 Zeichen. Commit `b9350c7`. |
+| 2026-09-17 | Button "Alle ausbezahlen" → "Alle als Ausbezahlt markieren" | Zahlstapel-Button in `PaystackView.vue` (i18n-Key `payAll`) umbenannt, um klarzustellen, dass nur der Status gesetzt wird. DE: "Alle als Ausbezahlt markieren", EN: "Mark all as Paid". **Nur Quelltext** — `js/spesenerfassung-main.js` muss neu gebaut werden (Deploy auf nextcloud3 ausstehend, dort läuft `makerfinance` 0.3.5). |
 
 ## Nächste Schritte
 
