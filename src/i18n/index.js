@@ -150,6 +150,7 @@ const messages = {
 		receiptRequired: 'Mindestens ein Beleg ist erforderlich.',
 		descriptionMaxLength: 'Beschreibung auf 160 Zeichen beschränkt.',
 		expenseDateFuture: 'Belegdatum darf nicht in der Zukunft sein.',
+		bookingReceipt: 'Spesenbeleg',
 	},
   en: {
     dashboard: 'Overview',
@@ -277,6 +278,7 @@ const messages = {
 		receiptRequired: 'At least one receipt is required.',
 		descriptionMaxLength: 'Description limited to 160 characters.',
 		expenseDateFuture: 'Expense date must not be in the future.',
+		bookingReceipt: 'Booking Receipt',
 	},
 }
 

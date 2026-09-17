@@ -262,19 +262,9 @@ class BookingReceiptService {
 		$folderPath = str_replace('\\', '/', $this->settingsService->getBookingFolder());
 
 		try {
-			$userFolder = $this->rootFolder->getUserFolder($treasurerUserId);
-			$parts = explode('/', trim($folderPath, '/'));
-			$current = $userFolder;
-			foreach ($parts as $part) {
-				if ($part === '') {
-					continue;
-				}
-				if (!$current->nodeExists($part)) {
-					$msg = 'Der Ordner "' . $folderPath . '" existiert nicht. Bitte vom Admin in den Einstellungen anlegen lassen.';
-					$this->log($expense->getId(), $msg);
-					return ['success' => false, 'message' => $msg];
-				}
-				$current = $current->get($part);
+			$current = $this->resolveFolder($expense->getId(), $treasurerUserId, $folderPath);
+			if ($current === null) {
+				return ['success' => false, 'message' => 'Der Ordner "' . $folderPath . '" existiert nicht. Bitte vom Admin in den Einstellungen anlegen lassen.'];
 			}
 
 			if ($current->nodeExists($fileName)) {
@@ -288,6 +278,56 @@ class BookingReceiptService {
 		} catch (\Throwable $e) {
 			$this->log($expense->getId(), 'Fehler beim Speichern des Buchungsbelegs: ' . $e->getMessage());
 			return ['success' => false, 'message' => 'Fehler beim Speichern des Buchungsbelegs.'];
+		}
+	}
+
+	private function resolveFolder(int $expenseId, string $treasurerUserId, string $folderPath): ?\OCP\Files\Folder {
+		try {
+			$userFolder = $this->rootFolder->getUserFolder($treasurerUserId);
+			$parts = explode('/', trim($folderPath, '/'));
+			$current = $userFolder;
+			foreach ($parts as $part) {
+				if ($part === '') {
+					continue;
+				}
+				if (!$current->nodeExists($part)) {
+					return null;
+				}
+				$current = $current->get($part);
+			}
+			return $current;
+		} catch (\Throwable $e) {
+			$this->log($expenseId, 'Fehler beim Auflösen des Buchungsordners: ' . $e->getMessage());
+			return null;
+		}
+	}
+
+	public function exists(Expense $expense, string $treasurerUserId): bool {
+		$fileName = 'Spesenbeleg_' . $expense->getId() . '.pdf';
+		$folderPath = str_replace('\\', '/', $this->settingsService->getBookingFolder());
+		$folder = $this->resolveFolder($expense->getId(), $treasurerUserId, $folderPath);
+		if ($folder === null) {
+			return false;
+		}
+		return $folder->nodeExists($fileName);
+	}
+
+	/**
+	 * @return array{content: string, name: string}|null
+	 */
+	public function getFile(Expense $expense, string $treasurerUserId): ?array {
+		$fileName = 'Spesenbeleg_' . $expense->getId() . '.pdf';
+		$folderPath = str_replace('\\', '/', $this->settingsService->getBookingFolder());
+		$folder = $this->resolveFolder($expense->getId(), $treasurerUserId, $folderPath);
+		if ($folder === null || !$folder->nodeExists($fileName)) {
+			return null;
+		}
+		try {
+			$file = $folder->get($fileName);
+			return ['content' => $file->getContent(), 'name' => $fileName];
+		} catch (\Throwable $e) {
+			$this->log($expense->getId(), 'Fehler beim Lesen des Buchungsbelegs: ' . $e->getMessage());
+			return null;
 		}
 	}
 

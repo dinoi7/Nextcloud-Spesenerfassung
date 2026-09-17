@@ -416,15 +416,34 @@ class ApprovalController extends Controller {
 			$u = $this->userManager->get($uid);
 			$names[$uid] = $u ? $u->getDisplayName() : $uid;
 		}
-		$result = array_map(function ($e) use ($names) {
+		$treasurerUid = $this->settingsService->getTreasurerUid();
+		$result = array_map(function ($e) use ($names, $treasurerUid) {
 			$row = $e->toArray();
 			$row['displayName'] = $names[$e->getUserId()] ?? $e->getUserId();
 			$receipts = $this->receiptService->findByExpenseId($e->getId());
 			$row['receipts'] = array_map(fn($r) => $r->toArray(), $receipts);
 			$row['receiptCount'] = count($receipts);
+			$row['bookingReceipt'] = $this->bookingReceiptService->exists($e, $treasurerUid);
 			return $row;
 		}, $expenses);
 		return new DataResponse(array_values($result));
+	}
+
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	public function bookingReceipt(int $id) {
+		if (!$this->checkRole('president') && !$this->checkRole('treasurer')) {
+			return new DataResponse(['error' => 'Not authorized'], Http::STATUS_FORBIDDEN);
+		}
+		$expense = $this->expenseService->findById($id);
+		if ($expense === null) {
+			return new DataResponse(['error' => 'Expense not found'], Http::STATUS_NOT_FOUND);
+		}
+		$file = $this->bookingReceiptService->getFile($expense, $this->settingsService->getTreasurerUid());
+		if ($file === null) {
+			return new DataResponse(['error' => 'Buchungsbeleg not found'], Http::STATUS_NOT_FOUND);
+		}
+		return new DataDownloadResponse($file['content'], $file['name'], 'application/pdf');
 	}
 
 	#[NoAdminRequired]
@@ -441,7 +460,8 @@ class ApprovalController extends Controller {
 			$names[$uid] = $u ? $u->getDisplayName() : $uid;
 		}
 		$csv = "\xEF\xBB\xBF";
-		$csv .= "\"Spesennummer\";\"Status\";\"Datum\";\"Erfasser\";\"Titel\";\"Kategorie\";\"Betrag (CHF)\";\"Fremdwährung\";\"Fremdbetrag\";\"Auszahlungsart\"\n";
+		$csv .= "\"Spesennummer\";\"Status\";\"Datum\";\"Erfasser\";\"Titel\";\"Kategorie\";\"Betrag (CHF)\";\"Fremdwährung\";\"Fremdbetrag\";\"Auszahlungsart\";\"Spesenbeleg\"\n";
+		$treasurerUid = $this->settingsService->getTreasurerUid();
 		foreach ($expenses as $e) {
 			$id = (string) $e->getId();
 			$status = $e->getStatus();
@@ -453,7 +473,8 @@ class ApprovalController extends Controller {
 			$fc = $this->sani($e->getForeignCurrency() ?? '');
 			$fa = $e->getForeignAmount() !== null ? number_format((float) $e->getForeignAmount(), 2, '.', '') : '';
 			$payout = $e->getPayoutMethod() === 'bank' ? 'Bank' : ($e->getPayoutMethod() ? 'Bar' : '');
-			$csv .= "\"$id\";\"$status\";\"$date\";\"$name\";\"$title\";\"$category\";\"$amount\";\"$fc\";\"$fa\";\"$payout\"\n";
+			$hasReceipt = $this->bookingReceiptService->exists($e, $treasurerUid) ? 'Ja' : 'Nein';
+			$csv .= "\"$id\";\"$status\";\"$date\";\"$name\";\"$title\";\"$category\";\"$amount\";\"$fc\";\"$fa\";\"$payout\";\"$hasReceipt\"\n";
 		}
 		return new DataDownloadResponse($csv, 'auswertung.csv', 'text/csv; charset=utf-8');
 	}
