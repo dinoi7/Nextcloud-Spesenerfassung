@@ -461,7 +461,15 @@ class ApprovalController extends Controller {
 		if ($file === null) {
 			return new DataResponse(['error' => 'Buchungsbeleg not found'], Http::STATUS_NOT_FOUND);
 		}
-		return new DataDisplayResponse($file['content'], $file['name'], 'application/pdf');
+		return new DataDisplayResponse(
+			$file['content'],
+			Http::STATUS_OK,
+			[
+				'Content-Type' => 'application/pdf',
+				'X-Content-Type-Options' => 'nosniff',
+				'Content-Security-Policy' => "default-src 'none'; sandbox",
+			]
+		);
 	}
 
 	#[NoAdminRequired]
