@@ -12,6 +12,9 @@ use Psr\Log\LoggerInterface;
 use setasign\Fpdi\Tcpdf\Fpdi;
 
 class BookingReceiptService {
+	private const MAX_EMBED_EDGE = 1600;
+	private const EMBED_JPEG_QUALITY = 82;
+
 	private const ACTION_LABELS = [
 		Approval::ACTION_SUBMITTED => 'Eingereicht',
 		Approval::ACTION_APPROVED => 'Genehmigt',
@@ -165,6 +168,17 @@ class BookingReceiptService {
 		}
 
 		if (count($receipts) > 0) {
+			$prepared = [];
+			foreach ($receipts as $receipt) {
+				$content = $this->receiptService->getContent($receipt);
+				$detected = $content !== null ? $this->detectMimeFromContent($content) : null;
+				$prepared[] = [
+					'receipt' => $receipt,
+					'content' => $content,
+					'mime' => $detected ?? $receipt->getMimeType(),
+				];
+			}
+
 			$pdf->SetFont('helvetica', 'B', 12);
 			$pdf->Cell(0, 8, 'Anhänge (' . count($receipts) . ')', 0, 1, 'L');
 			$pdf->Ln(2);
@@ -176,28 +190,32 @@ class BookingReceiptService {
 			$pdf->Cell(25, 6, 'Grösse', 0, 1, 'R', true);
 
 			$pdf->SetFont('helvetica', '', 9);
-			foreach ($receipts as $receipt) {
+			foreach ($prepared as $item) {
+				$receipt = $item['receipt'];
 				$pages = '-';
-				if ($receipt->getMimeType() === 'application/pdf') {
-					$pc = $this->receiptService->getPageCount($receipt);
-					$pages = $pc !== null ? (string) $pc : '-';
+				if ($item['mime'] === 'application/pdf' && $item['content'] !== null) {
+					$pages = (string) $this->countPdfPages($item['content']);
 				}
 				$kb = round($receipt->getSize() / 1024, 1) . ' KB';
-				$name = $receipt->getFileName();
-				$pdf->Cell(80, 6, $name, 0, 0, 'L');
+				$pdf->Cell(80, 6, $receipt->getFileName(), 0, 0, 'L');
 				$pdf->Cell(25, 6, $pages, 0, 0, 'R');
 				$pdf->Cell(25, 6, $kb, 0, 1, 'R');
 			}
 
 			$pdf->Ln(4);
 
-			foreach ($receipts as $receipt) {
-				$content = $this->receiptService->getContent($receipt);
+			foreach ($prepared as $item) {
+				$receipt = $item['receipt'];
+				$content = $item['content'];
+				$mime = $item['mime'];
+
 				if ($content === null) {
+					$this->log($expense->getId(), 'Attachment content not readable: ' . $receipt->getFileName());
+					$pdf->SetFont('helvetica', '', 9);
+					$pdf->Cell(0, 7, 'Anhang konnte nicht geladen werden: ' . $receipt->getFileName(), 0, 1);
 					continue;
 				}
 
-				$mime = $receipt->getMimeType();
 				$tmpFile = tempnam(sys_get_temp_dir(), 'spes_bbr_');
 				try {
 					file_put_contents($tmpFile, $content);
@@ -226,6 +244,7 @@ class BookingReceiptService {
 						}
 					} elseif (in_array($mime, ['image/jpeg', 'image/jpg', 'image/pjpeg', 'image/png'], true)) {
 						try {
+							$this->downscaleImage($tmpFile);
 							$info = getimagesize($tmpFile);
 							if ($info) {
 								$pdf->AddPage();
@@ -243,11 +262,20 @@ class BookingReceiptService {
 								$h = $imgH * $scale;
 								$x = ($pdf->getPageWidth() - $w) / 2;
 								$pdf->Image($tmpFile, $x, $pdf->GetY(), $w, $h);
+							} else {
+								$this->log($expense->getId(), 'Image embedding failed for ' . $receipt->getFileName() . ': getimagesize returned false');
+								$pdf->SetFont('helvetica', '', 9);
+								$pdf->Cell(0, 7, 'Bild konnte nicht eingebettet werden: ' . $receipt->getFileName(), 0, 1);
 							}
 						} catch (\Throwable $e) {
+							$this->log($expense->getId(), 'Image embedding failed for ' . $receipt->getFileName() . ': ' . $e->getMessage());
 							$pdf->SetFont('helvetica', '', 9);
 							$pdf->Cell(0, 7, 'Bild konnte nicht eingebettet werden: ' . $receipt->getFileName(), 0, 1);
 						}
+					} else {
+						$this->log($expense->getId(), 'Attachment type not embeddable: ' . $receipt->getFileName() . ' (' . $mime . ')');
+						$pdf->SetFont('helvetica', '', 9);
+						$pdf->Cell(0, 7, 'Anhang konnte nicht eingebettet werden: ' . $receipt->getFileName() . ' (Typ: ' . $mime . ')', 0, 1);
 					}
 				} finally {
 					if (file_exists($tmpFile)) {
@@ -278,6 +306,58 @@ class BookingReceiptService {
 		} catch (\Throwable $e) {
 			$this->log($expense->getId(), 'Fehler beim Speichern des Buchungsbelegs: ' . $e->getMessage());
 			return ['success' => false, 'message' => 'Fehler beim Speichern des Buchungsbelegs.'];
+		}
+	}
+
+	private function detectMimeFromContent(string $content): ?string {
+		if (!class_exists(\finfo::class)) {
+			return null;
+		}
+		try {
+			$detected = (new \finfo(FILEINFO_MIME_TYPE))->buffer($content);
+		} catch (\Throwable) {
+			return null;
+		}
+		return is_string($detected) && $detected !== '' ? $detected : null;
+	}
+
+	private function countPdfPages(string $content): int {
+		$matches = [];
+		preg_match_all('/\/Type\s*\/Page[^s]/', $content, $matches);
+		$count = count($matches[0]);
+		return $count > 0 ? $count : 1;
+	}
+
+	private function downscaleImage(string $filePath): void {
+		if (!function_exists('imagecreatefromstring') || !function_exists('getimagesize')) {
+			return;
+		}
+		$info = @getimagesize($filePath);
+		if ($info === false) {
+			return;
+		}
+		$width = (int) $info[0];
+		$height = (int) $info[1];
+		$longest = max($width, $height);
+		if ($longest <= self::MAX_EMBED_EDGE) {
+			return;
+		}
+		try {
+			$image = @imagecreatefromstring((string) file_get_contents($filePath));
+			if ($image === false) {
+				return;
+			}
+			$scale = self::MAX_EMBED_EDGE / $longest;
+			$newWidth = max(1, (int) round($width * $scale));
+			$newHeight = max(1, (int) round($height * $scale));
+			$resized = @imagescale($image, $newWidth, $newHeight, IMG_BICUBIC);
+			imagedestroy($image);
+			if ($resized === false) {
+				return;
+			}
+			imagejpeg($resized, $filePath, self::EMBED_JPEG_QUALITY);
+			imagedestroy($resized);
+		} catch (\Throwable) {
 		}
 	}
 

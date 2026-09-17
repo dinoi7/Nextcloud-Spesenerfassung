@@ -45,6 +45,8 @@ spesenerfassung/
 │   └── routes.php                      # Route-Definitionen
 ├── lib/
 │   ├── AppInfo/Application.php         # IBootstrap: Boot + Admin-Registrierung
+│   ├── Command/
+│   │   └── RegenerateBookingReceipt.php # occ: Spesenbeleg-PDF neu erzeugen
 │   ├── Controller/
 │   │   ├── ExpenseController.php       # CRUD Spesen + Beleg-Upload
 │   │   ├── ApprovalController.php      # Workflow-Endpunkte
@@ -333,3 +335,13 @@ GET    /                                    → PageController#index
 ### 15. Bild-Belege beim Upload verkleinern (2026-09-17)
 
 **Begründung:** Handyfotos von Belegen sind oft mehrere Megapixel gross und überschreiten die 1-MB-Grenze bzw. `upload_max_filesize`. Deshalb wird bereits im Browser via `src/imageResize.js` (Canvas) auf längste Kante 1600 px resized (JPEG Q80, PNG bleibt PNG); hochgeladen und gespeichert wird nur das reduzierte Bild. Als clientunabhängiges Sicherheitsnetz prüft `ReceiptService::resizeImage()` dasselbe serverseitig via GD (`getimagesizefromstring`, `imagescale`). Ist GD nicht verfügbar oder schlägt das Resize fehl, bleibt das Original erhalten und die bestehende 1-MB-Prüfung greift. PDFs werden nicht verändert.
+
+### 16. Spesenbeleg-Anhänge robust einbetten + Ablageort konsistent (2026-09-17)
+
+**Problem:** Die alte `ReceiptService::validateFile()` gab im Fehlerfall Fehlertexte statt `null` zurück; `upload()` prüfte nur auf `null`, speicherte die Datei trotzdem und schrieb den Fehlertext als `mime_type` in die DB. `BookingReceiptService::generate()` verzweigt exakt auf `application/pdf` / `image/*` und übersprang unbekannte Werte stillschweigend — Belege 113/114/115 fehlten daher als eingebettete Seiten im Spesenbeleg.
+
+**Fix:** `BookingReceiptService` ermittelt den MIME-Typ jetzt aus dem Datei-Inhalt (`finfo::buffer`) und nutzt den DB-Wert nur als Fallback. Nicht einbettbare Typen/nicht lesbare Inhalte erzeugen eine sichtbare Zeile im PDF plus Log-Eintrag statt stillem Skip. Bilder werden vor dem Einbetten via GD auf längste Kante 1600 px reduziert (JPEG Q82), damit Übergrössen das PDF nicht aufblähen.
+
+**Ablageort:** `ApprovalController::pay()`/`paystackPayAll()` generieren jetzt mit `SettingsService::getTreasurerUid()` statt mit dem handelnden User, sodass Schreiben (`generate()`) und Lesen (`exists()`/`getFile()`) denselben User-Kontext verwenden. `Makerspace` ist für den Kassier ein Mount auf `home::admin` (`oc_mounts`: `/kassier/files/Makerspace/ → home::admin`), daher liegt der Buchungsordner physisch bei admin und ist für beide Rollen identisch erreichbar.
+
+**Wiederherstellung:** Neuer occ-Befehl `spesenerfassung:regenerate-booking-receipt <id…>` erzeugt Spesenbelege neu (nutzt denselben `generate()`-Pfad wie der Workflow).

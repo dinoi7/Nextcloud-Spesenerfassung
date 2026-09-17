@@ -117,7 +117,7 @@ class ApprovalController extends Controller {
 			return new DataResponse(['error' => 'Expense not found'], Http::STATUS_NOT_FOUND);
 		}
 		try {
-			$booking = $this->bookingReceiptService->generate($expense, $this->getUserId());
+			$booking = $this->bookingReceiptService->generate($expense, $this->settingsService->getTreasurerUid());
 		} catch (\Throwable $e) {
 			$booking = ['success' => false, 'message' => 'Fehler beim Erstellen des Buchungsbelegs: ' . $e->getMessage()];
 		}
@@ -265,7 +265,7 @@ class ApprovalController extends Controller {
 
 		foreach ($expenses as $expense) {
 			try {
-				$booking = $this->bookingReceiptService->generate($expense, $this->getUserId());
+				$booking = $this->bookingReceiptService->generate($expense, $this->settingsService->getTreasurerUid());
 			} catch (\Throwable $e) {
 				$booking = ['success' => false, 'message' => 'Fehler: ' . $e->getMessage()];
 			}

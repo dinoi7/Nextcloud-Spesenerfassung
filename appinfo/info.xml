@@ -14,7 +14,7 @@ Features:
 - Email notifications on status changes
 - Full audit trail with rejection reasons
 - Responsive UI for desktop and mobile]]></description>
-    <version>1.0.10</version>
+    <version>1.0.11</version>
 	<licence>agpl</licence>
 	<author>Makerspace Reinach</author>
 	<namespace>Spesenerfassung</namespace>
@@ -24,6 +24,9 @@ Features:
 	<dependencies>
 		<nextcloud min-version="34" max-version="34"/>
 	</dependencies>
+	<commands>
+		<command>OCA\Spesenerfassung\Command\RegenerateBookingReceipt</command>
+	</commands>
 	<navigations>
 		<navigation>
 			<name>Spesenerfassung</name>
