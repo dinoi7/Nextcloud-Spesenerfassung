@@ -243,7 +243,11 @@ GET    /api/approvals/paystack/export       → ApprovalController#paystackExpor
 GET    /api/approvals/paystack/export/{id}  → ApprovalController#paystackExportSingle
 GET    /api/evaluation                      → ApprovalController#evaluation
 GET    /api/evaluation/export               → ApprovalController#evaluationExport
+GET    /api/approvals/booking-receipt/{id}          → ApprovalController#bookingReceipt (Download, Spesenbeleg-PDF)
+GET    /api/approvals/booking-receipt/{id}/preview  → ApprovalController#bookingReceiptPreview (Inline-Vorschau, Spesenbeleg-PDF)
 ```
+
+`evaluation()` liefert pro Spese zusätzlich `bookingReceipt` (bool, ob `Spesenbeleg_<id>.pdf` im kassier-Ordner existiert). `evaluationExport()` enthält die CSV-Spalte `Spesenbeleg` (Ja/Nein). Beide neuen Endpoints sind auf Präsident/Kassier beschränkt (`#[NoCSRFRequired]`).
 
 ### Einstellungen
 ```
@@ -310,6 +314,8 @@ GET    /                                    → PageController#index
 ### 11. PDF-Spesenbeleg mit TCPDF + FPDI (2026-07-18)
 
 **Begründung:** Beim Bezahlen einer Spese wird automatisch ein "Spesenbeleg"-PDF generiert und im kassier-User-Ordner abgelegt. TCPDF (6.11.3) erstellt das Grundgerüst (Layout, Tabellen, Text), FPDI (2.6.8) bettet PDF-Anhänge als weitere Seiten ein. Die Ablage erfolgt im kassier-Ordner (`IRootFolder->getUserFolder('kassier')`), nicht in IAppData, damit der Kassier direkten Zugriff über die Nextcloud-UI hat. Wichtige Fixes: `getTemplateSize()` für korrekte Anhang-Dimensionen, `SetPrintHeader(false)`/`SetPrintFooter(false)` gegen TCPDF-Standard-Rahmenlinien, `str_replace('\\', '/')` gegen Backslash im Ordnerpfad.
+
+**Ergänzung (2026-09-17):** Zugriff auf das generierte PDF erfolgt über zwei Endpoints in `ApprovalController` (Präsident/Kassier): `bookingReceipt(int)` (Download via `DataDownloadResponse`) und `bookingReceiptPreview(int)` (Inline-Vorschau via `DataDisplayResponse` mit `Content-Type: application/pdf`, `nosniff` + CSP `sandbox`). `BookingReceiptService` bietet dafür `exists()` und `getFile()`. In der Auswertung (`EvaluationView`) erscheint ab Status `paid`/`done` eine Spalte "Spesenbeleg" mit Download-Link und Hover-Vorschau (analog zu den Original-Belegen).
 
 ### 12. Security: Ownership-Check via `canAccessExpense()` (2026-07-19)
 

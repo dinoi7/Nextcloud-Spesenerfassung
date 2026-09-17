@@ -10,7 +10,7 @@ Expense tracking app with multi-step approval workflow for Nextcloud. Built for 
 - Payment stack (Zahlstapel) with QR-IBAN info and bulk "pay all"
 - Bookkeeping export (Buchhaltung) with Soll-Konto mapping per category and CSV export
 - PDF booking receipt generation (Spesenbeleg) with logo, history table, and embedded attachments
-- Evaluation (Auswertung) with filters and CSV export
+- Evaluation (Auswertung) with filters and CSV export, including a column linking to the generated Spesenbeleg PDF with inline preview
 - Bilingual email notifications (DE/EN) on every workflow status change
 - Nextcloud Dashboard widget showing actionable counts
 - Full audit trail (who did what and when)
