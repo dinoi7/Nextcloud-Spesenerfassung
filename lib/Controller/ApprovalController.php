@@ -12,6 +12,7 @@ use OCA\Spesenerfassung\Service\BookingReceiptService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
+use OCP\AppFramework\Http\DataDisplayResponse;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\IRequest;
 use OCP\IUserManager;
@@ -444,6 +445,23 @@ class ApprovalController extends Controller {
 			return new DataResponse(['error' => 'Buchungsbeleg not found'], Http::STATUS_NOT_FOUND);
 		}
 		return new DataDownloadResponse($file['content'], $file['name'], 'application/pdf');
+	}
+
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	public function bookingReceiptPreview(int $id) {
+		if (!$this->checkRole('president') && !$this->checkRole('treasurer')) {
+			return new DataResponse(['error' => 'Not authorized'], Http::STATUS_FORBIDDEN);
+		}
+		$expense = $this->expenseService->findById($id);
+		if ($expense === null) {
+			return new DataResponse(['error' => 'Expense not found'], Http::STATUS_NOT_FOUND);
+		}
+		$file = $this->bookingReceiptService->getFile($expense, $this->settingsService->getTreasurerUid());
+		if ($file === null) {
+			return new DataResponse(['error' => 'Buchungsbeleg not found'], Http::STATUS_NOT_FOUND);
+		}
+		return new DataDisplayResponse($file['content'], $file['name'], 'application/pdf');
 	}
 
 	#[NoAdminRequired]

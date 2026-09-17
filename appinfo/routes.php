@@ -35,6 +35,7 @@ return [
 		['name' => 'approval#evaluation', 'url' => '/api/evaluation', 'verb' => 'GET'],
 		['name' => 'approval#evaluationExport', 'url' => '/api/evaluation/export', 'verb' => 'GET'],
 		['name' => 'approval#bookingReceipt', 'url' => '/api/approvals/booking-receipt/{id}', 'verb' => 'GET', 'requirements' => ['id' => '\d+']],
+		['name' => 'approval#bookingReceiptPreview', 'url' => '/api/approvals/booking-receipt/{id}/preview', 'verb' => 'GET', 'requirements' => ['id' => '\d+']],
 
 		['name' => 'settings#get', 'url' => '/api/settings', 'verb' => 'GET'],
 		['name' => 'settings#update', 'url' => '/api/settings', 'verb' => 'PUT'],
