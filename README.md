@@ -152,7 +152,13 @@ spesenerfassung/
 composer lint      # PHP syntax check
 npm run build      # Build frontend
 npm run dev        # Watch mode for frontend development
+php occ spesenerfassung:regenerate-booking-receipt <id…>   # Regenerate Spesenbeleg PDF(s)
 ```
+
+### Storage locations
+
+- **Receipts (PDF/JPG/PNG):** stored via Nextcloud `IAppData` (not visible in the Files UI), path `appdata_<instanceid>/spesenerfassung/receipts/<expenseId>/<fileName>`; DB `sp_receipts.file_path = receipts/<expenseId>/<fileName>`. Served only through the app's download/preview endpoints.
+- **Spesenbeleg PDF:** written on payment into `booking_folder` (default `Buchungsbelege`, configurable) inside the treasurer's files, e.g. `Makerspace/Vorstand/Spesen/Spesenbeleg_<id>.pdf`. Regenerate it with the occ command above (target folder must exist).
 
 ## License
 

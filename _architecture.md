@@ -344,4 +344,10 @@ GET    /                                    → PageController#index
 
 **Ablageort:** `ApprovalController::pay()`/`paystackPayAll()` generieren jetzt mit `SettingsService::getTreasurerUid()` statt mit dem handelnden User, sodass Schreiben (`generate()`) und Lesen (`exists()`/`getFile()`) denselben User-Kontext verwenden. `Makerspace` ist für den Kassier ein Mount auf `home::admin` (`oc_mounts`: `/kassier/files/Makerspace/ → home::admin`), daher liegt der Buchungsordner physisch bei admin und ist für beide Rollen identisch erreichbar.
 
-**Wiederherstellung:** Neuer occ-Befehl `spesenerfassung:regenerate-booking-receipt <id…>` erzeugt Spesenbelege neu (nutzt denselben `generate()`-Pfad wie der Workflow).
+**Wiederherstellung:** Neuer occ-Befehl `spesenerfassung:regenerate-booking-receipt <id…>` erzeugt Spesenbelege neu (nutzt denselben `generate()`-Pfad wie der Workflow). Weil der MIME-Typ aus dem Datei-Inhalt gelesen wird, ist ein falscher `mime_type` in der DB dafür irrelevant; der Zielordner muss existieren.
+
+### 17. Ablageorte: Belegdateien vs. Spesenbeleg (2026-09-17)
+
+**Belegdateien (PDF/JPG/PNG):** über `IAppData`, app-weit und benutzerunabhängig. In der DB steht `sp_receipts.file_path = receipts/<expenseId>/<dateiName>`; physisch liegt die Datei unter `<datadirectory>/appdata_<instanceid>/spesenerfassung/receipts/<expenseId>/<dateiName>`. Kein Zugriff über die Nextcloud-Datei-UI; Auslieferung ausschliesslich über `ExpenseController::downloadReceipt()/previewReceipt()`. JPG/PNG werden vor dem Speichern auf max. 1600 px reduziert, PDFs bleiben unverändert.
+
+**Spesenbeleg-PDF:** beim Bezahlen (`pay`/`paystackPayAll`) erzeugt und im konfigurierten `booking_folder` (Default `Buchungsbelege`) im Nextcloud-Dateibereich des `treasurer_uid` abgelegt. Weil `Makerspace` für den Kassier ein Mount auf `home::admin` ist, liegt die Datei physisch unter `<datadirectory>/admin/files/<booking_folder>/Spesenbeleg_<id>.pdf`, ist aber via `/kassier/files/<booking_folder>/...` erreichbar. Enthält Deckblatt, Verlauf, Anhang-Tabelle und die eingebetteten Belege als weitere Seiten.
